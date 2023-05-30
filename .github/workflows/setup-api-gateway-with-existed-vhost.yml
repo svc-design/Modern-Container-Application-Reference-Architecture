@@ -20,13 +20,13 @@ defaults:
     working-directory: ./playbook
 
 jobs:
-  setup-k3s:
+  setup-api-gateway-cluster:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Gitlab in K3S
+      - name: Setup API Gateway Cluster in K3S
         shell: bash
         run: |
           export ANSIBLE_HOST_KEY_CHECKING=False
@@ -57,7 +57,7 @@ jobs:
   setup-datadog:
     runs-on: ubuntu-latest
     needs:
-      - setup-k3s
+      - setup-api-gateway-cluster
 
     steps:
       - uses: actions/checkout@v3
