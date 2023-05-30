@@ -90,6 +90,9 @@ jobs:
           ansible-playbook -i hosts/inventory jobs/init_datadog_agent -D
   setup-bookinfo:
     runs-on: ubuntu-latest
+    needs:
+      - setup-k3s
+      - setup-datadog
 
     steps:
       - uses: actions/checkout@v3
