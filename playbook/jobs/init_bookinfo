@@ -8,6 +8,8 @@
         name: bookinfo
       vars:
         group: master
+        domain: onwalk.net
+        namespace: bookinfo
         auto_issuance: false
         update_secret: true
         storage_type: oss
