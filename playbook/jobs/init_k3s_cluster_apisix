@@ -1,4 +1,4 @@
-playbook/jobs/init_k3s_cluster_apisix- name: set apisix cluster with vhosts
+- name: set apisix cluster with vhosts
   hosts: all
   user: root
   become: yes
