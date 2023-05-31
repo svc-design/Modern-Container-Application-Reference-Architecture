@@ -38,7 +38,7 @@ function set_k3s_default()
   fi
 }
 
-function set_k3s_cni_kubevon()
+function set_k3s_without_cni()
 {
   mkdir -pv /opt/rancher/k3s
 
@@ -76,8 +76,8 @@ function set_k3s_cni_kubevon()
 #
 if [[ $cni == 'default' ]]; then
   set_k3s_default
-elif [[ $cni == 'kubeovn' ]]; then
-  set_k3s_cni_kubevon
+else
+  set_k3s_without_cni
 fi
 
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
