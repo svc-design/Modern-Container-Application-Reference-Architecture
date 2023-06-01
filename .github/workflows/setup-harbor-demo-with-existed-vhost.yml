@@ -1,4 +1,4 @@
-name: setup k3s cluster cni-kube-ovn 
+name: setup harbor demo in k3s 
 
 on:
   pull_request:
