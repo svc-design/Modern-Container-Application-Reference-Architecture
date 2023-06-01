@@ -45,11 +45,44 @@ function set_k3s_without_cni()
 	--disable-kube-proxy                                 \
 	--disable=traefik,servicelb                          \
 	--cluster-domain=$cluster_domain                     \
+        --flannel-backend=none                               \
+	--disable-network-policy                             \
+	--write-kubeconfig-mode 644                          \
+	--write-kubeconfig ~/.kube/config                    \
+	--data-dir=/opt/rancher/k3s                          \
+	--kube-apiserver-arg service-node-port-range=0-50000
+  else
+    echo "当前主机在大陆网络上"
+    curl -sfL https://rancher-mirror.rancher.cn/k3s/k3s-install.sh | INSTALL_K3S_VERSION=$version  INSTALL_K3S_MIRROR=cn sh -s - \
+	--disable-kube-proxy                                 \
+	--disable=traefik,servicelb                          \
+	--cluster-domain=$cluster_domain                     \
+        --flannel-backend=none                               \
+	--disable-network-policy                             \
+	--write-kubeconfig-mode 644                          \
+	--write-kubeconfig ~/.kube/config                    \
+	--data-dir=/opt/rancher/k3s                          \
+	--kube-apiserver-arg service-node-port-range=0-50000
+  fi
+}
+
+function set_k3s_with_custom_cidr()
+{
+  mkdir -pv /opt/rancher/k3s
+
+  ping -c 1 google.com > /dev/null 2>&1
+  if [ $? -eq 0 ]; then
+    echo "当前主机在国际网络上"
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=$version sh -s - \
+	--disable-kube-proxy                                 \
+	--disable=traefik,servicelb                          \
+	--cluster-domain=$cluster_domain                     \
 	--cluster-cidr=$pod_cidr                             \
 	--service-cidr=$svc_cidr                             \
 	--write-kubeconfig-mode 644                          \
-        --flannel-backend=none                               \
+	--disable-kube-proxy                                 \
 	--disable-network-policy                             \
+        --flannel-backend=none                               \
 	--write-kubeconfig ~/.kube/config                    \
 	--data-dir=/opt/rancher/k3s                          \
 	--kube-apiserver-arg service-node-port-range=0-50000
@@ -61,14 +94,16 @@ function set_k3s_without_cni()
 	--cluster-domain=$cluster_domain                     \
 	--cluster-cidr=$pod_cidr                             \
 	--service-cidr=$svc_cidr                             \
-        --flannel-backend=none                               \
+	--disable-kube-proxy                                 \
 	--disable-network-policy                             \
+        --flannel-backend=none                               \
 	--write-kubeconfig-mode 644                          \
 	--write-kubeconfig ~/.kube/config                    \
 	--data-dir=/opt/rancher/k3s                          \
 	--kube-apiserver-arg service-node-port-range=0-50000
   fi
 }
+
 
 ## __main__ ##
 #

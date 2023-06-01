@@ -12,6 +12,7 @@
         version: 'v1.24.7+k3s1'
         ingress: nginx
         cni: default
+        external-dns: enable
         pod_cidr: '10.17.0.0/16'
         pod_gateway: '10.17.0.1'
         svc_cidr: '10.97.0.0/16'

@@ -8,7 +8,10 @@
 
 - name: Setup DNS Provider
   script: files/setup-dns-provider.sh {{ dns_ak }}  {{ dns_sk }}
-  when: inventory_hostname in groups[group]
+  when: ( inventory_hostname in groups[group] ) and (external-dns == 'enable' )
+- name: Remove DNS Provider
+  shell: 'helm delete external-dns  -n external-dns'
+  when: ( inventory_hostname in groups[group] ) and (external-dns == 'disable' )
 
 - name: Sync K3S CNI Config
   template: src=templates/cni_install.sh dest=/tmp/ owner=root group=root mode=0644
@@ -17,6 +20,7 @@
   shell: 'bash /tmp/cni_install.sh'
   when: ( inventory_hostname in groups[group] ) and (cni == 'kubeovn' )
   ignore_errors: yes
+
 
 #- name: Setup Egress
 #  script: files/setup-egress.sh {{ egress_ip }} {{ namespace }}

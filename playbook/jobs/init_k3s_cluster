@@ -8,10 +8,11 @@
         name: k3s
       vars:
         group: master
-        cluster_domain: 'cluster.local'
         version: 'v1.24.7+k3s1'
-        ingress: nginx
+        cluster_domain: 'cluster.local'
         cni: kubeovn
+        ingress: nginx
+        external-dns: enable
         pod_cidr: '10.16.0.0/16'
         pod_gateway: '10.16.0.1'
         svc_cidr: '10.96.0.0/16'
