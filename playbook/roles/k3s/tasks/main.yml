@@ -17,6 +17,7 @@
 - name: Remove DNS Provider
   shell: 'helm delete external-dns  -n external-dns'
   when: ( inventory_hostname in groups[group] ) and (external_dns == 'disable' )
+  ignore_errors: yes
 
 - name: Sync K3S CNI Config
   template: src=templates/cni_install.sh dest=/tmp/ owner=root group=root mode=0644
