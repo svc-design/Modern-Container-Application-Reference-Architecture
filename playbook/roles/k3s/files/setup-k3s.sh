@@ -18,7 +18,7 @@ default="--disable=traefik,servicelb                                    \
 	"
 disable_proxy="--disable-kube-proxy"
 disable_cni="--flannel-backend=none --disable-network-policy"
-custom_cidr="--cluster-cidr=$pod_cidr  --service-cidr=$svc_cidr --cluster-dns=$cluster_dns_ip"
+custom_cidr="--cluster-cidr=$pod_cidr  --service-cidr=$svc_cidr --cluster-dns=$cluster_dns"
 
 function setup_k3s()
 {
