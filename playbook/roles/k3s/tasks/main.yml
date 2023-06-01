@@ -4,7 +4,7 @@
   ignore_errors: yes
 
 - name: Setup K3S Server
-  script: files/setup-k3s.sh {{ version }} {{ cluster_domain }} {{ cni }} {{ ingress }} {{ pod_cidr }} {{ svc_cidr }} {{ cluster_dns }}
+  script: files/setup-k3s.sh {{ version }} {{ cluster_domain }} {{ cni }} {{ ingress }} {{ pod_cidr }} {{ svc_cidr }}
   when: inventory_hostname in groups[group]
 
 - name: Setup K3S Ingress

@@ -11,7 +11,6 @@ export cluster_dns=$7
 
 disable_proxy="--disable-kube-proxy"
 disable_cni="--flannel-backend=none --disable-network-policy"
-custom_cidr="--cluster-cidr=$pod_cidr --service-cidr=$svc_cidr --cluster-dns=$cluster_dns"
 default="--disable=traefik,servicelb --cluster-domain=$cluster_domain --data-dir=/opt/rancher/k3s --kube-apiserver-arg service-node-port-range=0-50000"
 
 function setup_k3s()
@@ -54,10 +53,5 @@ case $cni in
         *) echo "error args" ;;
 esac
 
-if [[ '$pod_cidr' != '' && '$svc_cidr' != '' && '$cluster_dns'!='' ]]; then
-  setup_k3s "$opts $custom_dir"
-else
-  setup_k3s "$opts"
-fi
-
+setup_k3s "$opts"
 setup_helm
