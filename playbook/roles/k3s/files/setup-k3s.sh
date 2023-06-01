@@ -46,7 +46,7 @@ function setup_helm()
 }
 
 if [[ "$pod_cidr" != '' && "$svc_cidr" != '' && "$cluster_dns" != '' ]]; then
-  opts=$custom
+  opts=$custom_cidr
 fi
 
 case $cni in
