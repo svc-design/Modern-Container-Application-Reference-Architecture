@@ -9,7 +9,7 @@
       vars:
         group: master
         cni: kubeovn
-        ingress: apisix
+        ingress: nginx
         external_dns: disable
         version: 'v1.24.7+k3s1'
         pod_cidr: '10.20.0.0/16'
