@@ -9,13 +9,7 @@ export pod_cidr=$5
 export svc_cidr=$6
 export cluster_dns=$7
 
-default="--disable=traefik,servicelb                                    \
-	--cluster-domain=$cluster_domain                                \
-  	--write-kubeconfig-mode 644                                     \
-  	--write-kubeconfig ~/.kube/config                               \
-  	--data-dir=/opt/rancher/k3s                                     \
-  	--kube-apiserver-arg service-node-port-range=0-50000
-	"
+default="--disable=traefik,servicelb --cluster-domain=$cluster_domain --write-kubeconfig-mode 644 --write-kubeconfig ~/.kube/config --data-dir=/opt/rancher/k3s --kube-apiserver-arg service-node-port-range=0-50000"
 disable_proxy="--disable-kube-proxy"
 disable_cni="--flannel-backend=none --disable-network-policy"
 custom_cidr="--cluster-cidr=$pod_cidr  --service-cidr=$svc_cidr --cluster-dns=$cluster_dns"
