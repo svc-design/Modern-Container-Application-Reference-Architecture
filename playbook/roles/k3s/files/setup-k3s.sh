@@ -45,7 +45,7 @@ function setup_helm()
   helm repo up
 }
 
-if [[ "$pod_dir" != '' && "$svc_dir" != '' && "$cluster_dns" != '' ]]; then
+if [[ "$pod_cidr" != '' && "$svc_cidr" != '' && "$cluster_dns" != '' ]]; then
   opts=$custom
 fi
 
