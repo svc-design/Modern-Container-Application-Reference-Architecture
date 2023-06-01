@@ -9,10 +9,10 @@ export pod_cidr=$5
 export svc_cidr=$6
 export cluster_dns=$7
 
-default="--disable=traefik,servicelb --cluster-domain=$cluster_domain --write-kubeconfig-mode 644 --write-kubeconfig ~/.kube/config --data-dir=/opt/rancher/k3s --kube-apiserver-arg service-node-port-range=0-50000 "
-disable_proxy="--disable-kube-proxy "
-disable_cni="--flannel-backend=none --disable-network-policy "
-custom_cidr="--cluster-cidr=$pod_cidr --service-cidr=$svc_cidr --cluster-dns=$cluster_dns "
+disable_proxy="--disable-kube-proxy"
+disable_cni="--flannel-backend=none --disable-network-policy"
+custom_cidr="--cluster-cidr=$pod_cidr --service-cidr=$svc_cidr --cluster-dns=$cluster_dns"
+default="--disable=traefik,servicelb --cluster-domain=$cluster_domain --data-dir=/opt/rancher/k3s --kube-apiserver-arg service-node-port-range=0-50000"
 
 function setup_k3s()
 {
@@ -27,6 +27,7 @@ function setup_k3s()
     echo "当前主机在大陆网络上"
     curl -sfL https://rancher-mirror.rancher.cn/k3s/k3s-install.sh | INSTALL_K3S_VERSION=$version  INSTALL_K3S_MIRROR=cn sh -s - $extra_opts
   fi
+  mkdir -pv ~/.kube/ && cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
 }
 
 function setup_helm()
