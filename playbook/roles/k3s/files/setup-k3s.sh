@@ -45,12 +45,18 @@ function setup_helm()
   helm repo up
 }
 
+
 case $cni in
-	'default')  opts="$default $custom_cidr" ;;
-	'kubeovn')  opts="$default $disable_cni $custom_cidr" ;;
-	'cilium')   opts="$default $disable_cni $disable_proxy $custom_cidr" ;;
+	'default')  opts="$default" ;;
+	'kubeovn')  opts="$default $disable_cni" ;;
+	'cilium')   opts="$default $disable_cni $disable_proxy" ;;
         *) echo "error args" ;;
 esac
 
-setup_k3s $opts
+if [[ '$pod_cidr' != '' && '$svc_cidr' != '' && '$cluster_dns'!='' ]]; then
+  setup_k3s "$opts $custom_dir"
+else
+  setup_k3s "$opts"
+fi
+
 setup_helm

@@ -14,7 +14,7 @@ rm -rf /var/log/ovn
 rm -fr /var/log/kube-ovn
 
 /usr/local/bin/k3s-uninstall.sh
-rm -rvf /opt/rancher/ /etc/rancher/ /var/lib/rancher/
+rm -rvf /opt/rancher/ /etc/rancher/ /var/lib/rancher/ ~/.kube
 
 rm -rvf /etc/cni/net.d/*
 
