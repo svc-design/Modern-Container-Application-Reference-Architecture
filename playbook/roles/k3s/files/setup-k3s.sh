@@ -9,10 +9,10 @@ export pod_cidr=$5
 export svc_cidr=$6
 export cluster_dns=$7
 
-default="--disable=traefik,servicelb --cluster-domain=$cluster_domain --write-kubeconfig-mode 644 --write-kubeconfig ~/.kube/config --data-dir=/opt/rancher/k3s --kube-apiserver-arg service-node-port-range=0-50000"
-disable_proxy="--disable-kube-proxy"
-disable_cni="--flannel-backend=none --disable-network-policy"
-custom_cidr="--cluster-cidr=$pod_cidr  --service-cidr=$svc_cidr --cluster-dns=$cluster_dns"
+default="--disable=traefik,servicelb --cluster-domain=$cluster_domain --write-kubeconfig-mode 644 --write-kubeconfig ~/.kube/config --data-dir=/opt/rancher/k3s --kube-apiserver-arg service-node-port-range=0-50000 "
+disable_proxy="--disable-kube-proxy "
+disable_cni="--flannel-backend=none --disable-network-policy "
+custom_cidr="--cluster-cidr=$pod_cidr --service-cidr=$svc_cidr --cluster-dns=$cluster_dns "
 
 function setup_k3s()
 {
@@ -22,10 +22,10 @@ function setup_k3s()
   ping -c 1 google.com > /dev/null 2>&1
   if [ $? -eq 0 ]; then
     echo "当前主机在国际网络上"
-    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=$version sh -s - $extra_opts $default
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=$version sh -s - $extra_opts
   else
     echo "当前主机在大陆网络上"
-    curl -sfL https://rancher-mirror.rancher.cn/k3s/k3s-install.sh | INSTALL_K3S_VERSION=$version  INSTALL_K3S_MIRROR=cn sh -s - $extra_opts $default
+    curl -sfL https://rancher-mirror.rancher.cn/k3s/k3s-install.sh | INSTALL_K3S_VERSION=$version  INSTALL_K3S_MIRROR=cn sh -s - $extra_opts
   fi
 }
 
@@ -45,14 +45,10 @@ function setup_helm()
   helm repo up
 }
 
-if [[ "$pod_cidr" != '' && "$svc_cidr" != '' && "$cluster_dns" != '' ]]; then
-  opts=$custom_cidr
-fi
-
 case $cni in
-	'default')  opts=$opts ;;
-	'kubeovn')  opts="$opts $disable_cni" ;;
-	'cilium')   opts="$opts $disable_cni $disable_proxy" ;;
+	'default')  opts="$default $custom_cidr" ;;
+	'kubeovn')  opts="$default $disable_cni $custom_cidr" ;;
+	'cilium')   opts="$default $disable_cni $disable_proxy $custom_cidr" ;;
         *) echo "error args" ;;
 esac
 
