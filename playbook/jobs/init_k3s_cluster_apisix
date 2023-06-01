@@ -8,14 +8,7 @@
         name: k3s
       vars:
         group: master
-        version: 'v1.24.7+k3s1'
-        cluster_domain: 'cluster.local'
         cni: default
         ingress: apisix
         external-dns: disable
-        pod_cidr: '10.100.0.0/16'
-        pod_gateway: '10.100.0.1'
-        svc_cidr: '172.16.0.0/16'
-        join_cidr: '100.64.0.0/16'
-        cni_iface: 'eth0'
-        cni_tunnel: 'geneve'
+        version: 'v1.24.7+k3s1'

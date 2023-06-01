@@ -7,122 +7,60 @@ export cni=$3
 export ingress=$4
 export pod_cidr=$5
 export svc_cidr=$6
+export cluster_dns=$7
 
-function set_k3s_default()
+default="--disable=traefik,servicelb                                    \
+	--cluster-domain=$cluster_domain                                \
+  	--write-kubeconfig-mode 644                                     \
+  	--write-kubeconfig ~/.kube/config                               \
+  	--data-dir=/opt/rancher/k3s                                     \
+  	--kube-apiserver-arg service-node-port-range=0-50000
+	"
+disable_proxy="--disable-kube-proxy"
+disable_cni="--flannel-backend=none --disable-network-policy"
+custom_cidr="--cluster-cidr=$pod_cidr  --service-cidr=$svc_cidr --cluster-dns=$cluster_dns_ip"
+
+function setup_k3s()
 {
+  local extra_opts=$1
   mkdir -pv /opt/rancher/k3s
   
   ping -c 1 google.com > /dev/null 2>&1
   if [ $? -eq 0 ]; then
     echo "当前主机在国际网络上"
-    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=$version sh -s - \
-  	--disable=traefik,servicelb                          \
-  	--cluster-domain=$cluster_domain                     \
-  	--write-kubeconfig-mode 644                          \
-  	--write-kubeconfig ~/.kube/config                    \
-  	--data-dir=/opt/rancher/k3s                          \
-  	--kube-apiserver-arg service-node-port-range=0-50000
+    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=$version sh -s - $extra_opts $default
   else
     echo "当前主机在大陆网络上"
-    curl -sfL https://rancher-mirror.rancher.cn/k3s/k3s-install.sh | INSTALL_K3S_VERSION=$version  INSTALL_K3S_MIRROR=cn sh -s - \
-  	--disable=traefik,servicelb                          \
-  	--cluster-domain=$cluster_domain                     \
-  	--write-kubeconfig-mode 644                          \
-  	--write-kubeconfig ~/.kube/config                    \
-  	--data-dir=/opt/rancher/k3s                          \
-  	--kube-apiserver-arg service-node-port-range=0-50000
+    curl -sfL https://rancher-mirror.rancher.cn/k3s/k3s-install.sh | INSTALL_K3S_VERSION=$version  INSTALL_K3S_MIRROR=cn sh -s - $extra_opts $default
   fi
 }
 
-function set_k3s_without_cni()
+function setup_helm()
 {
-  mkdir -pv /opt/rancher/k3s
-
-  ping -c 1 google.com > /dev/null 2>&1
-  if [ $? -eq 0 ]; then
-    echo "当前主机在国际网络上"
-    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=$version sh -s - \
-	--disable-kube-proxy                                 \
-	--disable=traefik,servicelb                          \
-	--cluster-domain=$cluster_domain                     \
-        --flannel-backend=none                               \
-	--disable-network-policy                             \
-	--write-kubeconfig-mode 644                          \
-	--write-kubeconfig ~/.kube/config                    \
-	--data-dir=/opt/rancher/k3s                          \
-	--kube-apiserver-arg service-node-port-range=0-50000
-  else
-    echo "当前主机在大陆网络上"
-    curl -sfL https://rancher-mirror.rancher.cn/k3s/k3s-install.sh | INSTALL_K3S_VERSION=$version  INSTALL_K3S_MIRROR=cn sh -s - \
-	--disable-kube-proxy                                 \
-	--disable=traefik,servicelb                          \
-	--cluster-domain=$cluster_domain                     \
-        --flannel-backend=none                               \
-	--disable-network-policy                             \
-	--write-kubeconfig-mode 644                          \
-	--write-kubeconfig ~/.kube/config                    \
-	--data-dir=/opt/rancher/k3s                          \
-	--kube-apiserver-arg service-node-port-range=0-50000
-  fi
+  export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+  case `uname -m` in
+  	x86_64) ARCH=amd64; ;;
+          aarch64) ARCH=arm64; ;;
+          loongarch64) ARCH=loongarch64; ;;
+          *) echo "un-supported arch, exit ..."; exit 1; ;;
+  esac
+  rm -rf helm.tar.gz* /usr/local/bin/helm || echo true
+  sudo wget --no-check-certificate https://mirrors.onwalk.net/tools/linux-${ARCH}/helm.tar.gz && sudo tar -xvpf helm.tar.gz -C /usr/local/bin/
+  sudo chmod 755 /usr/local/bin/helm
+  helm repo add artifact https://artifact.onwalk.net/chartrepo/public/ | echo true
+  helm repo up
 }
 
-function set_k3s_with_custom_cidr()
-{
-  mkdir -pv /opt/rancher/k3s
-
-  ping -c 1 google.com > /dev/null 2>&1
-  if [ $? -eq 0 ]; then
-    echo "当前主机在国际网络上"
-    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=$version sh -s - \
-	--disable-kube-proxy                                 \
-	--disable=traefik,servicelb                          \
-	--cluster-domain=$cluster_domain                     \
-	--cluster-cidr=$pod_cidr                             \
-	--service-cidr=$svc_cidr                             \
-	--write-kubeconfig-mode 644                          \
-	--disable-kube-proxy                                 \
-	--disable-network-policy                             \
-        --flannel-backend=none                               \
-	--write-kubeconfig ~/.kube/config                    \
-	--data-dir=/opt/rancher/k3s                          \
-	--kube-apiserver-arg service-node-port-range=0-50000
-  else
-    echo "当前主机在大陆网络上"
-    curl -sfL https://rancher-mirror.rancher.cn/k3s/k3s-install.sh | INSTALL_K3S_VERSION=$version  INSTALL_K3S_MIRROR=cn sh -s - \
-	--disable-kube-proxy                                 \
-	--disable=traefik,servicelb                          \
-	--cluster-domain=$cluster_domain                     \
-	--cluster-cidr=$pod_cidr                             \
-	--service-cidr=$svc_cidr                             \
-	--disable-kube-proxy                                 \
-	--disable-network-policy                             \
-        --flannel-backend=none                               \
-	--write-kubeconfig-mode 644                          \
-	--write-kubeconfig ~/.kube/config                    \
-	--data-dir=/opt/rancher/k3s                          \
-	--kube-apiserver-arg service-node-port-range=0-50000
-  fi
-}
-
-
-## __main__ ##
-#
-if [[ $cni == 'default' ]]; then
-  set_k3s_default
-else
-  set_k3s_without_cni
+if [[ "$pod_dir" != '' && "$svc_dir" != '' && "$cluster_dns" != '' ]]; then
+  opts=$custom
 fi
 
-export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-case `uname -m` in
-	x86_64) ARCH=amd64; ;;
-        aarch64) ARCH=arm64; ;;
-        loongarch64) ARCH=loongarch64; ;;
-        *) echo "un-supported arch, exit ..."; exit 1; ;;
+case $cni in
+	'default')  opts=$opts ;;
+	'kubeovn')  opts="$opts $disable_cni" ;;
+	'cilium')   opts="$opts $disable_cni $disable_proxy" ;;
+        *) echo "error args" ;;
 esac
-rm -rf helm.tar.gz* /usr/local/bin/helm || echo true
-sudo wget --no-check-certificate https://mirrors.onwalk.net/tools/linux-${ARCH}/helm.tar.gz && sudo tar -xvpf helm.tar.gz -C /usr/local/bin/
-sudo chmod 755 /usr/local/bin/helm
 
-helm repo add artifact https://artifact.onwalk.net/chartrepo/public/ | echo true
-helm repo up
+setup_k3s $opts
+setup_helm
