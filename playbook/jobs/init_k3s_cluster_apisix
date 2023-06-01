@@ -10,7 +10,7 @@
         group: master
         cni: kubeovn
         ingress: apisix
-        external-dns: disable
+        external_dns: disable
         version: 'v1.24.7+k3s1'
         pod_cidr: '10.10.0.0/16'
         pod_gateway: '10.10.0.1'
