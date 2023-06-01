@@ -10,7 +10,7 @@ on:
 
 env:
   DNS_AK: ${{ secrets.DNS_AK }}
-  DNS_SK: {{ secrets.DNS_SK }}
+  DNS_SK: ${{ secrets.DNS_SK }}
   AWS_AK: ${{ secrets.AWS_ACCESS_KEY }}
   AWS_SK: ${{ secrets.AWS_SECRET_KEY }}
   ALI_AK: ${{ secrets.ALI_AK }}
