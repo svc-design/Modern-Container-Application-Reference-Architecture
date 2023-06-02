@@ -126,6 +126,17 @@ spec:
       - serviceName: mirrors-nginx
         servicePort: 80
 ---
+apiVersion: apisix.apache.org/v2
+kind: ApisixTls
+metadata:
+  name: nginx-tls
+spec:
+  hosts:
+  - mirrors.onwalk.net
+  secret:
+    name: nginx-tls
+    namespace: nginx
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
