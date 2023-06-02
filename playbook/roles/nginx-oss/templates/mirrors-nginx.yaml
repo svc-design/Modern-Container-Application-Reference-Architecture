@@ -109,6 +109,23 @@ data:
       }
     }
 ---
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: mirrors
+  namespace: nginx
+spec:
+  http:
+    - name: root
+      match:
+        hosts:
+          - mirrors.onwalk.net
+        paths:
+          - "/"
+      backends:
+      - serviceName: mirrors-nginx
+        servicePort: 80
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
