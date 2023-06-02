@@ -34,3 +34,17 @@
           - secret_name: apisix-tls
             keyfile: /etc/ssl/onwalk.net.key
             certfile: /etc/ssl/onwalk.net.pem
+    - include_role:
+        name: k3s-addon
+      vars:
+        group: master
+        ingress: nginx
+        external_dns: enable
+        domain: onwalk.net
+        namespace: ingress
+        auto_issuance: false
+        update_secret: true
+        tls:
+          - secret_name: nginx-tls
+            keyfile: /etc/ssl/onwalk.net.key
+            certfile: /etc/ssl/onwalk.net.pem
