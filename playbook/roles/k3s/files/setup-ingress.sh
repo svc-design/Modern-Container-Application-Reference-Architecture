@@ -59,7 +59,6 @@ kubectl patch svc nginx-nginx-ingress -n ingress --patch-file nginx-svc-patch.ya
 
 elif [[ $ingress == apisix ]]; then
 
-export ingress_ip=$1
 helm repo add apisix https://charts.apiseven.com || echo true
 helm repo update
 kubectl create ns ingress || echo true
@@ -72,6 +71,7 @@ ingress-controller:
 etcd:
   replicaCount: 1
 gateway:
+  enabled: true
   type: NodePort
   http:
     enabled: true
