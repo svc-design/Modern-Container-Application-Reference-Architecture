@@ -96,6 +96,6 @@ admin:
         hosts:
           - apisix-admin.onwalk.net
 EOF
-helm upgrade --install apisix apisix/apisix --namespace ingress -f /tmp/values.yaml && rm -f /tmp/values.yaml
+helm upgrade --install apisix apisix/apisix --namespace ingress -f /tmp/values.yamll
 kubectl get service --namespace ingress
 fi
