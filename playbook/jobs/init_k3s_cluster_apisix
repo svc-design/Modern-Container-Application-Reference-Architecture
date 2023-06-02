@@ -26,4 +26,4 @@
         tls:
           - secret_name: apisix-tls
             keyfile: /etc/ssl/onwalk.net.key
-            certfil: /etc/ssl/onwalk.net.pem
+            certfile: /etc/ssl/onwalk.net.pem
