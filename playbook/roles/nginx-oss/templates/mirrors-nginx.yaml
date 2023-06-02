@@ -112,14 +112,13 @@ data:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  generation: 2
   labels:
     app.kubernetes.io/instance: mirrors
     app.kubernetes.io/name: nginx
   name: mirrors-nginx
   namespace: nginx
 spec:
-  ingressClassName: nginx
+  ingressClassName: apisix
   rules:
   - host: mirrors.onwalk.net
     http:
