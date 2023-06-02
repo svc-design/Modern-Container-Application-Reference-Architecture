@@ -17,9 +17,9 @@ gateway:
   externalIPs:
     - {{ ingress_ip }}
 discovery:
-  enabled: true
+  enabled: false
 admin:
-  enabled: true
+  enabled: false
   ingress:
     className: apisix
     enabled: true
