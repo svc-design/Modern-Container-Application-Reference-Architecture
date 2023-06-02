@@ -10,7 +10,7 @@
         group: master
         cni: kubeovn
         ingress: apisix
-        external_dns: disable
+        external_dns: enable
         version: 'v1.24.7+k3s1'
         pod_cidr: '10.10.0.0/16'
         pod_gateway: '10.10.0.1'
@@ -19,5 +19,11 @@
         cluster_domain: 'cluster.local'
         cluster_reset: true
         join_cidr: '100.64.0.0/16'
-        cni_iface: 'eth0'
-        cni_tunnel: 'geneve'
+        namespace: ingress
+        domain: onwalk.net
+        auto_issuance: true
+        update_secret: true
+        tls:
+          - secret_name: apisix-tls
+            keyfile: /etc/ssl/onwalk.net.key
+            certfile: /etc/ssl/onwalk.net.pem

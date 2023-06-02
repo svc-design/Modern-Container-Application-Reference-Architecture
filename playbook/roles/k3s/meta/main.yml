@@ -1,2 +1,4 @@
 dependencies:
   - role: common
+  - role: cert-manager
+  - role: secret-manger

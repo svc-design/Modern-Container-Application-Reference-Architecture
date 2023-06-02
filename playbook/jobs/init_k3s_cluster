@@ -8,6 +8,10 @@
         name: k3s
       vars:
         group: master
+        namespace: ingress
+        domain: onwalk.net
+        auto_issuance: false
+        update_secret: false
         version: 'v1.24.7+k3s1'
         cni: kubeovn
         ingress: nginx

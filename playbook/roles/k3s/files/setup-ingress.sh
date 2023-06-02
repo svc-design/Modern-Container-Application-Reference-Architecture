@@ -63,7 +63,7 @@ export ingress_ip=$1
 helm repo add apisix https://charts.apiseven.com || echo true
 helm repo update
 kubectl create ns ingress || echo true
-cat > values.yaml << EOF
+cat > /tmp/values.yaml << EOF
 ingress-controller:
   enabled: true
   config:
@@ -81,14 +81,21 @@ gateway:
     nodePort: 443
   externalIPs:
     - $ingress_ip
-admin:
-  enabled: true
-  type: NodePort
-  externalIPs: 
-    - $ingress_ip
 discovery:
   enabled: true
+admin:
+  enabled: true
+  ingress:
+    enabled: true
+    hosts:
+      - host: apisix-admin.onwalk.net
+        paths:
+          - "/apisix"
+    tls:
+      - secretName: apisix-tls
+        hosts:
+          - apisix-admin.onwalk.net
 EOF
-helm upgrade --install apisix apisix/apisix --namespace ingress --kubeconfig /etc/rancher/k3s/k3s.yaml -f values.yaml
+helm upgrade --install apisix apisix/apisix --namespace ingress -f /tmp/values.yaml && rm -f /tmp/values.yaml
 kubectl get service --namespace ingress
 fi
