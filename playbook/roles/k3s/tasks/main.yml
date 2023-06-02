@@ -1,8 +1,3 @@
-- name: Reset K3S Cluster
-  script: files/reset-k3s.sh
-  when: ( inventory_hostname in groups[group] ) and ( cluster_reset == true )
-  ignore_errors: yes
-
 - name: Setup K3S Server
   script: files/setup-k3s.sh {{ version }} {{ cluster_domain }} {{ cni }} {{ ingress }} {{ pod_cidr }} {{ svc_cidr }}
   when: inventory_hostname in groups[group]

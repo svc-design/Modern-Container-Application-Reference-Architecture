@@ -5,10 +5,14 @@
   gather_facts: yes
   tasks:
     - include_role:
+        name: k3s-reset
+      vars:
+        group: master
+    - include_role:
         name: k3s
       vars:
         group: master
-        cni: default
+        cni: kubeovn
         ingress: apisix
         external_dns: enable
         version: 'v1.24.7+k3s1'
@@ -17,7 +21,6 @@
         svc_cidr: '172.16.0.0/16'
         cluster_dns: '172.16.0.10'
         cluster_domain: 'cluster.local'
-        cluster_reset: true
         join_cidr: '100.64.0.0/16'
         namespace: ingress
         domain: onwalk.net
