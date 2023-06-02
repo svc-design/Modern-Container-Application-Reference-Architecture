@@ -8,7 +8,7 @@
         name: k3s
       vars:
         group: master
-        cni: kubeovn
+        cni: default
         ingress: apisix
         external_dns: enable
         version: 'v1.24.7+k3s1'
@@ -26,4 +26,4 @@
         tls:
           - secret_name: apisix-tls
             keyfile: /etc/ssl/onwalk.net.key
-            certfile: /etc/ssl/onwalk.net.pem
+            certfil: /etc/ssl/onwalk.net.pem

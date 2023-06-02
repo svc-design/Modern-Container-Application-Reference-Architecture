@@ -86,6 +86,7 @@ discovery:
 admin:
   enabled: true
   ingress:
+    className: apisix
     enabled: true
     hosts:
       - host: apisix-admin.onwalk.net
@@ -96,6 +97,6 @@ admin:
         hosts:
           - apisix-admin.onwalk.net
 EOF
-helm upgrade --install apisix apisix/apisix --namespace ingress -f /tmp/values.yamll
+helm upgrade --install apisix apisix/apisix --namespace ingress -f /tmp/values.yaml
 kubectl get service --namespace ingress
 fi
