@@ -18,8 +18,10 @@ gateway:
     - {{ ingress_ip }}
 discovery:
   enabled: false
+dashboard:
+  enabled: true
 admin:
-  enabled: false
+  enabled: true
   ingress:
     className: apisix
     enabled: true
