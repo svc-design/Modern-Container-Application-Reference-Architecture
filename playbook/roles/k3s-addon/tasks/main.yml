@@ -1,0 +1,11 @@
+- name: Setup K3S Ingress
+  script: files/setup-ingress.sh {{ ingress }} {{ ingress_ip }}
+  when: inventory_hostname in groups[group]
+
+- name: Setup DNS Provider
+  script: files/setup-dns-provider.sh {{ dns_ak }}  {{ dns_sk }}
+  when: ( inventory_hostname in groups[group] ) and (external_dns == 'enable' )
+- name: Remove DNS Provider
+  shell: 'helm delete external-dns  -n external-dns'
+  when: ( inventory_hostname in groups[group] ) and (external_dns == 'disable' )
+  ignore_errors: yes

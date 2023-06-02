@@ -10,11 +10,7 @@
         group: master
     - include_role:
         name: k3s
-      vars:
-        group: master
         cni: kubeovn
-        ingress: apisix
-        external_dns: enable
         version: 'v1.24.7+k3s1'
         pod_cidr: '10.10.0.0/16'
         pod_gateway: '10.10.0.1'
@@ -22,8 +18,16 @@
         cluster_dns: '172.16.0.10'
         cluster_domain: 'cluster.local'
         join_cidr: '100.64.0.0/16'
-        namespace: ingress
+      vars:
+        group: master
+    - include_role:
+        name: k3s-addon
+      vars:
+        group: master
+        ingress: apisix
+        external_dns: enable
         domain: onwalk.net
+        namespace: ingress
         auto_issuance: true
         update_secret: true
         tls:

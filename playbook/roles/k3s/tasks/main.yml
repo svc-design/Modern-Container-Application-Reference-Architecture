@@ -2,18 +2,6 @@
   script: files/setup-k3s.sh {{ version }} {{ cluster_domain }} {{ cni }} {{ ingress }} {{ pod_cidr }} {{ svc_cidr }}
   when: inventory_hostname in groups[group]
 
-- name: Setup K3S Ingress
-  script: files/setup-ingress.sh {{ ingress }} {{ ingress_ip }}
-  when: inventory_hostname in groups[group]
-
-- name: Setup DNS Provider
-  script: files/setup-dns-provider.sh {{ dns_ak }}  {{ dns_sk }}
-  when: ( inventory_hostname in groups[group] ) and (external_dns == 'enable' )
-- name: Remove DNS Provider
-  shell: 'helm delete external-dns  -n external-dns'
-  when: ( inventory_hostname in groups[group] ) and (external_dns == 'disable' )
-  ignore_errors: yes
-
 - name: Sync K3S CNI Config
   template: src=templates/cni_install.sh dest=/tmp/ owner=root group=root mode=0644
   when: ( inventory_hostname in groups[group] ) and (cni == 'kubeovn' )
@@ -21,8 +9,3 @@
   shell: 'bash /tmp/cni_install.sh'
   when: ( inventory_hostname in groups[group] ) and (cni == 'kubeovn' )
   ignore_errors: yes
-
-
-#- name: Setup Egress
-#  script: files/setup-egress.sh {{ egress_ip }} {{ namespace }}
-#  when: inventory_hostname in groups[group]
