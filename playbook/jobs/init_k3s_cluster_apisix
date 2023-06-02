@@ -10,6 +10,8 @@
         group: master
     - include_role:
         name: k3s
+      vars:
+        group: master
         cni: kubeovn
         version: 'v1.24.7+k3s1'
         pod_cidr: '10.10.0.0/16'
@@ -18,8 +20,6 @@
         cluster_dns: '172.16.0.10'
         cluster_domain: 'cluster.local'
         join_cidr: '100.64.0.0/16'
-      vars:
-        group: master
     - include_role:
         name: k3s-addon
       vars:
