@@ -130,6 +130,7 @@ apiVersion: apisix.apache.org/v2
 kind: ApisixTls
 metadata:
   name: nginx-tls
+  namespace: nginx
 spec:
   hosts:
   - mirrors.onwalk.net
