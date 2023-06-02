@@ -1,0 +1,33 @@
+ingress-controller:
+  enabled: true
+  config:
+    apisix:
+      serviceNamespace: ingress
+etcd:
+  replicaCount: 1
+gateway:
+  enabled: true
+  type: NodePort
+  http:
+    enabled: true
+    nodePort: 80
+  tls:
+    enabled: true
+    nodePort: 443
+  externalIPs:
+    - {{ ingress_ip }}
+discovery:
+  enabled: true
+admin:
+  enabled: true
+  ingress:
+    className: apisix
+    enabled: true
+    hosts:
+      - host: apisix-admin.onwalk.net
+        paths:
+          - "/apisix"
+    tls:
+      - secretName: apisix-tls
+        hosts:
+          - apisix-admin.onwalk.net
