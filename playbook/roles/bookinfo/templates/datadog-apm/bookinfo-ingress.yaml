@@ -20,3 +20,37 @@ spec:
   - hosts:
     - bookinfo.onwalk.net
     secretName: bookinfo-tls
+---
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: bookinfo
+  namespace: bookinfo
+spec:
+  http:
+  - name: root
+    match:
+      hosts:
+        - bookinfo.onwalk.net
+      paths:
+        - '/*'
+    backends:
+    - serviceName: productpage
+      servicePort: 9080
+    plugins:
+    - config:
+        http_to_https: true
+      enable: true
+      name: redirect
+---
+apiVersion: apisix.apache.org/v2
+kind: ApisixTls
+metadata:
+  name: bookinfo
+  namespace: bookinfo
+spec:
+  hosts:
+  - bookinfo.onwalk.net
+  secret:
+    name: bookinfo-tls
+    namespace: bookinfo

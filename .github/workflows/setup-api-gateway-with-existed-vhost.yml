@@ -55,6 +55,7 @@ jobs:
           EOF
           ansible-playbook -i hosts/inventory jobs/init_k3s_cluster_apisix -D
           ansible-playbook -i hosts/inventory jobs/init_nginx_oss -D
+          ansible-playbook -i hosts/inventory jobs/init_bookinfo -D
   setup-monitor-agent:
     runs-on: ubuntu-latest
     needs:
