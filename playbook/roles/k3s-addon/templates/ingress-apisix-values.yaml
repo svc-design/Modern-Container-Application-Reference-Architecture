@@ -5,10 +5,8 @@ ingress-controller:
       serviceNamespace: ingress
 etcd:
   replicaCount: 1
-serviceAccount:
-  create: true
-rbac:
-  create: true
+discovery:
+  enabled: true
 admin:
   enabled: true
 gateway:
@@ -24,5 +22,3 @@ gateway:
     - {{ ingress_ip }}
 dashboard:
   enabled: false
-discovery:
-  enabled: true

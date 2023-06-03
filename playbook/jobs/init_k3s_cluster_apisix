@@ -44,6 +44,7 @@
         namespace: ingress
         auto_issuance: false
         update_secret: true
+        svc_discovery: enable
         tls:
           - secret_name: nginx-tls
             keyfile: /etc/ssl/onwalk.net.key
