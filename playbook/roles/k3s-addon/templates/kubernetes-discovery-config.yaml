@@ -40,8 +40,8 @@ spec:
       - bookinfo.onwalk.net
       paths:
       - /*
-    backends:
-    - serviceName: bookinfo-upstream
+    upstreams:
+    - name: bookinfo-upstream
     plugins:
     - config:
         http_to_https: true
