@@ -2,10 +2,9 @@
 set -x
 
 export version=$1
-export cni=$3
-export pod_cidr=$4
-export svc_cidr=$5
-export cluster_dns=$6
+export cni=$2
+export pod_cidr=$3
+export svc_cidr=$4
 
 disable_proxy="--disable-kube-proxy"
 disable_cni="--flannel-backend=none --disable-network-policy"
