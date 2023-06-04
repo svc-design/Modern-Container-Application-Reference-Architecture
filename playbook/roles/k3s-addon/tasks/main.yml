@@ -6,7 +6,7 @@
   when: inventory_hostname in groups[group] and ( svc_discovery == 'enable' )
 
 - name: Set K3S Ingress
-  script: script: files/setup-ingress.sh {{ ingress }}  {{ ingress_ip }}
+  script: files/setup-ingress.sh {{ ingress }}  {{ ingress_ip }}
   when: inventory_hostname in groups[group] and ( ingress == 'nginx' )
 
 - name: Sync K3S Ingress Deploy yaml
