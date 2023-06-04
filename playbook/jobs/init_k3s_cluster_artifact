@@ -21,6 +21,7 @@
       vars:
         group: master
         ingress: nginx
+        namespace: ingress
         external_dns: enable
         svc_discovery: enable
         auto_issuance: false
