@@ -29,5 +29,5 @@ spec:
   hosts:
   - apisix-dashboard.onwalk.net
   secret:
-    name: apisix-tls
+    name: apisix-dashboard-tls
     namespace: ingress
