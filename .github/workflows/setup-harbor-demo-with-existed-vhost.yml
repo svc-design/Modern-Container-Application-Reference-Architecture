@@ -1,4 +1,4 @@
-name: setup harbor demo in k3s 
+name: Setup Harbor Demo in k3s 
 
 on:
   pull_request:
