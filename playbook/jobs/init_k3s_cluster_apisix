@@ -13,7 +13,7 @@
       vars:
         group: master
         cni: kubeovn
-        version: 'v1.24.7+k3s1'
+        version: 'v1.27.2+k3s1'
         pod_cidr: '10.10.0.0/16'
         pod_gateway: '10.10.0.1'
         svc_cidr: '172.16.0.0/16'
