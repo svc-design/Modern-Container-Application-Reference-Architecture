@@ -24,3 +24,5 @@
         namespace: ingress
         external_dns: enable
         svc_discovery: enable
+        auto_issuance: false
+        update_secret: false
