@@ -12,6 +12,13 @@
   shell: 'helm upgrade --install apisix apisix/apisix --namespace ingress -f /tmp/ingress-apisix-values.yaml' 
   when: inventory_hostname in groups[group] and ( ingress == 'apisix' )
 
+- name: Sync Apisix Ingress Dashboard yaml
+  template: src=templates/ingress-apisix-dashboard.yaml dest=/tmp/ owner=root group=root mode=0644
+  when: inventory_hostname in groups[group] and ( ingress == 'apisix' )
+- name: Setup Apisix Ingress Dashboard
+  shell: 'kubectl apply -f /tmp/ingress-apisix-dashboard.yaml'
+  when: inventory_hostname in groups[group] and ( ingress == 'apisix' )
+
 - name: Setup DNS Provider
   script: files/setup-dns-provider.sh {{ dns_ak }}  {{ dns_sk }}
   when: ( inventory_hostname in groups[group] ) and (external_dns == 'enable' )

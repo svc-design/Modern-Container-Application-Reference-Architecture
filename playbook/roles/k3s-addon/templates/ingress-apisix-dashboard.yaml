@@ -1,0 +1,33 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: apisix-dashboard
+  namespace: ingress
+spec:
+  http:
+  - name: root
+    match:
+      hosts:
+        - apisix-dashboard.onwalk.net
+      paths:
+        - '/*'
+    backends:
+    - serviceName: apisix-dashboard
+      servicePort: 80
+    plugins:
+    - config:
+        http_to_https: true
+      enable: true
+      name: redirect
+---
+apiVersion: apisix.apache.org/v2
+kind: ApisixTls
+metadata:
+  name: apisix
+  namespace: ingress
+spec:
+  hosts:
+  - apisix-dashboard.onwalk.net
+  secret:
+    name: apisix-tls
+    namespace: ingress
