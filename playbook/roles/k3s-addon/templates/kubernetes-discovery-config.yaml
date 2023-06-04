@@ -1,28 +1,49 @@
+---
+kubectl edit cm -n ingress apisix
+    discovery:
+      kubernetes:
+      - id: apisix
+        service:
+          schema: https
+          host: "10.170.0.6"
+          port: "6443"
+        client:
+          token: |-
+            #xxxxxxxxxxxxxxx 
+        default_weight: 50
+        namespace_selector:
+          match:
+          - bookinfo
+          - nginx
+        shared_size: 1m
+---
 apiVersion: apisix.apache.org/v2
 kind: ApisixUpstream
 metadata:
-  name: httpbin-upstream
+  name: bookinfo-upstream
+  namespace: bookinfo
 spec:
   discovery:
-    type: Kubernetes
-    service:
-      name: httpbin-service
-      namespace: default
-      port: 80
-
+    type: kubernetes
+    serviceName: apisix/bookinfo/productpage:9080
 ---
 apiVersion: apisix.apache.org/v2
 kind: ApisixRoute
 metadata:
-  name: httpbin-route
+  name: bookinfo-route
+  namespace: bookinfo
 spec:
-  rules:
-  - match:
+  http:
+  - name: root
+    match:
       hosts:
-      - httpbin.org
-      http:
-        paths:
-        - /*
-    backend:
-      serviceName: httpbin-upstream
-      servicePort: 80
+      - bookinfo.onwalk.net
+      paths:
+      - /*
+    backends:
+    - serviceName: bookinfo-upstream
+    plugins:
+    - config:
+        http_to_https: true
+      enable: true
+      name: redirect

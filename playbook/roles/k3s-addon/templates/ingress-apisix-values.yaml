@@ -21,4 +21,4 @@ gateway:
   externalIPs:
     - {{ ingress_ip }}
 dashboard:
-  enabled: false
+  enabled: true
