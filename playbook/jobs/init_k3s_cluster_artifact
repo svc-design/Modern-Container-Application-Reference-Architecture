@@ -5,6 +5,10 @@
   gather_facts: yes
   tasks:
     - include_role:
+        name: k3s-reset
+      vars:
+        group: master
+    - include_role:
         name: k3s
       vars:
         group: master
