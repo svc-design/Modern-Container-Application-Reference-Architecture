@@ -42,6 +42,6 @@
         namespace: ingress
         update_secret: true
         tls:
-          - secret_name: apisix-dashboard-tls
+          - secret_name: apisix-tls
             keyfile: /etc/ssl/onwalk.net.key
             certfile: /etc/ssl/onwalk.net.pem
