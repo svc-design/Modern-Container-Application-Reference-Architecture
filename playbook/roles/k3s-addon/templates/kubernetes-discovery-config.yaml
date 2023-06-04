@@ -47,3 +47,15 @@ spec:
         http_to_https: true
       enable: true
       name: redirect
+---
+apiVersion: apisix.apache.org/v2
+kind: ApisixTls
+metadata:
+  name: bookinfo
+  namespace: bookinfo
+spec:
+  hosts:
+  - bookinfo.onwalk.net
+  secret:
+    name: bookinfo-tls
+    namespace: bookinfo
