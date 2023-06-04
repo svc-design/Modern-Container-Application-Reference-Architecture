@@ -1,4 +1,4 @@
-- name: set apisix cluster with vhosts
+- name: set artifact cluster with vhosts
   hosts: all
   user: root
   become: yes
@@ -9,8 +9,6 @@
       vars:
         group: master
         cni: kubeovn
-        ingress: nginx
-        external_dns: disable
         version: 'v1.24.7+k3s1'
         pod_cidr: '10.20.0.0/16'
         pod_gateway: '10.20.0.1'
@@ -18,5 +16,12 @@
         cluster_dns: '172.16.0.10'
         cluster_domain: 'cluster.local'
         join_cidr: '100.64.0.0/16'
-        cni_iface: 'eth0'
-        cni_tunnel: 'geneve'
+    - include_role:
+        name: k3s-addon
+      vars:
+        group: master
+        ingress: nginx
+        external_dns: enable
+        svc_discovery: enable
+        auto_issuance: false
+        update_secret: false

@@ -29,7 +29,7 @@
         namespace: ingress
         auto_issuance: true
         update_secret: true
-        external_dns: enable
+        external_dns: disable
         svc_discovery: enable
         tls:
           - secret_name: nginx-tls
