@@ -14,6 +14,7 @@
         pod_gateway: '10.20.0.1'
         svc_cidr: '172.16.0.0/16'
         cluster_dns: '172.16.0.10'
+        node_ip: '10.170.0.3'
         join_cidr: '100.64.0.0/16'
     - include_role:
         name: k3s-addon
