@@ -30,18 +30,22 @@ function setup_k3s()
 
 function setup_helm()
 {
-  export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-  case `uname -m` in
+  ping -c 1 google.com > /dev/null 2>&1
+  if [ $? -eq 0 ]; then
+    echo "当前主机在国际网络上"
+    curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  else
+    echo "当前主机在大陆网络上"
+    case `uname -m` in
   	x86_64) ARCH=amd64; ;;
           aarch64) ARCH=arm64; ;;
           loongarch64) ARCH=loongarch64; ;;
           *) echo "un-supported arch, exit ..."; exit 1; ;;
-  esac
-  rm -rf helm.tar.gz* /usr/local/bin/helm || echo true
-  sudo wget --no-check-certificate https://mirrors.onwalk.net/tools/linux-${ARCH}/helm.tar.gz && sudo tar -xvpf helm.tar.gz -C /usr/local/bin/
-  sudo chmod 755 /usr/local/bin/helm
-  helm repo add artifact https://artifact.onwalk.net/chartrepo/public/ | echo true
-  helm repo up
+    esac
+    rm -rf helm.tar.gz* /usr/local/bin/helm || echo true
+    sudo wget --no-check-certificate https://mirrors.onwalk.net/tools/linux-${ARCH}/helm.tar.gz && sudo tar -xvpf helm.tar.gz -C /usr/local/bin/
+    sudo chmod 755 /usr/local/bin/helm
+  fi
 }
 
 
