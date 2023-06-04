@@ -62,7 +62,7 @@ elif [[ '$ingress' == 'apisix' ]]; then
 helm repo add apisix https://charts.apiseven.com || echo true
 helm repo update
 kubectl create ns ingress || echo true
-cat > /tmp/values.yaml << EOF
+cat > values.yaml << EOF
 ingress-controller:
   enabled: true
   config:
@@ -97,6 +97,5 @@ admin:
         hosts:
           - apisix-admin.onwalk.net
 EOF
-helm upgrade --install apisix apisix/apisix --namespace ingress -f /tmp/values.yaml
-kubectl get service --namespace ingress
+helm upgrade --install apisix apisix/apisix --namespace ingress -f values.yaml
 fi
