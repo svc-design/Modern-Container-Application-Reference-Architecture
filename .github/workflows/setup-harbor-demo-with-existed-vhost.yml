@@ -50,7 +50,7 @@ jobs:
           mkdir -pv hosts/ 
           cat > hosts/inventory << EOF
           [master]
-          artifact               ansible_host=34.150.76.248
+          artifact               ansible_host=34.96.156.183
           
           [all:vars]
           ansible_port=22
@@ -59,7 +59,7 @@ jobs:
           ansible_host_key_checking=False
           dns_ak=$DNS_AK
           dns_sk=$DNS_SK
-          ingress_ip=34.150.76.248
+          ingress_ip=34.96.156.183
           EOF
           ansible-playbook -i hosts/inventory jobs/init_k3s_cluster_artifact -D
   Setup-Habor-In-K3S:
@@ -86,7 +86,7 @@ jobs:
           mkdir -pv hosts/ 
           cat > hosts/inventory << EOF
           [master]
-          artifact               ansible_host=34.150.76.248
+          artifact               ansible_host=34.96.156.183
           
           [all:vars]
           ansible_port=22
@@ -125,7 +125,7 @@ jobs:
           mkdir -pv hosts/ 
           cat > hosts/inventory << EOF
           [master]
-          artifact               ansible_host=34.150.76.248
+          artifact               ansible_host=34.96.156.183
           
           [all:vars]
           ansible_port=22
