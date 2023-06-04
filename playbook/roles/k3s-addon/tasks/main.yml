@@ -14,8 +14,9 @@
   when: inventory_hostname in groups[group] and ( ingress == 'apisix' )
 - name: Setup K3S Ingress
   shell: 'helm repo add apisix https://charts.apiseven.com || echo true; \
-          helm repo update; \
-          kubectl create ns ingress || echo truehelm upgrade --install apisix apisix/apisix --namespace ingress -f /tmp/ingress-apisix-values.yaml' 
+          helm repo update;                                              \
+          kubectl create ns ingress || echo true;                        \
+          helm upgrade --install apisix apisix/apisix --namespace ingress -f /tmp/ingress-apisix-values.yaml' 
   when: inventory_hostname in groups[group] and ( ingress == 'apisix' )
 
 - name: Sync Apisix Ingress Dashboard yaml
