@@ -2,7 +2,6 @@
 set -x
 
 export version=$1
-export cluster_domain=$2
 export cni=$3
 export pod_cidr=$4
 export svc_cidr=$5
@@ -10,7 +9,7 @@ export cluster_dns=$6
 
 disable_proxy="--disable-kube-proxy"
 disable_cni="--flannel-backend=none --disable-network-policy"
-default="--disable=traefik,servicelb --cluster-domain=$cluster_domain --data-dir=/opt/rancher/k3s --kube-apiserver-arg service-node-port-range=0-50000"
+default="--disable=traefik,servicelb --data-dir=/opt/rancher/k3s --kube-apiserver-arg service-node-port-range=0-50000"
 
 function setup_k3s()
 {

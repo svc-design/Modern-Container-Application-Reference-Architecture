@@ -1,5 +1,5 @@
 - name: Setup K3S Server
-  script: files/setup-k3s.sh {{ version }} {{ cluster_domain }} {{ cni }} {{ pod_cidr }} {{ svc_cidr }}
+  script: files/setup-k3s.sh {{ version }} {{ cni }} {{ pod_cidr }} {{ svc_cidr }}
   when: inventory_hostname in groups[group]
 
 - name: Sync K3S CNI Config
