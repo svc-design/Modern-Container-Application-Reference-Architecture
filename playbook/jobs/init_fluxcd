@@ -1,0 +1,12 @@
+- name: set k3s cluster with vhosts
+  hosts: all
+  user: root
+  become: yes
+  gather_facts: yes
+  tasks:
+    - include_role:
+        name: fluxcd
+      vars:
+        group: master
+        version: '2.7.0'
+        namespace: fluxcd
