@@ -1,4 +1,4 @@
-name: Setup Harbor Demo in k3s 
+name: Setup FluxCD Demo in K3S 
 
 on:
   pull_request:
