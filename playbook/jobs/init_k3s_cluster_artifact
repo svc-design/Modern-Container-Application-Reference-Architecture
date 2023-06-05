@@ -6,9 +6,9 @@
   tasks:
     - include_role:
         name: k3s-reset
-        cluster_reset: 'disable'
       vars:
         group: master
+        cluster_reset: 'disable'
     - include_role:
         name: k3s
       vars:
