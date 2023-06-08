@@ -94,7 +94,7 @@ jobs:
           dns_sk=$DNS_SK
           ali_ak=$ALI_AK
           ali_sk=$ALI_SK
-          gitlab_odic_client_token=$GITLAB_OIDC_CLIENT_TOKEN
+          gitlab_oidc_client_token=$GITLAB_OIDC_CLIENT_TOKEN
           EOF
           ansible-playbook -i hosts/inventory jobs/init_gitlab -D
   Setup-Agent-In-K3S:
