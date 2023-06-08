@@ -94,6 +94,7 @@ jobs:
           dns_sk=$DNS_SK
           ali_ak=$ALI_AK
           ali_sk=$ALI_SK
+          smtp_password=$SMTP_PASSWORD
           gitlab_oidc_client_token=$GITLAB_OIDC_CLIENT_TOKEN
           EOF
           ansible-playbook -i hosts/inventory jobs/init_gitlab -D
