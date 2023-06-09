@@ -8,6 +8,7 @@
         name: gitlab
       vars:
         group: master
+        gitlab_version: '7.0.4'
         namespace: gitlab
         db_namespace: database
         domain: onwalk.net
