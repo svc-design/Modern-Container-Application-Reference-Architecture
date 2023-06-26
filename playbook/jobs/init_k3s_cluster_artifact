@@ -8,7 +8,7 @@
         name: k3s-reset
       vars:
         group: master
-        cluster_reset: 'disable'
+        cluster_reset: 'enable'
     - include_role:
         name: k3s
       vars:

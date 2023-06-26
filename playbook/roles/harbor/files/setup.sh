@@ -22,10 +22,10 @@ expose:
       notarySecretName: $secret_name
   ingress:
     hosts:
-      core: artifact.${domain}
+      core: harbor.${domain}
       notary: notary.${domain}
     className: "nginx"
-externalURL: https://artifact.${domain}
+externalURL: https://harbor.${domain}
 database:
   type: external
   external:
