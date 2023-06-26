@@ -5,11 +5,10 @@ export version=$1
 export cni=$2
 export pod_cidr=$3
 export svc_cidr=$4
-export node_ip=$5
 
 disable_proxy="--disable-kube-proxy"
 disable_cni="--flannel-backend=none --disable-network-policy"
-default="--disable=traefik,servicelb --advertise-address=$node_ip --data-dir=/opt/rancher/k3s --kube-apiserver-arg service-node-port-range=0-50000"
+default="--disable=traefik,servicelb --data-dir=/opt/rancher/k3s --kube-apiserver-arg service-node-port-range=0-50000"
 
 function setup_k3s()
 {
