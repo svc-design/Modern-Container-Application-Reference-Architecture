@@ -31,6 +31,11 @@ registry:
     image:
       repository: ghcr.io/octohelm/harbor/harbor-registryctl
       tag: v2.7.0@sha256:a13617e86374a55d40afe336433011e42745da49b882559efc3dedc49b7129f1
+chartmuseum:
+  enabled: true
+  image:
+    repository: ghcr.io/octohelm/harbor/chartmuseum-photon
+    tag: v2.7.0@sha256:0815066d46474b9403b2d2e5f6f9e2ae44d067d8d2f8523b95ea3d3f20f3d058
 trivy:
   enabled: false
 notary:
