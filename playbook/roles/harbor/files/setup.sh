@@ -13,9 +13,12 @@ cat > harbor-config.yaml << EOF
 exposureType: ingress
 ingress:
   core:
-    tls: enable
     ingressClassName: "nginx"
     hostname: harbor.${domain}
+    extraTls:
+    - hosts:
+        - harbor.${domain}
+      secretName: "$secret_name"
 externalURL: https://harbor.${domain}
 
 postgresql:
@@ -59,7 +62,7 @@ cat >> harbor-config.yaml << EOF
       accesskeyid: $ak
       accesskeysecret: $sk
       region: "oss-cn-wulanchabu"
-      bucket: "harbor-s3"
+      bucket: "artifact-s3"
       endpoint: "oss-cn-wulanchabu.aliyuncs.com"
 EOF
 fi
