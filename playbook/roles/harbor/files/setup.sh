@@ -11,13 +11,12 @@ storage_type=$8
 
 cat > harbor-config.yaml << EOF
 ingress:
-  enabled: true
   core:
     ingressClassName: "nginx"
     extraTls:
-      - hosts:
+    - hosts:
         - core.harbor.domain
-          secretName: "$secret_name"
+      secretName: "$secret_name"
 externalURL: https://harbor.onwalk.net
 
 postgresql:
