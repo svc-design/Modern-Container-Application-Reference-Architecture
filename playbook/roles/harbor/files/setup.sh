@@ -10,38 +10,43 @@ pg_db_password=$7
 storage_type=$8
 
 cat > harbor-config.yaml << EOF
-notary:
+ingress:
+  enabled: true
+  core:
+    ingressClassName: "nginx"
+    extraTls:
+      - hosts:
+        - core.harbor.domain
+          secretName: "$secret_name"
+externalURL: https://harbor.onwalk.net
+
+postgresql:
   enabled: false
-expose:
-  type: ingress
-  tls:
-    enabled: true
-    certSource: secret
-    secret:
-      secretName: $secret_name
-      notarySecretName: $secret_name
-  ingress:
-    hosts:
-      core: artifact.${domain}
-      notary: artifact.${domain}
-    className: "nginx"
-externalURL: https://harbor.${domain}
-database:
-  type: external
-  external:
-    host: "postgresql.database.svc.cluster.local"
-    port: "5432"
-    username: "postgres"
-    password: "$pg_db_password"
-    coreDatabase: "registry"
-    notaryServerDatabase: "notary_server"
-    notarySignerDatabase: "notary_signer"
 redis:
-  type: external
-  external:
-    addr: "redis-master.redis.svc.cluster.local:6379"
-    password: "$redis_password"
+  enabled: false
+
+externalDatabase:
+  host: postgresql.database.svc.cluster.local
+  user: postgres
+  port: 5432
+  password: "$pg_db_password"
+  sslmode: disable
+  coreDatabase: harbor_core
+  clairDatabase: harbor_clair
+  clairUsername: "postgres"
+  clairPassword: "$pg_db_password"
+  notaryServerDatabase: harbor_notary_server
+  notaryServerUsername: "postgres"
+  notaryServerPassword: "$pg_db_password"
+  notarySignerDatabase: harbor_notary_signer
+  notarySignerUsername: "postgres"
+  notarySignerPassword: "$pg_db_password"
+externalRedis:
+  host: redis-master.redis.svc.cluster.local
+  port: 6379
+  password: "$redis_password"
 persistence:
+  enabled: true
   imageChartStorage:
 EOF
 
@@ -69,6 +74,6 @@ EOF
 fi
 
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-helm repo add harbor https://helm.goharbor.io
+helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
-helm upgrade --install artifact harbor/harbor -f harbor-config.yaml --version 1.11.1 -n $namespace
+helm upgrade --install artifact bitnami/harbor -f harbor-config.yaml --version 16.4.10 -n $namespace
