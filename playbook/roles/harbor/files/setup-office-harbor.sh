@@ -69,7 +69,7 @@ persistence:
 EOF
 
 if [[ "$storage_type" == 'oss' ]] ; then
-cat >> harbor-config.yaml << EOF
+cat >> harbor-arm-config.yaml << EOF
     type: oss
     oss:
       accesskeyid: $ak
@@ -81,7 +81,7 @@ EOF
 fi
 
 if [[ "$storage_type" == 's3' ]] ; then
-cat >> harbor-config.yaml << EOF
+cat >> harbor-arm-config.yaml << EOF
     type: s3
     s3:
       region: cn-northwest-1
