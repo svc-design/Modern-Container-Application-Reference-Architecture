@@ -81,4 +81,4 @@ fi
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
-helm upgrade --install artifact bitnami/harbor -f harbor-config.yaml --version 16.4.10 -n $namespace
+helm upgrade --install artifact bitnami/harbor -f harbor-config.yaml --version 16.4.9 -n $namespace
