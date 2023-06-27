@@ -16,9 +16,9 @@ ingress:
     ingressClassName: "nginx"
     extraTls:
     - hosts:
-        - core.harbor.domain
+        - harbor.${domain}
       secretName: "$secret_name"
-externalURL: https://harbor.onwalk.net
+externalURL: https://harbor.${domain}
 
 postgresql:
   enabled: false
