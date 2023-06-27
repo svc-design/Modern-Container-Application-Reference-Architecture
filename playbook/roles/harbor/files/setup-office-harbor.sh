@@ -30,7 +30,7 @@ registry:
   controller:
     image:
       repository: bitnami/harbor-registry
-      tag: 2.7.1@sha256:eec9d5826e5efd583ee63e22b5a48efb7c2e7d9686eba6884504e0f9305bd48d
+      tag: 2.7.1@sha256:14651e6c825e444d5d29f971090426c3ae5abdb25c17853c0dfe87bbfef3965f
 chartmuseum:
   enabled: true
   image:
