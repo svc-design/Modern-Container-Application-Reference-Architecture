@@ -71,11 +71,11 @@ redis:
     password: "$redis_password"
 persistence:
   imageChartStorage:
+    type: $storage_type
 EOF
 
 if [[ "$storage_type" == 'oss' ]] ; then
 cat >> harbor-arm-config.yaml << EOF
-    type: oss
     oss:
       accesskeyid: $ak
       accesskeysecret: $sk
@@ -87,10 +87,9 @@ fi
 
 if [[ "$storage_type" == 's3' ]] ; then
 cat >> harbor-arm-config.yaml << EOF
-    type: s3
     s3:
-      region: cn-northwest-1
-      bucket: apollo-artifact
+      region: ap-east-1
+      bucket: artifact-s3
       accesskey: $ak
       secretkey: $sk
 EOF
