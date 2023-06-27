@@ -14,6 +14,7 @@ exposureType: ingress
 ingress:
   core:
     ingressClassName: "nginx"
+    hostname: harbor.${domain}
     extraTls:
     - hosts:
         - harbor.${domain}
