@@ -13,12 +13,9 @@ cat > harbor-config.yaml << EOF
 exposureType: ingress
 ingress:
   core:
+    tls: enable
     ingressClassName: "nginx"
     hostname: harbor.${domain}
-    extraTls:
-    - hosts:
-        - harbor.${domain}
-      secretName: "$secret_name"
 externalURL: https://harbor.${domain}
 
 postgresql:

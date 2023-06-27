@@ -15,6 +15,6 @@
         update_secret: true
         storage_type: oss
         tls:
-          - secret_name: harbor-tls
+          - secret_name: harbor.onwalk.net-tls
             keyfile: /etc/ssl/onwalk.net.key
             certfile: /etc/ssl/onwalk.net.pem
