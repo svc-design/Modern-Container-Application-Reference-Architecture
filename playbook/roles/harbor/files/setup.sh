@@ -10,6 +10,7 @@ pg_db_password=$7
 storage_type=$8
 
 cat > harbor-config.yaml << EOF
+exposureType: ingress
 ingress:
   core:
     ingressClassName: "nginx"
