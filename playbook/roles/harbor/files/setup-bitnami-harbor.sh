@@ -71,8 +71,8 @@ if [[ "$storage_type" == 's3' ]] ; then
 cat >> harbor-config.yaml << EOF
     type: s3
     s3:
-      region: cn-northwest-1
-      bucket: apollo-artifact
+      region: ap-east-1
+      bucket: artifact-s3
       accesskey: $ak
       secretkey: $sk
 EOF
