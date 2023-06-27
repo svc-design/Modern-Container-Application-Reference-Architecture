@@ -63,7 +63,7 @@ cat >> harbor-config.yaml << EOF
       accesskeysecret: $sk
       region: "oss-cn-wulanchabu"
       bucket: "artifact-s3"
-      endpoint: "artifact-s3.oss-cn-wulanchabu.aliyuncs.com"
+      endpoint: "oss-cn-wulanchabu.aliyuncs.com"
 EOF
 fi
 
