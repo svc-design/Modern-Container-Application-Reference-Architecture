@@ -24,6 +24,10 @@ postgresql:
   enabled: false
 redis:
   enabled: false
+notary:
+  enabled: false
+trivy:
+  enabled: false
 
 externalDatabase:
   host: postgresql.database.svc.cluster.local
