@@ -9,41 +9,30 @@ redis_password=$6
 pg_db_password=$7
 storage_type=$8
 
-cat > harbor-config.yaml << EOF
+cat > harbor-arm-config.yaml << EOF
 portal:
   image:
-    repository: artifact.onwalk.net/public/harbor-portal
-    tag: v2.7.1
+    repository: ghcr.io/octohelm/harbor/harbor-portal
+    tag: v2.7.0@sha256:b3f4e0e990500362b554338579497ad89af5473e024564731563704ceab9305b
 core:
   image:
-    repository: goharbor/harbor-core
-    tag: v2.7.1
+    repository: ghcr.io/octohelm/harbor/harbor-core
+    tag: v2.7.0@sha256:dd7f3898f32caf8e03cee046596f03034f4297231458d4de39775dd58709b55a 
 jobservice:
   image:
-    repository: goharbor/harbor-jobservice
-    tag: v2.7.1
+    repository: ghcr.io/octohelm/harbor/harbor-jobservice
+    tag: v2.7.0@sha256:7abd6694f546172ffec4a87e389e8ba425fa6ee82479782693c120a89a291435
 registry:
   registry:
     image:
-      repository: goharbor/registry-photon
-      tag: v2.7.1
+      repository: ghcr.io/octohelm/harbor/registry-photon
+      tag: v2.7.0@sha256:d5f23b2bc4271b2eb1ec002eb0c0c51e708015944316e5bd17c61de73ea54415
   controller:
     image:
-      repository: goharbor/harbor-registryctl
-      tag: v2.7.1
+      repository: ghcr.io/octohelm/harbor/harbor-registryctl
+      tag: v2.7.0@sha256:a13617e86374a55d40afe336433011e42745da49b882559efc3dedc49b7129f1
 trivy:
-  image:
-    repository: goharbor/trivy-adapter-photon
-    tag: v2.7.1
-notary:
-  server:
-    image:
-      repository: goharbor/notary-server-photon
-      tag: v2.7.1
-  signer:
-    image:
-      repository: goharbor/notary-signer-photon
-      tag: v2.7.1
+  enabled: false
 notary:
   enabled: false
 expose:
@@ -105,4 +94,4 @@ fi
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 helm repo add harbor https://helm.goharbor.io
 helm repo update
-helm upgrade --install artifact harbor/harbor -f harbor-config.yaml --version 1.11.1 -n $namespace
+helm upgrade --install artifact harbor/harbor -f harbor-arm-config.yaml --version 1.11.1 -n $namespace
