@@ -54,30 +54,20 @@ persistence:
   enabled: true
   imageChartStorage:
     type: $storage_type
-EOF
-
-if [[ "$storage_type" == 'oss' ]] ; then
-cat >> harbor-config.yaml << EOF
     oss:
       accesskeyid: $ak
       accesskeysecret: $sk
       region: "oss-cn-wulanchabu"
       bucket: "artifact-s3"
       endpoint: "oss-cn-wulanchabu.aliyuncs.com"
-EOF
-fi
-
-if [[ "$storage_type" == 's3' ]] ; then
-cat >> harbor-config.yaml << EOF
     s3:
       region: ap-east-1
       bucket: artifact-s3
       accesskey: $ak
       secretkey: $sk
 EOF
-fi
 
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
-helm upgrade --install artifact bitnami/harbor -f harbor-config.yaml --version 16.4.9 -n $namespace
+helm upgrade --install artifact bitnami/harbor -f harbor-config.yaml -n $namespace

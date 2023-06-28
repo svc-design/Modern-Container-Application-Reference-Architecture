@@ -25,7 +25,7 @@
   when: inventory_hostname in groups[group]
 
 - name: Setup harbor Server
-  script: files/setup-office-harbor.sh {{ oss_ak }} {{ oss_sk }} {{ domain }} {{ namespace }} {{ item.secret_name }} {{ hostvars[groups[group][0]].redis_password }} {{ hostvars[groups[group][0]].pg_db_password }} {{ storage_type }}
+  script: files/setup-bitnami-harbor.sh {{ oss_ak }} {{ oss_sk }} {{ domain }} {{ namespace }} {{ item.secret_name }} {{ hostvars[groups[group][0]].redis_password }} {{ hostvars[groups[group][0]].pg_db_password }} {{ storage_type }}
   loop: "{{ tls }}"
   when: inventory_hostname in groups[group]
 

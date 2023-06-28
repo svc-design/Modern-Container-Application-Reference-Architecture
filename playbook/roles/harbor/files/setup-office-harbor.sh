@@ -71,7 +71,9 @@ redis:
     password: "$redis_password"
 persistence:
   imageChartStorage:
-    type: $storage_type
+    type: filesystem
+    filesystem:
+      rootdirectory: /storage
     oss:
       accesskeyid: $ak
       accesskeysecret: $sk
