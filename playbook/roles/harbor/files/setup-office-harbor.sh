@@ -29,8 +29,8 @@ registry:
       tag: v2.7.0@sha256:d5f23b2bc4271b2eb1ec002eb0c0c51e708015944316e5bd17c61de73ea54415
   controller:
     image:
-      repository: ghcr.io/octohelm/harbor/harbor-registryctl
-      tag: v2.7.0@sha256:a13617e86374a55d40afe336433011e42745da49b882559efc3dedc49b7129f1
+      repository: ghcr.io/svc-design/harbor-multi-arch-images/harbor-registryctl
+      tag: v2.7.0@sha256:ba2412c1a629ca1c2ca4584ba51eb05e964c7eef7b1f9f6ddb39d67512debaf5 
 chartmuseum:
   enabled: true
   image:
