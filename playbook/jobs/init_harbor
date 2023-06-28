@@ -13,7 +13,7 @@
         db_namespace: database
         auto_issuance: true
         update_secret: true
-        storage_type: s3
+        storage_type: oss
         tls:
           - secret_name: harbor.onwalk.net-tls
             keyfile: /etc/ssl/onwalk.net.key

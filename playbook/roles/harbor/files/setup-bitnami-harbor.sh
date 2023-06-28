@@ -53,11 +53,11 @@ externalRedis:
 persistence:
   enabled: true
   imageChartStorage:
+    type: $storage_type
 EOF
 
 if [[ "$storage_type" == 'oss' ]] ; then
 cat >> harbor-config.yaml << EOF
-    type: oss
     oss:
       accesskeyid: $ak
       accesskeysecret: $sk
@@ -69,7 +69,6 @@ fi
 
 if [[ "$storage_type" == 's3' ]] ; then
 cat >> harbor-config.yaml << EOF
-    type: s3
     s3:
       region: ap-east-1
       bucket: artifact-s3
