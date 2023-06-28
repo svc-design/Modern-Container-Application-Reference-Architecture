@@ -11,10 +11,8 @@ on:
 env:
   DNS_AK: ${{ secrets.DNS_AK }}
   DNS_SK: ${{ secrets.DNS_SK }}
-  AWS_AK: ${{ secrets.AWS_ACCESS_KEY }}
-  AWS_SK: ${{ secrets.AWS_SECRET_KEY }}
-  ALI_AK: ${{ secrets.ALI_AK }}
-  ALI_SK: ${{ secrets.ALI_SK }}
+  OSS_AK: ${{ secrets.OSS_AK }}
+  OSS_SK: ${{ secrets.OSS_SK }}
   SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
   SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
   ADMIN_INIT_PASSWORD: ${{ secrets.ADMIN_INIT_PASSWORD }}
@@ -92,8 +90,8 @@ jobs:
           ansible_host_key_checking=False
           dns_ak=$DNS_AK
           dns_sk=$DNS_SK
-          ali_ak=$ALI_AK
-          ali_sk=$ALI_SK
+          oss_ak=$OSS_AK
+          oss_sk=$OSS_SK
           admin_password=$ADMIN_INIT_PASSWORD
           harbor_oidc_client_token=$HARBOR_OIDC_CLIENT_TOKEN
           EOF
