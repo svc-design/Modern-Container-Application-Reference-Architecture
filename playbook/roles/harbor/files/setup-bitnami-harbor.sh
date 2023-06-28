@@ -14,12 +14,12 @@ exposureType: ingress
 ingress:
   core:
     ingressClassName: "nginx"
-    hostname: harbor.${domain}
+    hostname: artifact.${domain}
     extraTls:
     - hosts:
         - harbor.${domain}
       secretName: "$secret_name"
-externalURL: https://harbor.${domain}
+externalURL: https://artifact.${domain}
 
 postgresql:
   enabled: false
@@ -58,7 +58,7 @@ persistence:
       accesskeyid: $ak
       accesskeysecret: $sk
       region: "oss-cn-wulanchabu"
-      bucket: "artifact-s3"
+      bucket: "oss-artifacts"
       endpoint: "oss-cn-wulanchabu.aliyuncs.com"
     s3:
       region: ap-east-1
@@ -70,4 +70,4 @@ EOF
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
-helm upgrade --install artifact bitnami/harbor -f harbor-config.yaml -n $namespace
+helm upgrade --install artifact bitnami/harbor --version=16.7.0 -f harbor-config.yaml -n $namespace
