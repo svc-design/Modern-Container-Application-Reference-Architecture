@@ -72,28 +72,18 @@ redis:
 persistence:
   imageChartStorage:
     type: $storage_type
-EOF
-
-if [[ "$storage_type" == 'oss' ]] ; then
-cat >> harbor-arm-config.yaml << EOF
     oss:
       accesskeyid: $ak
       accesskeysecret: $sk
       region: "oss-cn-wulanchabu"
       bucket: "harbor-s3"
       endpoint: "oss-cn-wulanchabu.aliyuncs.com"
-EOF
-fi
-
-if [[ "$storage_type" == 's3' ]] ; then
-cat >> harbor-arm-config.yaml << EOF
     s3:
       region: ap-east-1
       bucket: artifact-s3
       accesskey: $ak
       secretkey: $sk
 EOF
-fi
 
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 helm repo add harbor https://helm.goharbor.io
