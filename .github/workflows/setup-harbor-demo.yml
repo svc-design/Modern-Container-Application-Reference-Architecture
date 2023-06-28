@@ -96,6 +96,7 @@ jobs:
           harbor_oidc_client_token=$HARBOR_OIDC_CLIENT_TOKEN
           EOF
           ansible-playbook -i hosts/inventory jobs/init_harbor -D
+          ansible-playbook -i hosts/inventory jobs/init_nginx_oss -D
   Setup-Agent-In-K3S:
     runs-on: ubuntu-latest
     needs:
