@@ -51,9 +51,9 @@ expose:
   ingress:
     hosts:
       core: artifact.${domain}
-      notary: artifact.${domain}
+      notary: artifact-notary.${domain}
     className: "nginx"
-externalURL: https://harbor.${domain}
+externalURL: https://artifact.${domain}
 database:
   type: external
   external:
