@@ -5,7 +5,12 @@
   template: src=templates/{{ item }}  dest=/tmp/{{ item }} owner=root group=root mode=0644 force=yes unsafe_writes=yes
   with_items:
     - mirrors-nginx.yaml
+    - mirrors-nginx-ingress.yaml
+    - mirrors-nginx-apisix.yaml
 
 - name: Setup Mirrors Server
-  shell: "kubectl apply -f /tmp/mirrors-nginx.yaml"
+  shell: "kubectl apply -f /tmp/{{ item }}"
+  with_items:
+    - mirrors-nginx.yaml
+    - mirrors-nginx-ingress.yaml
   when: inventory_hostname in groups[group]

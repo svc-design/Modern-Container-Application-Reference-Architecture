@@ -1,0 +1,33 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: mirrors
+  namespace: nginx
+spec:
+  http:
+  - name: root
+    match:
+      hosts:
+        - mirrors.onwalk.net
+      paths:
+        - '/*'
+    backends:
+    - serviceName: mirrors-nginx
+      servicePort: 80
+    plugins:
+    - config:
+        http_to_https: true
+      enable: true
+      name: redirect
+---
+apiVersion: apisix.apache.org/v2
+kind: ApisixTls
+metadata:
+  name: nginx-tls
+  namespace: nginx
+spec:
+  hosts:
+  - mirrors.onwalk.net
+  secret:
+    name: nginx-tls
+    namespace: nginx
