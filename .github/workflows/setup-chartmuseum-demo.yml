@@ -24,8 +24,6 @@ defaults:
 jobs:
   Setup-Chartmuseum-In-K3S:
     runs-on: ubuntu-latest
-    needs:
-      - setup-k3s-cluster
 
     steps:
       - uses: actions/checkout@v3
