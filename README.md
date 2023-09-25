@@ -1,96 +1,65 @@
 # Modern Container Application Reference Architectures
 
-## Current Test Status
-
-![MARA Project](./docs/NGINX-MARA-icon.png)  
-
-This repository has the basics for a common way to deploy and manage modern
-apps. Over time, we'll build more example architectures using different
-deployment models and options – including other clouds – and you’ll be able
-to find those here.
-
-## Nomenclature
-
-Internally, we refer to this project as MARA for Modern Application Reference
-Architecture. The current repository name reflects the humble origins of this
-project, as it was started with the purpose of allowing users to build custom
-versions of the NGINX Ingress Controller in Kubernetes. This went so well that
-we expanded it to the project you're currently viewing.
-
 ## Modern App Architectures
 
-We define modern app architectures as those driven by four characteristics:
-*scalability*, *portability*, *resiliency*, and *agility*. While many different
-aspects of a modern architecture exist, these are fundamental.
+We define modern app architectures as those driven by four characteristics: scalability, portability, resiliency, and agility. While many different aspects of a modern architecture exist, these are fundamental.
 
-* **Scalability** – Quickly and seamlessly scale up or down to accommodate
-  spikes or reductions in demand, anywhere in the world.
+- Scalability – Quickly and seamlessly scale up or down to accommodate spikes or reductions in demand, anywhere in the world.
+- Portability – Easy to deploy on multiple types of devices and infrastructures, on public clouds, and on premises.
+- Resiliency – Can fail over to newly spun‑up clusters or virtual environments in different availability regions, clouds, or data centers.
+- Agility – Ability to update through automated CI/CD pipelines with higher code velocity and more frequent code pushes.
 
-* **Portability** – Easy to deploy on multiple types of devices and
-  infrastructures, on public clouds, and on premises.
+## Modern Container Application Reference Architectures
 
-* **Resiliency** – Can fail over to newly spun‑up clusters or virtual
-  environments in different availability regions, clouds, or data centers.
+This repository provides a reference architecture for modern container applications. It focuses on the following key principles:
 
-* **Agility** – Ability to update through automated CI/CD pipelines with higher
-  code velocity and more frequent code pushes.
+* Platform Agnosticism: The architecture is designed to be platform-agnostic, allowing you to deploy your application on different container orchestration platforms such as Kubernetes (k8s) or lightweight alternatives like k3s.
+* Prioritization of OSS: Open-source software (OSS) is prioritized, ensuring that the architecture is built on robust and widely adopted tools and technologies.
+* Everything Defined by Code: Infrastructure as Code (IaC) is used to define and provision all the necessary resources for your application. This ensures consistency, reproducibility, and scalability.
+* CI/CD Automation: Continuous Integration and Continuous Deployment (CI/CD) pipelines are implemented using GitHub CI, enabling automated build, test, and deployment processes.
+* Security-minded Development: Security is a top priority in the architecture, with best practices implemented at every stage, including containerized builds, secure container registries like Harbor, and secure communication between services.
+* Distributed Storage: The architecture incorporates distributed storage solutions to ensure high availability and scalability for your application's data.
 
-This diagram is an example of what we mean by a **modern app architecture**:
-![Modern Apps Architecture Example Diagram](docs/DIAG-NGINX-ModernAppsRefArch-NGINX-MARA-1-0-blog-1024x800.png)
+## Tools Chain
 
-To satisfy the four key characteristics, many modern app architectures employ:
+The following tools are used in this reference architecture:
 
-* Platform agnosticism
-* Prioritization of OSS
-* Everything defined by code
-* CI/CD automation
-* Security-minded development
-* Containerized builds
-* Distributed storage
+- Pipeline: GitHub CI
+- IaC Tool: Pulumi
+- Code Repository: GitHub
+- Container Registry: Harbor
+- Monitoring:
+  - Logs: Loki
+  - Tracing: Deepflow
+  - Metrics: Prometheus
+  - Notification: Alertmanager
+  - Datastore: Clickhouse
+  - Visualization: Grafana
+- Cluster Management:
+  - Kubernetes (k8s)
+  - Lightweight Kubernetes (k3s)
+- Ingress: Nginx
+- DNS
 
-## What's Being Built
+# Getting Started
 
-For details on the current state of this project, please see the
-[readme](pulumi/python/README.md) in the [`pulumi/python`](pulumi/python)
-subdirectory. This project is under active development, and the current work is
-using [Pulumi](https://www.pulumi.com/) with Python. Additionally, please see
-[Status and Issues](docs/status-and-issues.md) for the project's up-to-date
-build status and known issues.
+To get started with this reference architecture, follow these steps:
 
-Subdirectories contained within the root directory separate reference
-architectures by infrastructure deployment tooling with additional
-subdirectories as needed. For example, Pulumi allows the use of multiple
-languages for deployment. As we decided to use Python in our first build, there
-is a `python` subdirectory under the `pulumi` directory.
+1. Clone this repository to your local machine.
+2. Set up the required tools mentioned above, ensuring they are properly configured.
+3. Modify the code and configuration files as per your application's requirements.
+4. Use Pulumi to provision the necessary infrastructure resources defined in the IaC files.
+5. Configure the CI/CD pipeline in GitHub CI to trigger builds and deployments automatically.
+6. Monitor your application using the provided monitoring stack.
+7. Deploy your application to the target cluster using k8s or k3s.
+8. Set up Nginx Ingress and DNS for routing traffic to your application.
 
-This project was started to provide a complete, stealable, easy to deploy, and
-standalone example of how a modern app architecture can be built. It was driven
-by the necessity to be flexible and not require a long list of dependencies to
-get started. It needs to provide examples of tooling used to build this sort of
-architecture in the real world. Most importantly, it needs to work. Hopefully
-this provides a ‘jumping off’ point for someone to build their own
-infrastructure.
+For more detailed instructions and examples, please refer to the documentation provided in this repository.
 
-## Tools Chains
+# Contributing
 
-1. Pipeline: Github ci
-2. IAC Tool: Pulumi
-3. CodeRepo: Github 
-4. Registry: Harbor
-5. Monitor：
-  - logs: Loki
-  - tracing: Deepflow
-  - mectic: Prometheus
-  - notify: Alertmanger
-  - datastore: Clickhouse
-  - visualization：Grafana
-6. cluster management: 
-  - k3s
-  - k8s
-7. Ingress: nginx
-8. DNS
+We welcome contributions from the community to enhance this reference architecture. If you have any suggestions, improvements, or bug fixes, please feel free to submit a pull request.
 
-## Contribution
+# License
 
-## License
-
+This reference architecture is released under the GPL V3 License.
