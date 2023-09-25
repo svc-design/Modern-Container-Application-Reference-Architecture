@@ -6,7 +6,7 @@ admin_password=$3
 secret_name=$4
 storage_type=$5
 
-cat > vaules.yaml << EOF
+cat > values.yaml << EOF
 env:
   open:
     STORAGE: local
