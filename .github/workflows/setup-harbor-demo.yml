@@ -1,6 +1,8 @@
 name: Setup Harbor Demo in k3s 
 
 on:
+  schedule:
+    - cron: "0 0 1 */2 *"
   pull_request:
   push:
     paths:
@@ -45,7 +47,7 @@ jobs:
           mkdir -pv hosts/ 
           cat > hosts/inventory << EOF
           [master]
-          artifact               ansible_host=18.167.129.213
+          artifact.onwalk.net               ansible_host=18.167.129.213
           
           [all:vars]
           ansible_port=22
@@ -56,7 +58,7 @@ jobs:
           dns_sk=$DNS_SK
           ingress_ip=18.167.129.213
           EOF
-          ansible-playbook -i hosts/inventory jobs/init_k3s_cluster_artifact -D
+          ansible-playbook -i hosts/inventory jobs/init_k3s_cluster_artifact -D -C
   Setup-Habor-In-K3S:
     runs-on: ubuntu-latest
     needs:
@@ -96,7 +98,6 @@ jobs:
           harbor_oidc_client_token=$HARBOR_OIDC_CLIENT_TOKEN
           EOF
           ansible-playbook -i hosts/inventory jobs/init_harbor -D
-          ansible-playbook -i hosts/inventory jobs/init_nginx_oss -D
   Setup-Agent-In-K3S:
     runs-on: ubuntu-latest
     needs:
