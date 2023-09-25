@@ -2,7 +2,7 @@
 
 domain=$1
 namespace=$2
-auth_password=$3
+admin_password=$3
 secret_name=$4
 storage_type=$5
 
@@ -14,7 +14,7 @@ env:
     AUTH_ANONYMOUS_GET: true
   secret:
     BASIC_AUTH_USER: admin
-    BASIC_AUTH_PASS: '$auth_password'
+    BASIC_AUTH_PASS: '$admin_password'
 ingress:
   enabled: true
   hosts:
