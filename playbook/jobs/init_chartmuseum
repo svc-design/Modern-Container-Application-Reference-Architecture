@@ -1,0 +1,19 @@
+- name: setup harbor 
+  hosts: all
+  user: root
+  become: yes
+  gather_facts: yes
+  tasks:
+    - include_role:
+        name: chartmuseum
+      vars:
+        group: master
+        namespace: harbor
+        domain: onwalk.net
+        auto_issuance: true
+        update_secret: true
+        storage_type: oss
+        tls:
+          - secret_name: chartmuseum-tls
+            keyfile: /etc/ssl/onwalk.net.key
+            certfile: /etc/ssl/onwalk.net.pem
