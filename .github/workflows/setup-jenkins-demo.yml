@@ -41,18 +41,18 @@ jobs:
           mkdir -pv hosts/ 
           cat > hosts/inventory << EOF
           [master]
-          artifact               ansible_host=35.220.216.69
+          wwww.onwalk.net               ansible_host=8.130.36.45
           
           [all:vars]
-          ansible_port=8022
+          ansible_port=22
           ansible_ssh_user=root
           ansible_ssh_private_key_file=~/.ssh/id_rsa
           ansible_host_key_checking=False
           dns_ak=$DNS_AK
           dns_sk=$DNS_SK
-          ingress_ip=35.220.216.69
+          ingress_ip=8.130.36.45
           EOF
-          ansible-playbook -i hosts/inventory jobs/init_k3s_cluster_artifact -D -C
+          ansible-playbook -i hosts/inventory jobs/init_k3s_cluster -D
   Setup-Jenkins-In-K3S:
     runs-on: ubuntu-latest
     needs:
@@ -77,10 +77,10 @@ jobs:
           mkdir -pv hosts/ 
           cat > hosts/inventory << EOF
           [master]
-          artifact               ansible_host=35.220.216.69
+          artifact               ansible_host=8.130.36.45
           
           [all:vars]
-          ansible_port=8022
+          ansible_port=22
           ansible_ssh_user=root
           ansible_ssh_private_key_file=~/.ssh/id_rsa
           ansible_host_key_checking=False
@@ -112,10 +112,10 @@ jobs:
           mkdir -pv hosts/ 
           cat > hosts/inventory << EOF
           [master]
-          artifact               ansible_host=35.220.216.69
+          artifact               ansible_host=8.130.36.45
           
           [all:vars]
-          ansible_port=8022
+          ansible_port=22
           ansible_ssh_user=root
           ansible_ssh_private_key_file=~/.ssh/id_rsa
           ansible_host_key_checking=False

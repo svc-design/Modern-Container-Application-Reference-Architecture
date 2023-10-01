@@ -6,44 +6,28 @@ export namespace=$3
 export mysql_db_password=$4
 
 cat > values.yaml << EOF
-persistence:
-  enabled: true
-  storageClass: "local-path"
-  size: "50Gi"
-
-# Default values for Jenkins.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
 
 controller:
   adminUser: "admin"
   adminPassword: "jenkins"
+  jenkinsHome: "/var/jenkins_home"
   ingress:
     enabled: true
     ingressClassName: nginx
-    hostName: jenkins.example.com
-
-# Jenkins Master settings
-master:
-  replicas: 2
-  image: "jenkins/jenkins"
-  tag: "lts"
-  pullPolicy: "IfNotPresent"
-  adminUser: "admin"
-  adminPassword: "admin"
-  jenkinsHome: "/var/jenkins_home"
-  servicePort: 8080
-  targetPort: 8080
-
-  # Install plugins including the Database plugin
+    hostName: jenkins.$domain
+    tls:
+      - secretName: $secret
+        hosts:
+          - jenkins.$domain
+  installLatestPlugins: true
   installPlugins:
-    - "kubernetes:1.28.6"
-    - "workflow-job:2.39"
-    - "workflow-aggregator:2.6"
-    - "credentials-binding:1.23"
-    - "git:4.4.5"
-    - "database:1.1.3"
-
+    - git:5.1.0
+    - database:1.1.3
+    - workflow-job:2.39
+    - credentials-binding:1.23
+    - kubernetes:4029.v5712230ccb_f8
+    - workflow-aggregator:596.v8c21c963d92d
+    - configuration-as-code:1670.v564dc8b_982d0
   JCasC:
     enabled: true
     defaultConfig: true
@@ -51,22 +35,21 @@ master:
       database: |
         unclassified:
           globalDatabaseConfiguration:
-            database: mysql
-            hostname: my-mysql-host
+            database: jenkins
+            hostname: mysql.database.svc.cluster.local
             name: jenkins
-            password: my-password
-            username: my-user
+            password: $mysql_db_password
+            username: root
             validationQuery: "SELECT 1"
-
 agent:
   enabled: true
-  image: "jenkins/inbound-agent"
-  tag: "4.3-4"
-  customJenkinsLabels: []
-  # Number of executors
   numExecutors: 1
   replicas: 3
 
+persistence:
+  enabled: true
+  storageClass: "local-path"
+  size: "10Gi"
 networkPolicy:
   enabled: false
 backup:
@@ -76,4 +59,5 @@ EOF
 
 helm repo add jenkins https://charts.jenkins.io
 helm repo update
-helm upgrade --install jenkins jenkins/jenkins --version 4.1.1 -f values.yaml
+#helm upgrade --install jenkins jenkins/jenkins --version 4.1.1 -f values.yaml
+helm upgrade --install jenkins jenkins/jenkins -n $namespace --create-namespace -f values.yaml 
