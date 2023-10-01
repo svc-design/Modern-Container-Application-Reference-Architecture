@@ -77,7 +77,7 @@ jobs:
           mkdir -pv hosts/ 
           cat > hosts/inventory << EOF
           [master]
-          artifact               ansible_host=8.130.36.45
+          wwww.onwalk.net               ansible_host=8.130.36.45
           
           [all:vars]
           ansible_port=22
@@ -112,7 +112,7 @@ jobs:
           mkdir -pv hosts/ 
           cat > hosts/inventory << EOF
           [master]
-          artifact               ansible_host=8.130.36.45
+          wwww.onwalk.net               ansible_host=8.130.36.45
           
           [all:vars]
           ansible_port=22
