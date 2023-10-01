@@ -1,0 +1,28 @@
+- name: set artifact cluster with vhosts
+  hosts: all
+  user: root
+  become: yes
+  gather_facts: yes
+  tasks:
+    - include_role:
+        name: k3s-reset
+      vars:
+        group: master
+        cluster_reset: 'enable'
+    - include_role:
+        name: k3s
+      vars:
+        group: master
+        cni: default
+        version: 'v1.27.2+k3s1'
+    - include_role:
+        name: k3s-addon
+      vars:
+        group: master
+        ingress: nginx
+        domain: onwalk.net
+        namespace: ingress
+        external_dns: true
+        auto_issuance: true
+        update_secret: true
+        svc_discovery: disable
