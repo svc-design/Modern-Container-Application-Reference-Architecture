@@ -1,0 +1,4 @@
+dependencies:
+  - role: mysql
+  - role: cert-manager
+  - role: secret-manger

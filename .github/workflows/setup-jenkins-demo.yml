@@ -1,0 +1,123 @@
+name: Setup Gitlab Demo in k3s
+
+on:
+  pull_request:
+  push:
+    paths:
+      - '.github/workflows/setup-jenkins-demo.yml'
+  workflow_dispatch:
+    branches: [ 'main' ]
+
+env:
+  DNS_AK: ${{ secrets.DNS_AK }}
+  DNS_SK: ${{ secrets.DNS_SK }}
+  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+  SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+
+defaults:
+  run:
+    working-directory: ./playbook
+
+jobs:
+  setup-k3s:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup K3S Cluster
+        shell: bash
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          sudo apt install jq ansible -y
+
+          mkdir -pv ~/.ssh/
+          cat > ~/.ssh/id_rsa << EOF
+          ${SSH_PRIVATE_KEY}
+          EOF
+          sudo chmod 0400 ~/.ssh/id_rsa
+          md5sum ~/.ssh/id_rsa
+
+          mkdir -pv hosts/ 
+          cat > hosts/inventory << EOF
+          [master]
+          artifact               ansible_host=35.220.216.69
+          
+          [all:vars]
+          ansible_port=8022
+          ansible_ssh_user=root
+          ansible_ssh_private_key_file=~/.ssh/id_rsa
+          ansible_host_key_checking=False
+          dns_ak=$DNS_AK
+          dns_sk=$DNS_SK
+          ingress_ip=35.220.216.69
+          EOF
+          ansible-playbook -i hosts/inventory jobs/init_k3s_cluster_artifact -D -C
+  Setup-Jenkins-In-K3S:
+    runs-on: ubuntu-latest
+    needs:
+      - setup-k3s
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Jenkins in K3S
+        shell: bash
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          sudo apt install jq ansible -y
+
+          mkdir -pv ~/.ssh/
+          cat > ~/.ssh/id_rsa << EOF
+          ${SSH_PRIVATE_KEY}
+          EOF
+          sudo chmod 0400 ~/.ssh/id_rsa
+          md5sum ~/.ssh/id_rsa
+
+          mkdir -pv hosts/ 
+          cat > hosts/inventory << EOF
+          [master]
+          artifact               ansible_host=35.220.216.69
+          
+          [all:vars]
+          ansible_port=8022
+          ansible_ssh_user=root
+          ansible_ssh_private_key_file=~/.ssh/id_rsa
+          ansible_host_key_checking=False
+          dns_ak=$DNS_AK
+          dns_sk=$DNS_SK
+          EOF
+          ansible-playbook -i hosts/inventory jobs/init_jenkins -D
+  Setup-Agent-In-K3S:
+    runs-on: ubuntu-latest
+    needs:
+      - setup-k3s
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup APP for K3S
+        shell: bash
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          sudo apt install jq ansible -y
+
+          mkdir -pv ~/.ssh/
+          cat > ~/.ssh/id_rsa << EOF
+          ${SSH_PRIVATE_KEY}
+          EOF
+          sudo chmod 0400 ~/.ssh/id_rsa
+          md5sum ~/.ssh/id_rsa
+
+          mkdir -pv hosts/ 
+          cat > hosts/inventory << EOF
+          [master]
+          artifact               ansible_host=35.220.216.69
+          
+          [all:vars]
+          ansible_port=8022
+          ansible_ssh_user=root
+          ansible_ssh_private_key_file=~/.ssh/id_rsa
+          ansible_host_key_checking=False
+          EOF
+          ansible-playbook -i hosts/inventory jobs/init_observability-agent -D -C

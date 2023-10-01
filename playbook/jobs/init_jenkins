@@ -1,0 +1,19 @@
+- name: setup observability server 
+  hosts: all
+  user: root
+  become: yes
+  gather_facts: yes
+  tasks:
+    - include_role:
+        name: jenkins 
+      vars:
+        group: master
+        namespace: jenkins
+        db_namespace: database
+        domain: onwalk.net
+        auto_issuance: true
+        update_secret: true
+        tls:
+          - secret_name: jenkins-tls
+            keyfile: /etc/ssl/onwalk.net.key
+            certfile: /etc/ssl/onwalk.net.pem
