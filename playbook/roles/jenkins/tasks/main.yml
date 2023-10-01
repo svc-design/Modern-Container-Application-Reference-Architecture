@@ -9,7 +9,7 @@
   when: inventory_hostname in groups[group][0]
 
 - name: DB Pre Setup for Jenkins Server
-  script: files/pre-install.sh {{ db_namespace }}
+  script: files/pre-setup.sh {{ db_namespace }}
   when: inventory_hostname in groups[group]
 
 - name: Setup Jenkins Cluster
