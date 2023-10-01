@@ -1,4 +1,4 @@
-name: Setup Gitlab Demo in k3s
+name: Setup Jenkins Demo in K3S
 
 on:
   pull_request:
