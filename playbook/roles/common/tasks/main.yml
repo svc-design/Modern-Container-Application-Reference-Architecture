@@ -17,6 +17,6 @@
 #  shell: "apt update && apt install -y auditd"
 #  when: (ansible_facts['distribution'] == "Ubuntu") or (ansible_facts['distribution'] == "Debian")
 #
-#- name: Install packages
-#  shell: "yum makecache && yum install -y audit"
-#  when: (ansible_facts['distribution'] != "Ubuntu") or (ansible_facts['distribution'] != "Debian")
+- name: Install packages
+  shell: "yum makecache && yum install -y audit container-selinux"
+  when: (ansible_facts['distribution'] != "Ubuntu") or (ansible_facts['distribution'] != "Debian")
