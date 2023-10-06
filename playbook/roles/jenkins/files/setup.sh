@@ -22,10 +22,10 @@ controller:
   installLatestPlugins: true
   installPlugins:
     - git:5.1.0
-    - database:1.1.3
-    - workflow-job:2.39
-    - credentials-binding:1.23
+    - database:191.vd5981b_97a_5fa_
+    - workflow-job:1308.v58d48a_763b_31
     - kubernetes:4029.v5712230ccb_f8
+    - credentials-binding:636.v55f1275c7b_27
     - workflow-aggregator:596.v8c21c963d92d
     - configuration-as-code:1670.v564dc8b_982d0
   JCasC:
