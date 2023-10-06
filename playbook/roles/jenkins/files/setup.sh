@@ -28,19 +28,6 @@ controller:
     - credentials-binding:636.v55f1275c7b_27
     - workflow-aggregator:596.v8c21c963d92d
     - configuration-as-code:1670.v564dc8b_982d0
-  JCasC:
-    enabled: true
-    defaultConfig: true
-    configScripts:
-      database: |
-        unclassified:
-          globalDatabaseConfiguration:
-            database: jenkins
-            hostname: mysql.database.svc.cluster.local
-            name: jenkins
-            password: $mysql_db_password
-            username: root
-            validationQuery: "SELECT 1"
 agent:
   enabled: true
   numExecutors: 1
@@ -59,5 +46,4 @@ EOF
 
 helm repo add jenkins https://charts.jenkins.io
 helm repo update
-#helm upgrade --install jenkins jenkins/jenkins --version 4.1.1 -f values.yaml
 helm upgrade --install jenkins jenkins/jenkins -n $namespace --create-namespace -f values.yaml 
