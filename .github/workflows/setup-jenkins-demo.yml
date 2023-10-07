@@ -41,7 +41,7 @@ jobs:
           mkdir -pv hosts/ 
           cat > hosts/inventory << EOF
           [master]
-          jenkins.onwalk.net               ansible_host=8.217.120.208
+          jenkins.onwalk.net               ansible_host=8.217.247.141
           
           [all:vars]
           ansible_port=22
@@ -50,7 +50,7 @@ jobs:
           ansible_host_key_checking=False
           dns_ak=$DNS_AK
           dns_sk=$DNS_SK
-          ingress_ip=8.217.120.208
+          ingress_ip=8.217.247.141
           EOF
           ansible-playbook -i hosts/inventory jobs/init_k3s_cluster_std -D
   Setup-Jenkins-In-K3S:
@@ -77,7 +77,7 @@ jobs:
           mkdir -pv hosts/ 
           cat > hosts/inventory << EOF
           [master]
-          jenkins.onwalk.net               ansible_host=8.217.120.208
+          jenkins.onwalk.net               ansible_host=8.217.247.141
           
           [all:vars]
           ansible_port=22
@@ -112,7 +112,7 @@ jobs:
           mkdir -pv hosts/ 
           cat > hosts/inventory << EOF
           [master]
-          jenkins.onwalk.net               ansible_host=8.217.120.208
+          jenkins.onwalk.net               ansible_host=8.217.247.141
           
           [all:vars]
           ansible_port=22
