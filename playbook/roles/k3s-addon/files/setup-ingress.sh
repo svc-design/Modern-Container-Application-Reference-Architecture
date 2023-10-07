@@ -22,6 +22,7 @@ metadata:
   name: nginx-nginx-ingress
   namespace: ingress
 data:
+  use-ssl-certificate-for-ingress: "false"
   external-status-address: $ingress_ip
   proxy-connect-timeout: 10s
   proxy-read-timeout: 10s

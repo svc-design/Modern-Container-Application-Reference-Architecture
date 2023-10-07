@@ -25,6 +25,6 @@
         domain: onwalk.net
         namespace: ingress
         external_dns: true
-        auto_issuance: true
         update_secret: true
+        auto_issuance: false
         svc_discovery: disable
