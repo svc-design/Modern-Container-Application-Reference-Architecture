@@ -19,6 +19,7 @@ controller:
       kubernetes.io/tls-acme: "false"
     ingressClassName: nginx
     hostName: jenkins.$domain
+    path: '/'
     tls:
       - secretName: $secret
         hosts:
