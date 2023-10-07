@@ -26,5 +26,5 @@
         namespace: ingress
         external_dns: true
         update_secret: true
-        auto_issuance: false
+        auto_issuance: true
         svc_discovery: disable

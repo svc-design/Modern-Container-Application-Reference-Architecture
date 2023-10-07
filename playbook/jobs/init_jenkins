@@ -1,4 +1,4 @@
-- name: setup observability server 
+- name: setup jenkins server 
   hosts: all
   user: root
   become: yes

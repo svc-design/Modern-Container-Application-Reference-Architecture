@@ -14,6 +14,8 @@ controller:
   jenkinsHome: "/var/jenkins_home"
   ingress:
     enabled: true
+    annotations:
+      kubernetes.io/tls-acme: "false"
     ingressClassName: nginx
     hostName: jenkins.$domain
     tls:
