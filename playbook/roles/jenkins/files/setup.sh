@@ -8,6 +8,7 @@ export mysql_db_password=$4
 cat > values.yaml << EOF
 
 controller:
+  jenkinsUrl: https://jenkins.$domain
   adminUser: "admin"
   adminPassword: "jenkins"
   jenkinsHome: "/var/jenkins_home"
