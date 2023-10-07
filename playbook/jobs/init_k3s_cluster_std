@@ -24,7 +24,7 @@
         ingress: nginx
         domain: onwalk.net
         namespace: ingress
-        external_dns: true
+        external_dns: enable
         auto_issuance: false
         update_secret: false
         svc_discovery: disable
