@@ -35,6 +35,22 @@ controller:
     - workflow-aggregator:596.v8c21c963d92d
     - credentials-binding:636.v55f1275c7b_27
     - configuration-as-code:1670.v564dc8b_982d0
+  JCasC:
+    enabled: true
+    defaultConfig: true
+    configScripts:
+      database: |
+        unclassified:
+          globalDatabaseConfiguration:
+            database:
+              mysql:
+                hostname: mysql.database.svc.cluster.local
+                port: '3306'
+                username: "root"
+                database: "jenkins"
+                password: $mysql_db_password
+                properties: "?useSSL=false"
+                validationQuery: "SELECT 1"
 agent:
   enabled: true
   replicas: 3
