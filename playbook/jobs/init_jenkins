@@ -11,7 +11,7 @@
         namespace: jenkins
         db_namespace: database
         domain: onwalk.net
-        auto_issuance: false
+        auto_issuance: true
         update_secret: true
         tls:
           - secret_name: jenkins-tls
