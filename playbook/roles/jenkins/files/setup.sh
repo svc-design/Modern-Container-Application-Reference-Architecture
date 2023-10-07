@@ -26,12 +26,13 @@ controller:
           - jenkins.$domain
   installLatestPlugins: true
   installPlugins:
-    - git:5.1.0
+    - git:5.2.0
+    - gitlab-plugin:1.7.16
     - database-mysql:1.4
     - database:191.vd5981b_97a_5fa_
     - locale:314.v22ce953dfe9e
     - kubernetes:4029.v5712230ccb_f8
-    - workflow-job:1308.v58d48a_763b_31
+    - workflow-job:1326.ve643e00e9220
     - workflow-aggregator:596.v8c21c963d92d
     - credentials-binding:636.v55f1275c7b_27
     - configuration-as-code:1670.v564dc8b_982d0
