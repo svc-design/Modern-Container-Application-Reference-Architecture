@@ -43,7 +43,7 @@ jobs:
           mkdir -pv hosts/ 
           cat > hosts/inventory << EOF
           [master]
-          cicd.onwalk.net               ansible_host=8.217.120.208
+          cicd.onwalk.net               ansible_host=8.218.230.41
           
           [all:vars]
           ansible_port=8022
@@ -52,7 +52,7 @@ jobs:
           ansible_host_key_checking=False
           dns_ak=$DNS_AK
           dns_sk=$DNS_SK
-          ingress_ip=8.217.120.208
+          ingress_ip=8.218.230.41
           EOF
           ansible-playbook -i hosts/inventory jobs/init_k3s_cluster_std -D -C
   Setup-Gitlab-In-K3S:
@@ -79,7 +79,7 @@ jobs:
           mkdir -pv hosts/ 
           cat > hosts/inventory << EOF
           [master]
-          cicd.onwalk.net               ansible_host=8.217.120.208
+          cicd.onwalk.net               ansible_host=8.218.230.41
           
           [all:vars]
           ansible_port=8022
@@ -118,7 +118,7 @@ jobs:
           mkdir -pv hosts/ 
           cat > hosts/inventory << EOF
           [master]
-          cicd.onwalk.net               ansible_host=8.217.120.208
+          cicd.onwalk.net               ansible_host=8.218.230.41
           
           [all:vars]
           ansible_port=8022
