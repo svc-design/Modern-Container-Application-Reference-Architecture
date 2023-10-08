@@ -63,7 +63,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Setup Habor in K3S
+      - name: Setup Gitlab in K3S
         shell: bash
         run: |
           export ANSIBLE_HOST_KEY_CHECKING=False
