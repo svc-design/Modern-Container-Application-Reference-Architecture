@@ -1,5 +1,7 @@
 #!/bin/bash
 
+kubectl  delete hpa --all -A
+
 # 获取所有部署
 DEPLOYMENTS=$(kubectl get deploy -n gitlab -o jsonpath='{.items[*].metadata.name}')
 
