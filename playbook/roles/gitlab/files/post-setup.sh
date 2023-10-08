@@ -10,9 +10,6 @@ do
   kubectl scale deploy/$DEPLOY -n gitlab --replicas=1
 done
 
-# 获取所有部署
-DEPLOYMENTS=$(kubectl get deploy -n gitlab -o jsonpath='{.items[*].metadata.name}')
-
 # 遍历部署并获取 CPU 和内存配置
 for DEPLOY in $DEPLOYMENTS
 do
@@ -22,7 +19,7 @@ do
   echo "===================="
 done
 
-# 遍历部署并获取 CPU 和内存配置, 并设置 CPU 和内存请求
+# 遍历部署并设置 CPU 和内存请求
 #for DEPLOY in $DEPLOYMENTS
 #do
 #  echo "Setting cpu=0.1 and mem=100m for deployment $DEPLOY"
