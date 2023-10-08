@@ -11,10 +11,6 @@ on:
 env:
   DNS_AK: ${{ secrets.DNS_AK }}
   DNS_SK: ${{ secrets.DNS_SK }}
-  AWS_AK: ${{ secrets.AWS_ACCESS_KEY }}
-  AWS_SK: ${{ secrets.AWS_SECRET_KEY }}
-  ALI_AK: ${{ secrets.ALI_AK }}
-  ALI_SK: ${{ secrets.ALI_SK }}
   SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
   SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
   SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
@@ -25,7 +21,7 @@ defaults:
     working-directory: ./playbook
 
 jobs:
-  setup-gcp-hk-k3s:
+  setup-k3s:
     runs-on: ubuntu-latest
 
     steps:
@@ -58,11 +54,11 @@ jobs:
           dns_sk=$DNS_SK
           ingress_ip=35.220.216.69
           EOF
-          ansible-playbook -i hosts/inventory jobs/init_k3s_cluster_artifact -D -C
+          ansible-playbook -i hosts/inventory jobs/init_k3s_cluster_std -D -C
   Setup-Gitlab-In-K3S:
     runs-on: ubuntu-latest
     needs:
-      - setup-gcp-hk-k3s
+      - setup-k3s
 
     steps:
       - uses: actions/checkout@v3
@@ -101,7 +97,7 @@ jobs:
   Setup-Agent-In-K3S:
     runs-on: ubuntu-latest
     needs:
-      - setup-gcp-hk-k3s
+      - setup-k3s
 
     steps:
       - uses: actions/checkout@v3
