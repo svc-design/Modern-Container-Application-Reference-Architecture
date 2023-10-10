@@ -27,8 +27,9 @@ controller:
   installLatestPlugins: true
   installPlugins:
     - git:5.2.0
-    - gitlab-plugin:1.7.16
     - database-mysql:1.4
+    - gitlab-plugin:1.7.16
+    - pipeline-stage-view:2.33
     - database:191.vd5981b_97a_5fa_
     - locale:314.v22ce953dfe9e
     - kubernetes:4029.v5712230ccb_f8
