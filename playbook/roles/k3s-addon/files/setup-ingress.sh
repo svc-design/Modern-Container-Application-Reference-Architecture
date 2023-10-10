@@ -2,7 +2,52 @@
 ingress=$1
 ingress_ip=$2
 
-if [[ $ingress == "nginx" ]]; then
+if [[ $ingress == "default" ]]; then
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+helm repo add stable https://kubernetes.github.io/ingress-nginx
+helm repo up
+
+cat > value.yaml <<EOF
+controller:
+  name: controller
+  config:
+    use-http2: true
+  ingressClassResource:
+    name: nginx
+  replicaCount: 2
+  service:
+    enabled: true
+    type: NodePort
+    externalIPs:
+      - $ingress_ip
+    nodePorts:
+      http: 80
+      https: 443
+  admissionWebhooks:
+    patch:
+      enabled: true
+defaultBackend:
+  enabled: true
+tcp:
+  22: "gitlab/gitlab-gitlab-shell:22"
+EOF
+
+cat > svc-patch.yaml <<EOF
+spec:
+  ports:
+  - name: 22-tcp
+    nodePort: 22
+    port: 22
+    protocol: TCP
+    targetPort: 22-tcp
+EOF
+
+kubectl create namespace ingress || echo true
+helm upgrade --install nginx stable/ingress-nginx --namespace ingress -f value.yaml
+kubectl patch svc nginx-ingress-nginx-controller -n ingress --patch-file svc-patch.yaml
+kubectl delete pods --all -n ingress
+
+elif [[ $ingress == "nginx" ]]; then
 cat > value.yaml <<EOF
 controller:
   nginxplus: false
