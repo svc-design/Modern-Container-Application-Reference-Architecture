@@ -15,15 +15,21 @@ on:
         required: true
         type: string
     secrets:
+      GCP_CREDENTIALS_JSON:
+        required: true
       SSH_PRIVATE_KEY:
         required: true
-      GCP_CREDENTIALS_JSON:
+      DNS_AK:
+        required: true
+      DNS_SK:
         required: true
 
 jobs:
   setup-app-cluster:
     runs-on: ubuntu-latest
     env:
+      DNS_AK: ${{ secrets.DNS_AK }}
+      DNS_SK: ${{ secrets.DNS_SK }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       SSH_HOST_DOMAIN: "${{ inputs.ssh_host_name }}.${{ inputs.domain }}"
     
