@@ -3,10 +3,6 @@ name: MultiCluster Pipeline
 env:
   STATE: "create"   # 可以根据需要更改初始状态, 可选create，update, destroy
   CLOUD: "gcp"       # 选择云服务商, 可选: gcp, aws, ali, azure
-  TZ: Asia/Shanghai
-  REPO: "artifact.onwalk.net"
-  IMAGE: base/${{ github.repository }} 
-  TAG: ${{ github.sha }}
   DNS_AK: ${{ secrets.DNS_AK }}
   DNS_SK: ${{ secrets.DNS_SK }}
   SSH_USER: ${{ secrets.HOST_USER }}
