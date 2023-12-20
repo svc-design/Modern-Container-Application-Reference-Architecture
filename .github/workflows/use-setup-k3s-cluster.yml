@@ -1,0 +1,60 @@
+name: Setup App Cluster Workflow
+on:
+  workflow_call:
+    inputs:
+      cluster_name:
+        required: true
+        type: string
+      ssh_host_name:
+        required: true
+        type: string
+      ssh_host_domain:
+        required: true
+        type: string
+
+jobs:
+  setup-app-cluster:
+    runs-on: ubuntu-latest
+    env:
+      SSH_HOST_DOMAIN: ${{ inputs.ssh_host_domain }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+
+      - name: Pre Setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip jq
+          python -m pip install --upgrade pip jinja2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.6.4
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+      - name: Set GitHub Actions output variables
+        id: terraform-output
+        run: |
+          python3 scripts/init.py && terraform init
+          SSH_HOST_IP=`terraform output | grep  ${{ inputs.ssh_host_name }} | awk -F= '{print "$2}'`
+          echo "SSH_HOST_IP: $SSH_HOST_IP" >> $GITHUB_ENV
+        working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+
+      - name: Update playbook hosts
+        run: bash observability-platform-pre_setup.sh
+        working-directory: playbook/ 
+
+      - name: Setup K3S Cluster
+        shell: bash
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          ansible-playbook -i hosts/inventory init_k3s_cluster_std -e "cluster_name=app" -D
+        working-directory: playbook/ 

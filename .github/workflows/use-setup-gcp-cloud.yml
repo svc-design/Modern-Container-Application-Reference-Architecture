@@ -1,32 +1,18 @@
-name: Destroy Resources by IAC tools 
-
-env:
-  STATE: "destroy"   # 可以根据需要更改初始状态, 可选create，update, destroy
-  CLOUD: "gcp"       # 选择云服务商, 可选: gcp, aws, ali, azure
-
+name: GCS Workflow
 on:
-  pull_request:
-  push:
-    paths:
-      - '.github/workflows/iac-pipeline-destroy.yml'
-  workflow_dispatch:
-    branches:
-      - main
+  workflow_call:
+    secrets:
+      GCP_CREDENTIALS_JSON:
+        required: true
 
 jobs:
   gcs:
     runs-on: ubuntu-latest
-    needs:
-      - vhost
-      - network
-      - key_pair
-      - firewall
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        submodules: 'recursive'
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
 
     - name: Pre Setup
       run: |
@@ -49,14 +35,21 @@ jobs:
       with:
         version: '>= 363.0.0'
 
-    - name: Delete Google Cloud Storage Bucket
+    - name: Check if GCS bucket exists
+      id: check_bucket
       run: |
-        gsutil -m rm -r gs://iac_gcp_terraform_state || true
-        gcloud storage buckets delete gs://iac_gcp_terraform_state --quiet || true
+        BUCKET_NAME="iac_gcp_terraform_state"
+        gsutil ls -b gs://${BUCKET_NAME} || echo "::set-output name=bucket_exists::false"
+
+    - name: Terraform Init And Apply
+      if: steps.check_bucket.outputs.bucket_exists == 'false'
+      run: |
+        bash run_terraform.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/gcs/
   network:
     runs-on: ubuntu-latest
     needs:
-      - vhost
+      - gcs
 
     steps:
     - name: Checkout code
@@ -86,6 +79,10 @@ jobs:
       working-directory: iac_modules/terraform/${{ env.CLOUD }}/network/
   vhost:
     runs-on: ubuntu-latest
+    needs:
+      - gcs
+      - network
+      - key_pair
 
     steps:
     - name: Checkout code
@@ -121,7 +118,7 @@ jobs:
   key_pair:
     runs-on: ubuntu-latest
     needs:
-      - vhost
+      - gcs
 
     steps:
     - name: Checkout code
@@ -169,7 +166,8 @@ jobs:
   firewall:
     runs-on: ubuntu-latest
     needs:
-      - vhost
+      - gcs
+      - network
 
     steps:
     - name: Checkout code
