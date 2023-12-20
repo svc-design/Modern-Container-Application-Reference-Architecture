@@ -9,6 +9,9 @@ We define modern app architectures as those driven by four characteristics: scal
 - Resiliency – Can fail over to newly spun‑up clusters or virtual environments in different availability regions, clouds, or data centers.
 - Agility – Ability to update through automated CI/CD pipelines with higher code velocity and more frequent code pushes.
 
+![PlantUML Diagram](https://www.plantuml.com/plantuml/png/XPL1JnD15CVlxrECN3nnwis3WPIcD9A6A7UpRL_BfhkpP6QsQ8o9qKXY0ke1HNlGH2NqOglnO3WGlWopYz_26RAbmylkq5Ft_N_px__jpBokI1K8bSOHtEbXF-J87ZRgMwljvaQ3TQD0Ie15eHcgzRHJRpcbpJHAun0eunJM0z59X5FOI8RkWZN4dNwKxBgc8ebHRMCgdU9gX4B50Gy6wBhLex0xt4vIYMu84VGDwLJQWv0_SN-r_SZrtcmr0uMxmLE0kqp_6ETlP_hRApqTNvo-WNuIzL2mfJKSOPJinCWLQ_1HA19klo-nPy3CnsrfzFX1sa71KQ4i4OSr2S-lVRTGgf0F_9uM8gP49Qxc9VRIhWeJxZUs734cQc4Cy-rdoyltYtrczzZ5sNb-E2b4AnLdmaZ_NX_aPrCeder4tWnLXZMtH5kc4iLf8rIoEDmCOCNYW9guUdggFq-oFnEzjmz57Wz1ujr6-ir8-5j8lrbfbrSNm80jFX0efTiVrKXd7gR2W7JZOIeCIZkmSyCWsT6nFZzoybE5fYydoXVJv5L4-MAmZxO-7q16qkzcboTxUlyZp0TT9R0OUvM8EmIl86UDkMylnldNOrYCHEAJVVYL7Kprpq_wvGJ0Z42hEyFF89SdtxClxs5HAxcs5lixomz_bs73MhLETyR7UOteBdcv6qOho7lstmx-0m00)
+
+
 ## Modern Container Application Reference Architectures
 
 This repository provides a reference architecture for modern container applications. It focuses on the following key principles:

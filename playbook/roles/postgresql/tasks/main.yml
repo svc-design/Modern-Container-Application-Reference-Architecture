@@ -1,3 +1,0 @@
-- name: Install PostgreSQL Server
-  script: files/setup-postgresql.sh {{ db_namespace }}
-  when: inventory_hostname in groups[group]

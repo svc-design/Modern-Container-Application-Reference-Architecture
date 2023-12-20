@@ -1,0 +1,30 @@
+@startuml
+!define RECTANGLE class
+
+' Central Container Platform
+RECTANGLE ContainerPlatform {
+    RECTANGLE ServiceMeshSolutions
+}
+
+' Microservices at the top
+RECTANGLE Microservices
+
+' DevOps Solutions and Federated Identity Solutions on the left
+RECTANGLE DevOpsSolutions
+RECTANGLE FederatedIdentitySolutions
+
+' Observability Platform Solutions on the right
+RECTANGLE ObservabilityPlatformSolutions
+
+' LangChainAI at the bottom
+RECTANGLE LangChainAI
+
+' Define relationships
+Microservices -down- ContainerPlatform : "Supported by\n"
+DevOpsSolutions -right- ContainerPlatform : "Integrated with\n"
+FederatedIdentitySolutions -right- ContainerPlatform : "Secured by\n"
+ObservabilityPlatformSolutions -left- ContainerPlatform : "Monitored by\n"
+LangChainAI -up- ContainerPlatform : "Enhanced by\n"
+ServiceMeshSolutions -- ContainerPlatform : "Interconnected within\n"
+
+@enduml

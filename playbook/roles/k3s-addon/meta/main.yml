@@ -1,3 +1,0 @@
-dependencies:
-  - role: cert-manager
-  - role: secret-manger

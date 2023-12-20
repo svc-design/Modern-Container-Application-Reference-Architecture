@@ -1,3 +1,0 @@
-- name: Setup Observability Agent
-  script: files/setup.sh {{ observableserver }} {{ port }} {{ deepflowserverip }} {{ deepflowserverid }}
-  when: inventory_hostname in groups[group]

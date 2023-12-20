@@ -1,8 +1,0 @@
-- name: Setup MySQL Server
-  script: files/setup-mysql.sh
-  when: inventory_hostname in groups[group]
-
-- name: Post Setup MySQL Server
-  script: files/post-setup.sh {{ db_namespace }}
-  when: inventory_hostname in groups[group]
-  ignore_errors: yes

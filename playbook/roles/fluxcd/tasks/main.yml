@@ -1,3 +1,0 @@
-- name: Setup FluxCD Chart
-  script: files/setup.sh {{ version }} {{ namespace }}
-  when: inventory_hostname in groups[group]

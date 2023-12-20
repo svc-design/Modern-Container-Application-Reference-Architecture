@@ -1,0 +1,75 @@
+@startuml
+!define RECTANGLE class
+
+RECTANGLE GitHubCI
+RECTANGLE Pulumi
+RECTANGLE GitHub
+RECTANGLE Harbor
+RECTANGLE Loki
+RECTANGLE Deepflow
+RECTANGLE Prometheus
+RECTANGLE Alertmanager
+RECTANGLE Clickhouse
+RECTANGLE Grafana
+RECTANGLE Nginx
+RECTANGLE DNS
+RECTANGLE APIGateway
+
+' 多环境定义
+folder "Development Environment" {
+    RECTANGLE Dev_Kubernetes
+    RECTANGLE Dev_k3s
+}
+folder "Testing Environment" {
+    RECTANGLE Test_Kubernetes
+    RECTANGLE Test_k3s
+}
+folder "Production Environment" {
+    RECTANGLE Prod_Kubernetes
+    RECTANGLE Prod_k3s
+}
+
+GitHubCI --> GitHub : 使用
+GitHub --> Pulumi : 配置
+Pulumi --> Dev_Kubernetes
+Pulumi --> Dev_k3s
+Pulumi --> Test_Kubernetes
+Pulumi --> Test_k3s
+Pulumi --> Prod_Kubernetes
+Pulumi --> Prod_k3s
+
+Dev_Kubernetes --> Harbor : 容器注册
+Dev_k3s --> Harbor : 容器注册
+Test_Kubernetes --> Harbor : 容器注册
+Test_k3s --> Harbor : 容器注册
+Prod_Kubernetes --> Harbor : 容器注册
+Prod_k3s --> Harbor : 容器注册
+
+Dev_Kubernetes --> Nginx : Ingress
+Dev_k3s --> Nginx : Ingress
+Test_Kubernetes --> Nginx : Ingress
+Test_k3s --> Nginx : Ingress
+Prod_Kubernetes --> Nginx : Ingress
+Prod_k3s --> Nginx : Ingress
+
+Dev_Kubernetes --> Loki : 日志
+Dev_k3s --> Loki : 日志
+Test_Kubernetes --> Loki : 日志
+Test_k3s --> Loki : 日志
+Prod_Kubernetes --> Loki : 日志
+Prod_k3s --> Loki : 日志
+
+Loki --> Grafana : 可视化
+Deepflow --> Grafana : 可视化
+Prometheus --> Grafana : 可视化
+Alertmanager --> Prometheus : 通知
+Clickhouse --> Grafana : 数据存储
+
+DNS --> APIGateway : 解析
+APIGateway --> Dev_Kubernetes : 路由
+APIGateway --> Dev_k3s : 路由
+APIGateway --> Test_Kubernetes : 路由
+APIGateway --> Test_k3s : 路由
+APIGateway --> Prod_Kubernetes : 路由
+APIGateway --> Prod_k3s : 路由
+@enduml

@@ -1,3 +1,0 @@
-- name: Setup Datadog Agent
-  script: files/setup.sh {{ datadog_token }}
-  when: inventory_hostname in groups[group]
