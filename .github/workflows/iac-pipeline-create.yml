@@ -21,7 +21,9 @@ jobs:
   apply-cluster-resources:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-gcp-cloud.yml@main
     secrets:
+      SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
 
   setup-monitor-cluster:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main

@@ -3,9 +3,10 @@ name: GCS Workflow
 on:
   workflow_call:
     secrets:
+      SSH_PUBLIC_KEY:
+        required: true
       GCP_CREDENTIALS_JSON:
         required: true
-
 jobs:
   gcs:
     runs-on: ubuntu-latest
@@ -44,7 +45,7 @@ jobs:
       if: steps.check_bucket.outputs.bucket_exists == 'false'
       run: |
         bash run_terraform.sh
-      working-directory: iac_modules/terraform/${{ env.CLOUD }}/gcs/
+      working-directory: iac_modules/terraform/gcp/gcs/
   network:
     runs-on: ubuntu-latest
     needs:
@@ -73,7 +74,7 @@ jobs:
     - name: Terraform Init And Apply
       run: |
         bash run_terraform.sh
-      working-directory: iac_modules/terraform/${{ env.CLOUD }}/network/
+      working-directory: iac_modules/terraform/gcp/network/
   vhost:
     runs-on: ubuntu-latest
     needs:
@@ -103,12 +104,12 @@ jobs:
 
     - name: Fetch SSH Keys
       run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > ssh_keys.pub
-      working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+      working-directory: iac_modules/terraform/gcp/vhost/
 
     - name: Terraform Init And Apply
       run: |
         python3 scripts/init.py && bash scripts/run_terraform.sh
-      working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+      working-directory: iac_modules/terraform/gcp/vhost/
 
   key_pair:
     runs-on: ubuntu-latest
@@ -143,18 +144,18 @@ jobs:
     - name: Check if SSH Metadata exists
       id: check_ssh_metadata
       run: bash scripts/check_ssh_metadata.sh
-      working-directory: iac_modules/terraform/${{ env.CLOUD }}/key_pair/
+      working-directory: iac_modules/terraform/gcp/key_pair/
 
     - name: Fetch SSH Keys
       if: steps.check_ssh_metadata.outputs.ssh_metadata_exists == 'false'
       run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > ssh_keys.pub
-      working-directory: iac_modules/terraform/${{ env.CLOUD }}/key_pair/
+      working-directory: iac_modules/terraform/gcp/key_pair/
 
     - name: Terraform Init And Apply
       if: steps.check_ssh_metadata.outputs.ssh_metadata_exists == 'false'
       run: |
         python3 scripts/init.py && bash scripts/run_terraform.sh
-      working-directory: iac_modules/terraform/${{ env.CLOUD }}/key_pair/
+      working-directory: iac_modules/terraform/gcp/key_pair/
 
   firewall:
     runs-on: ubuntu-latest
@@ -185,4 +186,4 @@ jobs:
     - name: Terraform Init And Apply
       run: |
         python3 scripts/init.py && bash scripts/run_terraform.sh
-      working-directory: iac_modules/terraform/${{ env.CLOUD }}/firewall/
+      working-directory: iac_modules/terraform/gcp/firewall/
