@@ -51,8 +51,9 @@ jobs:
 
       - name: Extract SSH Host IP and Set as Env Variable
         run: |
-          python3 scripts/init.py && terraform init && terraform output -json
-          SSH_HOST_IP=$(terraform output -json | jq -r '.[] | select(.name == "${{ inputs.ssh_host_name }}").value' | tr -d '"\n')
+          python3 scripts/init.py && terraform init
+          terraform output -raw ${{ inputs.ssh_host_name }}
+          SSH_HOST_IP=$(terraform output -raw ${{ inputs.ssh_host_name }})
           echo "SSH_HOST_IP=${SSH_HOST_IP}" >> $GITHUB_ENV
         shell: bash
         working-directory: iac_modules/terraform/gcp/vhost/

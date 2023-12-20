@@ -25,7 +25,7 @@ jobs:
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
 
   setup-monitor-cluster:
-    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
+    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-ansible-playbook-role.yml@main
     with:
       domain: 'svc.plus'
       cluster_name: 'monitor'
@@ -38,7 +38,7 @@ jobs:
       - apply-cluster-resources
 
   setup-devops-cluster:
-    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
+    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-ansible-playbook-role.yml@main
     with:
       domain: 'svc.plus'
       cluster_name: 'devops'
@@ -51,7 +51,7 @@ jobs:
       - apply-cluster-resources
 
   setup-sit-cluster:
-    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
+    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-ansible-playbook-role.yml@main
     with:
       cluster_name: 'sit'
       ssh_host_name: 'sit'
@@ -64,7 +64,7 @@ jobs:
       - apply-cluster-resources
 
   setup-uat-cluster:
-    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
+    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-ansible-playbook-role.yml@main
     with:
       cluster_name: 'uat'
       ssh_host_name: 'uat'
@@ -77,7 +77,7 @@ jobs:
       - apply-cluster-resources
 
   setup-prod-cluster:
-    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
+    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-ansible-playbook-role.yml@main
     with:
       domain: 'svc.plus'
       cluster_name: 'prod'
