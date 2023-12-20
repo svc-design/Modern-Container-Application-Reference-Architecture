@@ -1,5 +1,8 @@
 name: GCS Workflow
 
+env:
+  STATE: "create"
+
 on:
   workflow_call:
     secrets:
@@ -35,10 +38,21 @@ jobs:
       with:
         version: '>= 363.0.0'
 
-    - name: Terraform Init And Apply
+    - name: Check Bucket Existence and Set Environment Variable
       run: |
         BUCKET_NAME="iac_gcp_terraform_state"
-        gsutil ls -b gs://${BUCKET_NAME} || bash run_terraform.sh
+        BUCKET_EXISTS=$(gsutil ls -b gs://${BUCKET_NAME} &> /dev/null && echo "true" || echo "false")
+        echo "BUCKET_EXISTS=${BUCKET_EXISTS}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Terraform Init And Apply
+      run: |
+        if [ "$BUCKET_EXISTS" = "true" ]; then
+            echo "Bucket ${BUCKET_NAME} exists."
+        else
+            echo "Bucket ${BUCKET_NAME} does not exist."
+            bash run_terraform.sh
+        fi
       working-directory: iac_modules/terraform/gcp/gcs/
   network:
     runs-on: ubuntu-latest
