@@ -44,6 +44,7 @@ jobs:
     - name: Terraform Init And Apply
       if: steps.check_bucket.outputs.bucket_exists == 'false'
       run: |
+        pwd && ls -l
         bash run_terraform.sh
       working-directory: iac_modules/terraform/gcp/gcs/
   network:
