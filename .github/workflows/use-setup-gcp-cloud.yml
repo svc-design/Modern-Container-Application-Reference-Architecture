@@ -39,13 +39,11 @@ jobs:
       id: check_bucket
       run: |
         BUCKET_NAME="iac_gcp_terraform_state"
-        gsutil ls -b gs://${BUCKET_NAME} || echo "::set-output name=bucket_exists::false"
+        gsutil ls -b gs://${BUCKET_NAME} || echo "bucket_exists=false" >> $GITHUB_ENV
 
     - name: Terraform Init And Apply
-      if: steps.check_bucket.outputs.bucket_exists == 'false'
-      run: |
-        pwd && ls -l
-        bash run_terraform.sh
+      if: '$BUCKET_NAME' == 'false'
+      run: bash run_terraform.sh
       working-directory: iac_modules/terraform/gcp/gcs/
   network:
     runs-on: ubuntu-latest
