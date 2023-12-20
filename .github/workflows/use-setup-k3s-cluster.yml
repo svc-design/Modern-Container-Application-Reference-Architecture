@@ -11,6 +11,9 @@ on:
       ssh_host_name:
         required: true
         type: string
+      config_task_name:
+        required: true
+        type: string
     secrets:
       SSH_PRIVATE_KEY:
         required: true
@@ -46,12 +49,12 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
 
-      - name: Set GitHub Actions output variables
-        id: terraform-output
+      - name: Extract SSH Host IP and Set as Env Variable
         run: |
-          python3 scripts/init.py && terraform init
-          SSH_HOST_IP=$(terraform output | grep "${{ inputs.ssh_host_name }}" | awk -F= '{print $2}' | tr -d ' "\n')
-          echo "SSH_HOST_IP=$SSH_HOST_IP" >> $GITHUB_ENV
+          python3 scripts/init.py && terraform init && terraform output -json
+          SSH_HOST_IP=$(terraform output -json | jq -r '.[] | select(.name == "${{ inputs.ssh_host_name }}").value' | tr -d '"\n')
+          echo "SSH_HOST_IP=${SSH_HOST_IP}" >> $GITHUB_ENV
+        shell: bash
         working-directory: iac_modules/terraform/gcp/vhost/
 
       - name: Update playbook hosts
@@ -62,5 +65,5 @@ jobs:
         shell: bash
         run: |
           export ANSIBLE_HOST_KEY_CHECKING=False
-          ansible-playbook -i hosts/inventory init_k3s_cluster_with_gitops -e "cluster_name=${inputs.ssh_host_name}" -e "domain=${inputs.domain}" -D
+          ansible-playbook -i hosts/inventory ${inputs.config_task_name} -e "cluster_name=${inputs.ssh_host_name}" -e "domain=${inputs.domain}" -D
         working-directory: playbook/ 
