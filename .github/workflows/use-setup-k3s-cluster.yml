@@ -2,21 +2,27 @@ name: Setup App Cluster Workflow
 on:
   workflow_call:
     inputs:
+      domain:
+        required: true
+        type: string
       cluster_name:
         required: true
         type: string
       ssh_host_name:
         required: true
         type: string
-      ssh_host_domain:
+    secrets:
+      SSH_PRIVATE_KEY:
         required: true
-        type: string
+      GCP_CREDENTIALS_JSON:
+        required: true
 
 jobs:
   setup-app-cluster:
     runs-on: ubuntu-latest
     env:
-      SSH_HOST_DOMAIN: ${{ inputs.ssh_host_domain }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      SSH_HOST_DOMAIN: "${{ inputs.ssh_host_name }}.${{ inputs.domain }}"
     
     steps:
       - name: Checkout code
@@ -46,7 +52,7 @@ jobs:
           python3 scripts/init.py && terraform init
           SSH_HOST_IP=`terraform output | grep  ${{ inputs.ssh_host_name }} | awk -F= '{print "$2}'`
           echo "SSH_HOST_IP: $SSH_HOST_IP" >> $GITHUB_ENV
-        working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+        working-directory: iac_modules/terraform/gcp/vhost/
 
       - name: Update playbook hosts
         run: bash observability-platform-pre_setup.sh
@@ -56,5 +62,5 @@ jobs:
         shell: bash
         run: |
           export ANSIBLE_HOST_KEY_CHECKING=False
-          ansible-playbook -i hosts/inventory init_k3s_cluster_std -e "cluster_name=app" -D
+          ansible-playbook -i hosts/inventory init_k3s_cluster_with_gitops -e "cluster_name=${inputs.ssh_host_name}" -e "domain=${inputs.domain}" -D
         working-directory: playbook/ 
