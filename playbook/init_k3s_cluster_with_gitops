@@ -22,5 +22,9 @@
       vars:
         group: master
         gitops: enable
+        auto_issuance: true
         external_dns: enable
+        update_secret: false
+        external_dns: enable
+        svc_discovery: disable
         config_repo: https://github.com/svc-design/gitops.git
