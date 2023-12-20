@@ -50,9 +50,8 @@ jobs:
         id: terraform-output
         run: |
           python3 scripts/init.py && terraform init
-          terraform output
-          SSH_HOST_IP=`terraform output | grep  ${{ inputs.ssh_host_name }} | awk -F= '{print $2}'`
-          echo "SSH_HOST_IP: $SSH_HOST_IP" >> $GITHUB_ENV
+          SSH_HOST_IP=$(terraform output | grep "${{ inputs.ssh_host_name }}" | awk -F= '{print $2}' | tr -d ' "\n')
+          echo "SSH_HOST_IP=$SSH_HOST_IP" >> $GITHUB_ENV
         working-directory: iac_modules/terraform/gcp/vhost/
 
       - name: Update playbook hosts

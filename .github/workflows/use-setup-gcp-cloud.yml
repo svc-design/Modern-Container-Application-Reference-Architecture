@@ -1,4 +1,4 @@
-name: GCS Workflow
+name: Workflow Call Apply GCP Cloud Resources
 
 env:
   STATE: "create"
