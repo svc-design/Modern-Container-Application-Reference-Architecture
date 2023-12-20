@@ -1,4 +1,4 @@
-name: Setup App Cluster Workflow
+name: Workflow Call Setup K3S Cluster
 on:
   workflow_call:
     inputs:
@@ -51,7 +51,7 @@ jobs:
         run: |
           python3 scripts/init.py && terraform init
           terraform output
-          SSH_HOST_IP=`terraform output | grep  ${{ inputs.ssh_host_name }} | awk -F= '{print "$2}'`
+          SSH_HOST_IP=`terraform output | grep  ${{ inputs.ssh_host_name }} | awk -F= '{print $2}'`
           echo "SSH_HOST_IP: $SSH_HOST_IP" >> $GITHUB_ENV
         working-directory: iac_modules/terraform/gcp/vhost/
 
