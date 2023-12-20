@@ -1,0 +1,19 @@
+- name: Pre setting
+  shell: "rm -f /usr/bin/promtail; mkdir -pv /etc/promtail/ && touch /var/log/positions.yaml"
+  when: inventory_hostname in groups[group]
+
+- name: Download promtail binary
+  shell: 'curl -Lo /usr/bin/promtail https://mirrors.onwalk.net/tools/linux-amd64/promtail && chmod 755 /usr/bin/promtail'
+  when: inventory_hostname in groups[group]
+
+- name: Create promtail-agent service
+  template: src=templates/promtail-agent.service dest=/lib/systemd/system/promtail-agent.service owner=root group=root mode=0644
+  when: inventory_hostname in groups[group]
+
+- name: Create promtail-agent config
+  template: src=templates/promtail.yaml dest=/etc/promtail/promtail.yaml owner=root group=root mode=0644
+  when: inventory_hostname in groups[group]
+
+- name: Init promtail-agent service
+  shell: "systemctl enable promtail-agent && systemctl daemon-reload && systemctl restart promtail-agent"
+  when: inventory_hostname in groups[group]

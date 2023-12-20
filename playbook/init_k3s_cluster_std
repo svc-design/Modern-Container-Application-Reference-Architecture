@@ -1,0 +1,32 @@
+- name: set artifact cluster with vhosts
+  hosts: all
+  user: root
+  become: yes
+  gather_facts: yes
+  tasks:
+    - include_role:
+        name: k3s-reset
+      vars:
+        group: master
+        cluster_reset: 'enable'
+    - include_role:
+        name: k3s
+      vars:
+        group: master
+        cni: default
+        version: 'v1.27.2+k3s1'
+        pod_cidr: '10.10.0.0/16'
+        svc_cidr: '172.16.0.0/16'
+    - include_role:
+        name: k3s-addon
+      vars:
+        group: master
+        gitops: enable
+        config_repo: https://github.com/svc-design/gitops.git
+        ingress: nginx
+        domain: svc.plus
+        namespace: ingress
+        auto_issuance: true
+        update_secret: false
+        external_dns: enable
+        svc_discovery: disable

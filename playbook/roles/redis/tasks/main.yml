@@ -1,0 +1,3 @@
+- name: Setup Redis Server
+  script: files/setup-redis.sh
+  when: inventory_hostname in groups[group]

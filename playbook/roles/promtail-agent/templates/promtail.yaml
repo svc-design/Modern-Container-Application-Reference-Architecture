@@ -1,0 +1,38 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+clients:
+  - url: http://{{ loki_host }}:{{ loki_port }}/loki/api/v1/push
+
+positions:
+  filename: /var/log/positions.yaml
+
+scrape_configs:
+- job_name: system-auth-log
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+      instance: {{ inventory_hostname }}
+      {{ label }}
+      job: secure
+      __path__: /var/log/auth.log
+- job_name: system-os-log
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+      instance: {{ inventory_hostname }}
+      {{ label }}
+      job: syslog
+      __path__: /var/log/syslog
+- job_name: system-audit-log
+  static_configs:
+  - targets:
+      - localhost
+    labels:
+      instance: {{ inventory_hostname }}
+      {{ label }}
+      job: audit
+      __path__: /var/log/audit/audit.log

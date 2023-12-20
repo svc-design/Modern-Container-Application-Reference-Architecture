@@ -1,0 +1,47 @@
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+ name: kubernetes-discovery
+ namespace: default
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+ name: kubernetes-discovery
+rules:
+- apiGroups: [ "" ]
+  resources: [ endpoints ]
+  verbs: [ get,list,watch ]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+ name: kubernetes-discovery
+roleRef:
+ apiGroup: rbac.authorization.k8s.io
+ kind: ClusterRole
+ name: apisix-test
+subjects:
+ - kind: ServiceAccount
+   name: kubernetes-discovery
+   namespace: default
+---
+#discovery:
+#  kubernetes:
+#  - id: release  # a custom name refer to the cluster, pattern ^[a-z0-9]{1,8}
+#    service:
+#      schema: https #default https
+#      host: "1.cluster.com"
+#      port: "6443"
+#    client:
+#      #token: |-
+#       # eyJhbGciOiJSUzI1NiIsImtpZCI6Ikx5ME1DNWdnbmhQNkZCNlZYMXBsT3pYU3BBS2swYzBPSkN3ZnBESGpkUEEif
+#       # 6Ikx5ME1DNWdnbmhQNkZCNlZYMXBsT3pYU3BBS2swYzBPSkN3ZnBESGpkUEEifeyJhbGciOiJSUzI1NiIsImtpZCI
+#    default_weight: 50 # weight assigned to each discovered endpoint. default 50, minimum 0
+#    namespace_selector:
+#      equal: default
+#    label_selector: |-
+#      first="a",second="b"
+#    shared_size: 1m #default 1m

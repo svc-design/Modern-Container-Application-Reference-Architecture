@@ -1,0 +1,12 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+{% for item in groups[group] %}
+{{ hostvars[item]['ansible_host'] }} {{ item }}
+{% endfor %}
+
+{% if extra_domain is defined %}
+{% for ip, domain_name in extra_domain.items() %}
+{{ ip }}  {{ domain_name }}      
+{% endfor %}
+{% endif %}

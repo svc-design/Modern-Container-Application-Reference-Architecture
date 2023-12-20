@@ -1,0 +1,4 @@
+- name: Reset K3S Cluster
+  script: files/reset-k3s.sh
+  when: (inventory_hostname in groups[group] ) and ( cluster_reset == 'enanble' )
+

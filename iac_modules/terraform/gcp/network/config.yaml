@@ -1,0 +1,5 @@
+project_id: "cloudsvcsandbox"
+region: "asia-northeast1"
+vpc_cidr: "10.0.0.0/16"
+region: "asia-northeast1"
+bucket_name: "iac_gcp_terraform_state"

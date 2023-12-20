@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clickhouse-config
+  namespace: monitoring
+data:
+  keeper.xml: |
+    <?xml version="1.0"?>
+    <yandex>
+        <listen_host>0.0.0.0</listen_host>
+        <logger>
+            <level>trace</level>
+            <console>1</console>
+        </logger>
+        <openSSL>
+            <server>
+                <certificateFile remove="1"/>
+                <privateKeyFile remove="1"/>
+            </server>
+        </openSSL>
+        <keeper_server>
+            <tcp_port>2181</tcp_port>
+            <server_id from_env="CK_INDEX"/>
+            <log_storage_path>/var/lib/clickhouse/coordination/log</log_storage_path>
+            <snapshot_storage_path>/var/lib/clickhouse/coordination/snapshots</snapshot_storage_path>
+            <coordination_settings>
+                <operation_timeout_ms>10000</operation_timeout_ms>
+                <session_timeout_ms>30000</session_timeout_ms>
+                <raft_logs_level>trace</raft_logs_level>
+                <rotate_log_storage_interval>10000</rotate_log_storage_interval>
+            </coordination_settings>
+            <raft_configuration>
+                <server>
+                    <id>0</id>
+                    <hostname>clickhouse-0.clickhouse-service.monitoring</hostname>
+                    <port>9444</port>
+                </server>
+                <server>
+                    <id>1</id>
+                    <hostname>clickhouse-1.clickhouse-service.monitoring</hostname>
+                    <port>9444</port>
+                </server>
+                <server>
+                    <id>2</id>
+                    <hostname>clickhouse-2.clickhouse-service.monitoring</hostname>
+                    <port>9444</port>
+                </server>
+            </raft_configuration>
+        </keeper_server>
+        <zookeeper>
+            <node>
+                <host>clickhouse-0.clickhouse-service.monitoring</host>
+                <port>2181</port>
+            </node>
+            <node>
+                <host>clickhouse-1.clickhouse-service.monitoring</host>
+                <port>2181</port>
+            </node>
+            <node>
+                <host>clickhouse-2.clickhouse-service.monitoring</host>
+                <port>2181</port>
+            </node>
+        </zookeeper>
+    </yandex>
+
+  cluster.xml: |
+    <?xml version="1.0"?>
+    <yandex>
+        <remote_servers>
+            <testcluster>
+                <shard>
+                    <replica>
+                        <host>clickhouse-0.clickhouse-service.monitoring</host>
+                        <port>9000</port>
+                    </replica>
+                </shard>
+                <shard>
+                    <replica>
+                        <host>clickhouse-1.clickhouse-service.monitoring</host>
+                        <port>9000</port>
+                    </replica>
+                </shard>
+            </testcluster>
+        </remote_servers>
+    </yandex>
+  macros.xml: |
+    <?xml version="1.0" ?>
+    <yandex>
+        <macros>
+            <cluster>testcluster</cluster>
+            <replica from_env="HOSTNAME"/>
+            <shard>1</shard>
+        </macros>
+    </yandex>

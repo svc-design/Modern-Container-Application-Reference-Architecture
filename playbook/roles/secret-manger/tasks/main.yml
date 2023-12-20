@@ -1,0 +1,48 @@
+- name: "cluster {{ ClusterContext }} : Create namespace"
+  shell: "kubectl create ns {{ namespace }} || echo true"
+
+# Create General Secret for K8S form File
+
+- name: "cluster {{ ClusterContext }} : Clean OLD Secret"
+  shell: "kubectl delete secret {{ item.secret_name }} -n  {{ namespace }}"
+  ignore_errors: yes
+  loop: "{{ generic }}"
+  when: generic is defined
+
+- name: "cluster {{ ClusterContext }} Create New Generic Secret from Key/Vaule"
+  shell: 'kubectl create secret generic {{ item.secret_name }}              \
+          --from-literal={{ item.sercet_key }}="{{ item.secret_value }}"    \
+          -n {{ namespace }}'
+  loop: "{{ generic }}"
+  when: generic is defined
+
+# Create General Secret for K8S From Key/Value
+
+- name: "cluster {{ ClusterContext }} : Clean OLD Secret"
+  shell: "kubectl delete secret {{ item.secret_name }} -n  {{ namespace }}"
+  ignore_errors: yes
+  loop: "{{ secret }}"
+  when: secret is defined
+
+- name: "cluster {{ ClusterContext }} Create New Generic Secret from Key/Vaule"
+  shell: 'kubectl create secret generic {{ item.secret_name }}              \
+          --from-literal={{ item.sercet_key }}="{{ item.secret_value }}"    \
+          -n {{ namespace }}'
+  loop: "{{ secrets }}"
+  when: secrets is defined
+
+# TLS Secret for K8S key/cert
+ 
+- name: "cluster {{ ClusterContext }} : Clean OLD Secret"
+  shell: "kubectl delete secret {{ item.secret_name }} -n {{ namespace }}"
+  ignore_errors: yes
+  loop: "{{ tls }}"
+  when: tls is defined
+
+- name: "cluster {{ ClusterContext }} : Create New tls secret"
+  shell: 'kubectl create secret tls {{ item.secret_name }}            \
+          --key={{ item.keyfile }}                                    \
+          --cert={{ item.certfile }}                                  \
+          -n {{ namespace }}'
+  loop: "{{ tls }}"
+  when: tls is defined

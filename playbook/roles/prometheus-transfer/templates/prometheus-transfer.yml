@@ -1,0 +1,9 @@
+global:
+  scrape_interval: 3s
+  evaluation_interval: 3s
+remote_read:
+  - url: '{{ remote_read }}'
+    read_recent: true
+    basic_auth:
+      username: '{{ remote_user }}'
+      password: '{{ remote_token }}'

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qryn
+  namespace: monitoring
+  labels:
+    io.metrico.service: qryn
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      io.metrico.service: qryn
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        qryn.cmd: qryn.dev
+      creationTimestamp: null
+      labels:
+        io.metrico.service: qryn
+    spec:
+      containers:
+        - env:
+            - name: CLICKHOUSE_AUTH
+              value: "default"
+            - name: CLICKHOUSE_PORT
+              value: "8123"
+            - name: CLICKHOUSE_SERVER
+              value: "{{ hostvars[groups[group][0]].ck_node_ip }}"
+          image: qxip/qryn
+          name: qryn
+          ports:
+            - containerPort: 3100
+          resources: {}
+      restartPolicy: Always
+status: {}

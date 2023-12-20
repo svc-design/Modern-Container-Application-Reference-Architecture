@@ -1,0 +1,65 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixUpstream
+metadata:
+  name: bookinfo-upstream
+  namespace: bookinfo
+spec:
+  discovery:
+    type: kubernetes
+    serviceName: apisix/bookinfo/productpage:9080
+---
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: bookinfo
+  namespace: bookinfo
+spec:
+  http:
+  - name: root
+    match:
+      hosts:
+      - bookinfo.onwalk.net
+      paths:
+      - /*
+    upstreams:
+    - name: bookinfo-upstream
+    plugins:
+    - config:
+        http_to_https: true
+      enable: true
+      name: redirect
+---
+apiVersion: apisix.apache.org/v2
+kind: ApisixTls
+metadata:
+  name: bookinfo
+  namespace: bookinfo
+spec:
+  hosts:
+  - bookinfo.onwalk.net
+  secret:
+    name: bookinfo-tls
+    namespace: bookinfo
+---
+curl -k --header "Authorization: Bearer tokenxxxxx" https://10.170.0.8:6443/api
+---
+kubectl get secret kubernetes-discovery-token -o jsonpath={.data.token} | base64 -d
+---
+kubectl edit cm -n ingress apisix
+    discovery:
+      kubernetes:
+      - id: apisix
+        service:
+          schema: https
+          host: "10.170.0.6"
+          port: "6443"
+        client:
+          token: |-
+            #xxxxxxxxxxxxxxx 
+        default_weight: 50
+        namespace_selector:
+          match:
+          - bookinfo
+          - nginx
+        shared_size: 1m
+---

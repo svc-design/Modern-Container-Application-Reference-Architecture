@@ -1,0 +1,24 @@
+ingress-controller:
+  enabled: true
+  config:
+    apisix:
+      serviceNamespace: ingress
+etcd:
+  replicaCount: 1
+discovery:
+  enabled: true
+admin:
+  enabled: true
+gateway:
+  enabled: true
+  type: NodePort
+  http:
+    enabled: true
+    nodePort: 80
+  tls:
+    enabled: true
+    nodePort: 443
+  externalIPs:
+    - {{ ingress_ip }}
+dashboard:
+  enabled: true

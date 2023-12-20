@@ -1,0 +1,48 @@
+- name: Prep DIR
+  shell: "mkdir -pv /tmp/clickhouse-cluster/ && mkdir -pv /tmp/qryn"
+
+- name: Prep NameSpace
+  shell: "kubectl create namespace monitoring || echo true"
+
+- name: sync clickhouse deploy yaml
+  template: src=templates/{{ item }}  dest=/tmp/{{ item }} owner=root group=root mode=0644 force=yes unsafe_writes=yes
+  with_items:
+    - clickhouse-cluster/clickhouse-config.yaml
+    - clickhouse-cluster/clickhouse-service.yaml
+    - clickhouse-cluster/clickhouse-user-config.yaml
+    - clickhouse-cluster/clickhouse-statefulset.yml
+    - postsetup.sh
+
+- name: Setup ClickHouse Server
+  shell: "cd /tmp/clickhouse-cluster && kubectl apply -f ."
+  when: inventory_hostname in groups[group]
+
+#- name: Post Setup ClickHouse Server
+#  shell: "cd /tmp/ && sh postsetup.sh"
+#  when: inventory_hostname in groups[group]
+
+- name: get clickhouse node ip
+  shell: " kubectl  get pods -n monitoring -o wide | grep -E '^clickhouse-' | awk '{print $6}' "
+  register: ck_node_ip_raw
+  when: inventory_hostname in groups[group][0]
+
+- name: Check if ck_node_ip_raw is not empty
+  fail:
+    msg: "ck_node_ip_raw is empty, terminating the playbook."
+  when: ck_node_ip_raw.stdout_lines | length == 0
+
+- name: set fact join command for ck_node_ip
+  set_fact:
+    ck_node_ip : "{{ ck_node_ip_raw.stdout_lines[0] }}"
+  when: inventory_hostname in groups[group][0]
+
+- name: sync clickhouse deploy yaml
+  template: src=templates/{{ item }}  dest=/tmp/{{ item }} owner=root group=root mode=0644 force=yes unsafe_writes=yes
+  with_items:
+    - qryn/qryn-deployment.yaml
+    - qryn/qryn-service.yaml
+    - qryn/qryn-ingress.yaml
+
+- name: Setup Qryn Server
+  shell: "cd /tmp/qryn && kubectl apply -f ."
+  when: inventory_hostname in groups[group]

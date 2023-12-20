@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: clickhouse-user-config
+  namespace: monitoring
+data:
+  user.xml: |
+    <?xml version="1.0"?>
+    <yandex>
+        <profiles>
+            <default>
+                <max_memory_usage>10000000000</max_memory_usage>
+                <max_distributed_depth>4000</max_distributed_depth>
+                <distributed_connections_pool_size>4096</distributed_connections_pool_size>
+                <max_distributed_connections>4096</max_distributed_connections>
+                <load_balancing>random</load_balancing>
+            </default>
+        </profiles>
+    </yandex>

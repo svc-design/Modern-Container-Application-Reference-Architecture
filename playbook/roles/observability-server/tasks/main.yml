@@ -1,0 +1,38 @@
+- name: Post Setup MySQL Server
+  script: files/mysql-db-init-setup.sh {{ db_namespace }}
+  when: inventory_hostname in groups[group]
+
+- name: get mysql db password
+  shell: 'kubectl get secret --namespace database mysql -o jsonpath="{.data.mysql-root-password}" | base64 -d'
+  register: mysql_db_password_raw
+  when: inventory_hostname in groups[group][0]
+
+- name: set fact join command
+  set_fact:
+    mysql_db_password : "{{ mysql_db_password_raw.stdout }}"
+  when: inventory_hostname in groups[group][0]
+
+- name: get clickhouse node ips
+  shell: "kubectl  get pods -n monitoring -o wide | grep  clickhouse  | awk '{print $6}'"
+  register: ck_node_ips_raw
+  when: inventory_hostname in groups[group][0]
+
+- name: set fact join command for ck_node_ip1
+  set_fact:
+    ck_node_ip1 : "{{ ck_node_ips_raw.stdout_lines[0] }}"
+  when: inventory_hostname in groups[group][0]
+
+- name: set fact join command for ck_node_ip2
+  set_fact:
+    ck_node_ip2 : "{{ ck_node_ips_raw.stdout_lines[1] }}"
+  when: inventory_hostname in groups[group][0]
+
+- name: set fact join command for ck_node_ip3
+  set_fact:
+    ck_node_ip3 : "{{ ck_node_ips_raw.stdout_lines[2] }}"
+  when: inventory_hostname in groups[group][0]
+
+- name: Setup OpenLdap Server
+  script: files/setup-observable-server.sh {{ domain }} {{ item.secret_name }} {{ namespace }} {{ mysql_db_password }} {{ ck_node_ip1 }} {{ ck_node_ip2 }} {{ ck_node_ip3 }}
+  when: inventory_hostname in groups[group] and ( tls is defined)
+  loop: "{{ tls }}"

@@ -1,0 +1,19 @@
+- name: setup keycloak 
+  hosts: all
+  user: root
+  become: yes
+  gather_facts: yes
+  tasks:
+    - include_role:
+        name: keycloak
+      vars:
+        group: master
+        namespace: itsm
+        db_namespace: database
+        domain: onwalk.net
+        update_secret: true
+        auto_issuance: false
+        tls:
+          - secret_name: keycloak-tls
+            keyfile: /etc/ssl/onwalk.net.key
+            certfile: /etc/ssl/onwalk.net.pem

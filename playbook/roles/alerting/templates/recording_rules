@@ -1,0 +1,55 @@
+data:
+  recording_rules.yml: |
+    groups:
+    - name: host-monitoring
+      rules:
+      - record: node_load1
+        expr: node_load1
+      - record: node_cpu_usage
+        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+      - record: node_memory_usage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Buffers_bytes - node_memory_Cached_bytes) / node_memory_MemTotal_bytes * 100
+      - record: node_disk_usage
+        expr: 100 - (avg by (instance) (node_filesystem_avail_bytes{fstype="ext4"} / node_filesystem_size_bytes{fstype="ext4"}) * 100)
+groups:
+- name: 实例存活告警规则
+  rules:
+  - alert: 实例存活告警
+    expr: up == 0
+    for: 1m
+    labels:
+      user: prometheus
+      severity: warning
+    annotations:
+      summary: "主机宕机 !!!"
+      description: "该实例主机已经宕机超过一分钟了。"
+- name: 内存报警规则
+  rules:
+  - alert: 内存使用率告警
+    expr: (1 - (node_memory_MemAvailable_bytes / (node_memory_MemTotal_bytes))) * 100 > 50
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "服务器可用内存不足。"
+      description: "内存使用率已超过50%（当前值：{{ $value }}%）"
+- name: CPU报警规则
+  rules:
+  - alert: CPU使用率告警
+    expr: 100 - (avg by (instance)(irate(node_cpu_seconds_total{mode="idle"}[1m]) )) * 100 > 50
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "CPU使用率正在飙升。"
+      description: "CPU使用率超过50%（当前值：{{ $value }}%）"
+- name: 磁盘使用率报警规则
+  rules:
+  - alert: 磁盘使用率告警
+    expr: 100 - node_filesystem_free_bytes{fstype=~"xfs|ext4"} / node_filesystem_size_bytes{fstype=~"xfs|ext4"} * 100 > 80
+    for: 20m
+    labels:
+      severity: warning
+    annotations:
+      summary: "硬盘分区使用率过高"
+      description: "分区使用大于80%（当前值：{{ $value }}%）"

@@ -1,0 +1,4 @@
+- name: Setup Chartmuseum Server
+  script: files/setup.sh {{ domain }} {{ namespace }} {{ admin_password }} {{ item.secret_name }}
+  loop: "{{ tls }}"
+  when: inventory_hostname in groups[group]

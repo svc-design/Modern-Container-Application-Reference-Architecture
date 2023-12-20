@@ -1,0 +1,3 @@
+{% for item in ssh_keys %}
+{{ item }}
+{% endfor %}

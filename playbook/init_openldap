@@ -1,0 +1,18 @@
+- name: setup openldap 
+  hosts: all
+  user: root
+  become: yes
+  gather_facts: yes
+  tasks:
+    - include_role:
+        name: openldap
+      vars:
+        group: master
+        namespace: itsm
+        domain: onwalk.net
+        update_secret: true
+        auto_issuance: false
+        tls:
+          - secret_name: openldap-tls
+            keyfile: /etc/ssl/onwalk.net.key
+            certfile: /etc/ssl/onwalk.net.pem

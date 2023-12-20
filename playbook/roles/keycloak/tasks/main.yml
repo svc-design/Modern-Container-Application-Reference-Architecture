@@ -1,0 +1,29 @@
+- name: Init Keycloak DB
+  script: files/pre-setup.sh {{ db_namespace }}
+
+- name: get db password
+  shell: 'kubectl get secret --namespace database postgresql -o jsonpath="{.data.postgres-password}" | base64 -d'
+  register: command_raw
+  when: inventory_hostname in groups[group][0]
+
+- name: set fact join command
+  set_fact:
+    keycloak_db_password : "{{ command_raw.stdout }}"
+  when: inventory_hostname in groups[group][0]
+
+#- name: Show Debug Info
+#  debug: var=command_raw verbosity=0
+
+- name: Setup Keycloak Server
+  script: files/setup-keycloak.sh {{ domain }} {{ item.secret_name }} {{ namespace }} {{ admin_password }} {{ hostvars[groups[group][0]].keycloak_db_password }}
+  loop: "{{ tls }}"
+  when: inventory_hostname in groups[group]
+
+#- name: Sync aws-gloabl-oidc-broker deploy yaml
+#  template: src=templates/{{ item }}  dest=/tmp/{{ item }} owner=root group=root mode=0644 force=yes unsafe_writes=yes
+#  with_items:
+#    - aws-gloabl-oidc-broker.yaml
+
+#- name: Setup aws-gloabl-oidc-broker
+#  shell: "kubectl apply -f /tmp/aws-gloabl-oidc-broker.yaml"
+#  when: inventory_hostname in groups[group]

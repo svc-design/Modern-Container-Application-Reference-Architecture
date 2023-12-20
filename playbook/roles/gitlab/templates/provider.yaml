@@ -1,0 +1,18 @@
+name: 'openid_connect'
+label: 'keycloak-sso'
+args:
+  name: 'openid_connect'
+  scope:
+    - 'openid'
+    - 'profile'
+    - 'email'
+  pkce: true
+  discovery: true
+  response_type: 'code'
+  client_auth_method: 'query'
+  send_scope_to_token_endpoint: true
+  issuer: '{{ gitlab_oidc_isser }}'
+  client_options:
+    identifier: '{{ gitlab_oidc_client_id }}'
+    secret: '{{ gitlab_oidc_client_token }}'
+    redirect_uri: '{{ gitlab_oidc_redirect_uri }}'

@@ -1,0 +1,58 @@
+- name: get redis password
+  shell: 'kubectl get secret --namespace redis redis -o jsonpath="{.data.redis-password}" | base64 -d'
+  register: redis_command_raw
+  when: inventory_hostname in groups[group][0]
+
+- name: set fact join command for redis
+  set_fact:
+    redis_password : "{{ redis_command_raw.stdout }}"
+
+- name: get db password
+  shell: 'kubectl get secret --namespace database postgresql -o jsonpath="{.data.postgres-password}" | base64 -d'
+  register: db_command_raw
+  when: inventory_hostname in groups[group][0]
+
+- name: set fact join command for mysql_db
+  set_fact:
+    pg_db_password : "{{ db_command_raw.stdout }}"
+  when: inventory_hostname in groups[group][0]
+
+#- name: Show Debug Info
+#  debug: var=db_password_raw verbosity=0
+#
+- name: Sync provider.yaml
+  template: src=templates/{{ item }}  dest=/tmp/{{ item }} owner=root group=root mode=0644 force=yes unsafe_writes=yes
+  with_items:
+    - provider.yaml
+
+- name:  "cluster {{ ClusterContext }} Create New Generic Secret from Key/Vaule"
+  shell: 'kubectl delete secret {{ item.secret_name }} -n  {{ namespace }} || echo true; kubectl create secret generic {{ item.secret_name }} --from-file="{{ item.key }}={{ item.value }}" -n {{ namespace }}'
+  loop:
+    - { secret_name: 'gitlab-sso-secret', key: 'provider', value: "/tmp/provider.yaml" }
+
+- name:  "cluster {{ ClusterContext }} Create New Generic Secret from Key/Vaule"
+  shell: 'kubectl delete secret {{ item.secret_name }} -n  {{ namespace }} || echo true; kubectl create secret generic {{ item.secret_name }} --from-literal={{ item.key }}="{{ hostvars[groups[group][0]].pg_db_password }}" -n {{ namespace }}'
+  loop:
+    - { secret_name: 'gitlab-db-secret', key: 'password' }
+
+- name:  "cluster {{ ClusterContext }} Create New Generic Secret from Key/Vaule"
+  shell: 'kubectl delete secret {{ item.secret_name }} -n  {{ namespace }} || echo true; kubectl create secret generic {{ item.secret_name }} --from-literal={{ item.key }}="{{ hostvars[groups[group][0]].redis_password }}" -n {{ namespace }}'
+  loop:
+    - { secret_name: 'gitlab-redis-secret', key: 'password' }
+
+- name:  "cluster {{ ClusterContext }} Create SMTP Secret"
+  shell: 'kubectl delete secret {{ item.secret_name }} -n  {{ namespace }} || echo true; kubectl create secret generic {{ item.secret_name }} --from-literal={{ item.key }}={{ smtp_password }} -n {{ namespace }}'
+  loop:
+    - { secret_name: 'gitlab-smtp-secret', key: 'password' }
+
+- name: DB Pre Setup for Gitlab Server
+  script: files/pre-setup.sh {{ db_namespace }}
+  when: inventory_hostname in groups[group]
+
+- name: Setup Gitlab Server
+  script: files/setup.sh {{ gitlab_version }} {{ domain }} {{ namespace }} 'gitlab-tls' 'gitlab-db-secret' 'gitlab-sso-secret' 'gitlab-smtp-secret' 'gitlab-redis-secret'
+  when: inventory_hostname in groups[group]
+
+- name: Post Setup for Gitlab Server
+  script: files/post-setup.sh
+  when: inventory_hostname in groups[group]

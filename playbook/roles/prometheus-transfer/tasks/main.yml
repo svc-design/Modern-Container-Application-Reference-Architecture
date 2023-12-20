@@ -1,0 +1,21 @@
+- name: Pre setting
+  shell: "rm -f /usr/bin/prometheus; mkdir -pv /opt/prometheus/data/ && chown prometheus:prometheus /opt/prometheus/data/"
+
+- name: download prometheus binary 
+  shell: 'curl -Lo /usr/bin/prometheus https://mirrors.onwalk.net/tools/linux-amd64/prometheus && chmod 755 /usr/bin/prometheus' 
+
+- name: create prometheus-transfer service
+  template: src=templates/prometheus-transfer.service dest=/etc/systemd/system/prometheus-transfer.service owner=root group=root mode=0644
+
+- name: create prometheus-transfer config
+  template: src=templates/prometheus-transfer.yml dest=/etc/prometheus/prometheus-transfer.yml owner=root group=root mode=0644
+
+- name: create prometheus-transfer start script
+  template: src=templates/start-prometheus-transfer-service.sh dest=/usr/bin/start-prometheus-transfer-service.sh owner=root group=root mode=0755
+
+- name: create prometheus-transfer stop script
+  template: src=templates/stop-prometheus-transfer-service.sh dest=/usr/bin/stop-prometheus-transfer-service.sh owner=root group=root mode=0755
+
+- name: init prometheus-transfer service
+  shell: "systemctl enable prometheus-transfer && systemctl daemon-reload && systemctl restart prometheus-transfer"
+

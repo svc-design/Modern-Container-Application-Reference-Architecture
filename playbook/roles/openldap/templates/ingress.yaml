@@ -1,0 +1,45 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openldap
+  namespace: itsm
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: ldap.onwalk.net
+    http:
+      paths:
+      - backend:
+          service:
+            name: openldap-headless
+            port:
+              name: http
+        path: /
+        pathType: ImplementationSpecific
+---
+apiVersion: k8s.nginx.org/v1alpha1
+kind: GlobalConfiguration
+metadata:
+  name: nginx-configuration
+  namespace: ingress
+spec:
+  listeners:
+  - name: ldap-tcp
+    port: 389
+    protocol: TCP
+---
+apiVersion: k8s.nginx.org/v1alpha1
+kind: TransportServer
+metadata:
+  name: ldap-tcp
+  namespace: itsm
+spec:
+  listener:
+    name: ldap-tcp
+    protocol: TCP
+  upstreams:
+  - name: ldap-app
+    service: openldap-headless
+    port: 389
+  action:
+    pass: ldap-app

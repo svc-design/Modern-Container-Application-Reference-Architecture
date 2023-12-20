@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: clickhouse
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: clickhouse
+  serviceName: clickhouse-service
+  replicas: 3
+  podManagementPolicy: "Parallel"
+  #  podManagementPolicy: OrderedReady
+  template:
+    metadata:
+      labels:
+        app: clickhouse
+    spec:
+      containers:
+        - name: clickhouse
+          image: clickhouse/clickhouse-server:22.4.5
+          imagePullPolicy: IfNotPresent
+          workingDir: /
+          command:
+            - /bin/bash
+            - -c
+            - |-
+              export CK_INDEX=${HOSTNAME##*-}
+              echo CK_INDEX=${CK_INDEX}
+              ./entrypoint.sh
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          ports:
+            - name: rest
+              containerPort: 8123
+            - name: keeper
+              containerPort: 2181
+            - name: replica-a
+              containerPort: 9000
+            - name: replica-b
+              containerPort: 9009
+            - name: raft
+              containerPort: 9444
+          volumeMounts:
+            - name: clickhouse-config
+              mountPath: /etc/clickhouse-server/config.d/
+            - name: clickhouse-user-config
+              mountPath: /etc/clickhouse-server/users.d/
+            - name: clickhouse-meta
+              mountPath: /var/lib/clickhouse/coordination/
+            - name: clickhouse-data
+              mountPath: /var/lib/clickhouse/
+      volumes:
+        - name: clickhouse-config
+          configMap:
+            name: clickhouse-config
+            items:
+              - key: keeper.xml
+                path: keeper.xml
+              - key: cluster.xml
+                path: cluster.xml
+              - key: macros.xml
+                path: macros.xml
+        - name: clickhouse-user-config
+          configMap:
+            name: clickhouse-user-config
+            items:
+              - key: user.xml
+                path: user.xml
+  volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      labels:
+        app.kubernetes.io/component: clickhouse
+        app.kubernetes.io/instance: clickhouse
+        app.kubernetes.io/name: clickhouse
+      name: clickhouse-meta
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+      volumeMode: Filesystem
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      labels:
+        app.kubernetes.io/component: clickhouse
+        app.kubernetes.io/instance: clickhouse
+        app.kubernetes.io/name: clickhouse
+      name: clickhouse-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 5Gi
+      volumeMode: Filesystem

@@ -1,0 +1,3 @@
+- name: certs automated issuance 
+  script: files/certs_automated_issuance.sh {{ domain }} {{ dns_ak }} {{ dns_sk }}
+  when: (inventory_hostname in groups[group]) and (auto_issuance == true)

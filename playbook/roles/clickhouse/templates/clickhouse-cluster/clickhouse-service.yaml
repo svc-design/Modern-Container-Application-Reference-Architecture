@@ -1,0 +1,23 @@
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    app: clickhouse
+  name: clickhouse-service
+  namespace: monitoring
+spec:
+  ports:
+    - name: rest
+      port: 8123
+    - name: keeper
+      port: 2181
+    - name: replica-a
+      port: 9000
+    - name: replica-b
+      port: 9009
+    - name: raft
+      port: 9444
+
+  clusterIP: None
+  selector:
+    app: clickhouse

@@ -1,0 +1,37 @@
+data:
+  alerting_rules.yml: |
+    groups:
+    - name: host-monitoring
+      rules:
+      - alert: HighLoad
+        expr: node_load1 > 2.0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High load on {{ $labels.instance }}
+          description: "Load is {{ $value }} (threshold: 2.0)"
+      - alert: HighCpuUsage
+        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: High CPU usage on {{ $labels.instance }}
+          description: "CPU usage is {{ $value }}%"
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemFree_bytes - node_memory_Buffers_bytes - node_memory_Cached_bytes) / node_memory_MemTotal_bytes * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: High memory usage on {{ $labels.instance }}
+          description: "Memory usage is {{ $value }}%"
+      - alert: HighDiskUsage
+        expr: node_filesystem_avail_bytes{fstype="ext4"} / node_filesystem_size_bytes{fstype="ext4"} * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: High disk usage on {{ $labels.instance }}
+          description: "Disk usage is {{ $value }}%

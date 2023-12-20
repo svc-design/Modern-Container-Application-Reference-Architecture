@@ -1,0 +1,5 @@
+[default]
+use_https = True
+host_base = {{ s3_endpoint }}
+bucket_location = {{ region }}
+host_bucket = %(bucket)s.{{ s3_endpoint }}

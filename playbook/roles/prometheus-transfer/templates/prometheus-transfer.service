@@ -1,0 +1,16 @@
+[Unit]
+Description=Prometheus
+Documentation=https://prometheus.io/
+After=network.target
+
+[Service]
+Type=simple
+User=prometheus
+ExecStart=/usr/bin/start-prometheus-transfer-service.sh
+ExecStop=/usr/bin/stop-prometheus-transfer-service.sh
+Restart=on-failure
+RestartSec=30
+StartLimitInterval=0
+
+[Install]
+WantedBy=multi-user.target

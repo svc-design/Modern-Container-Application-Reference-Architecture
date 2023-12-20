@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    io.metrico.service: qryn
+  name: qryn
+  namespace: monitoring
+spec:
+  ports:
+    - name: "3100"
+      port: 3100
+      targetPort: 3100
+  selector:
+    io.metrico.service: qryn

@@ -1,0 +1,11 @@
+- name: Setup K3S Server
+  script: files/setup-k3s.sh {{ version }} {{ cni }} {{ pod_cidr }} {{ svc_cidr }}
+  when: inventory_hostname in groups[group]
+
+- name: Sync K3S CNI Config
+  template: src=templates/cni_install.sh dest=/tmp/ owner=root group=root mode=0644
+  when: ( inventory_hostname in groups[group] ) and (cni == 'kubeovn' )
+- name: Setup K3S CNI
+  shell: 'bash /tmp/cni_install.sh'
+  when: ( inventory_hostname in groups[group] ) and (cni == 'kubeovn' )
+  ignore_errors: yes

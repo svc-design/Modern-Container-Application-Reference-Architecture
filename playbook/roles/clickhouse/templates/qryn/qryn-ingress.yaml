@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: data-gateway
+  namespace: monitoring
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: data-gateway.{{ domain }}
+    http:
+      paths:
+      - backend:
+          service:
+            name: qryn
+            port:
+              number: 3100
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - data-gateway.{{ domain }}
+    secretName: obs-tls

@@ -1,0 +1,23 @@
+- name: setup gitlab 
+  hosts: all
+  user: root
+  become: yes
+  gather_facts: yes
+  tasks:
+    - include_role:
+        name: gitlab
+      vars:
+        group: master
+        gitlab_version: '7.0.4'
+        namespace: gitlab
+        db_namespace: database
+        domain: onwalk.net
+        auto_issuance: false
+        update_secret: true  
+        tls:
+          - secret_name: gitlab-tls
+            keyfile: /etc/ssl/onwalk.net.key
+            certfile: /etc/ssl/onwalk.net.pem
+        gitlab_oidc_client_id: gitlab-oidc
+        gitlab_oidc_isser: 'https://keycloak.onwalk.net/realms/cloud-sso'
+        gitlab_oidc_redirect_uri: 'https://gitlab.onwalk.net/users/auth/openid_connect/callback'

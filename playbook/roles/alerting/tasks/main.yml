@@ -1,0 +1,17 @@
+roles/alerting/tasks/main.yml- name: get db password
+  shell: 'kubectl get secret --namespace database postgresql -o jsonpath="{.data.postgres-password}" | base64 -d'
+  register: command_raw
+  when: inventory_hostname in groups[group][0]
+
+- name: set fact join command
+  set_fact:
+    mysql_db_password : "{{ command_raw.stdout_lines[0] }}"
+  when: inventory_hostname in groups[group][0]
+
+- name: Setup OpenLdap Server
+  script: files/setup-observable-server.sh {{ domain }} {{ secret }} {{ namespace }} {{ mysql_db_password }}
+  when: inventory_hostname in groups[group]
+
+- name: Check alerting rules config
+  shell: promtool check rules /path/to/example.rules.yml
+  when: inventory_hostname in groups[group]

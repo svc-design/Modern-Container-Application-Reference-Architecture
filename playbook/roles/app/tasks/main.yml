@@ -1,0 +1,16 @@
+- name: Prep DIR
+  shell: "mkdir -pv /tmp/app/"
+
+- name: Prep NameSpace
+  shell: "kubectl create namespace default || echo true"
+
+- name: Sync Deploy yaml
+  template: src=templates/{{ item }}  dest=/tmp/app/{{ item }} owner=root group=root mode=0644 force=yes unsafe_writes=yes
+  with_items:
+    - deploy-app.yaml
+
+- name: Setup App
+  shell: "kubectl apply -f /tmp/app/{{ item }}"
+  when: inventory_hostname in groups[group]
+  with_items:
+   - deploy-app.yaml
