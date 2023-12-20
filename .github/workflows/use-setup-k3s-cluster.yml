@@ -71,5 +71,5 @@ jobs:
         shell: bash
         run: |
           export ANSIBLE_HOST_KEY_CHECKING=False
-          ansible-playbook -i hosts/inventory init_k3s_cluster_with_gitops -e "cluster_name=${inputs.ssh_host_name}" -e "domain=${inputs.domain}" -D
+          ansible-playbook -i hosts/inventory init_k3s_cluster_with_gitops -e "cluster_name=${{inputs.ssh_host_name}}" -e "domain=${{inputs.domain}}" -D
         working-directory: playbook/ 
