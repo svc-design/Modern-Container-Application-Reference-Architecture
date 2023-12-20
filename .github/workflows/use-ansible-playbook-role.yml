@@ -23,6 +23,8 @@ on:
         required: true
       DNS_SK:
         required: true
+      SSH_USER:
+        required: true
 
 jobs:
   setup-app-cluster:
@@ -30,6 +32,7 @@ jobs:
     env:
       DNS_AK: ${{ secrets.DNS_AK }}
       DNS_SK: ${{ secrets.DNS_SK }}
+      SSH_USER: ${{ secrets.SSH_USER }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       SSH_HOST_DOMAIN: "${{ inputs.ssh_host_name }}.${{ inputs.domain }}"
     
