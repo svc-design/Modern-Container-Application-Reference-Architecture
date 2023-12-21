@@ -10,6 +10,7 @@ sources:
   - ingress
 domainFilters:
   - onwalk.net
+  - svc.ink
   - svc.plus
   - svc-sit.ink
   - svc-dev.ink
