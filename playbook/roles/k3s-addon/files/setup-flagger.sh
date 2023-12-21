@@ -9,13 +9,14 @@ check_not_empty() {
 }
 
 # 检查参数是否为空
-check_not_empty "$1" "Git repository URL" && git_repo=$1
-check_not_empty "$2" "Git repository URL" && git_repo=$1
+#check_not_empty "$1" "Git repository URL" && git_repo=$1
+#check_not_empty "$2" "Git repository URL" && git_repo=$1
 
 helm repo add flagger https://flagger.app
 helm repo update
+kubectl create ns ingress || echo true
 helm upgrade -i flagger flagger/flagger           \
---namespace ingress-nginx                         \
+--namespace ingress                               \
 --set prometheus.install=false                    \
 --set meshProvider=nginx                          \
---set metricsServer="https://prometheus.svc.plus" \
+--set metricsServer="https://prometheus.svc.plus"
