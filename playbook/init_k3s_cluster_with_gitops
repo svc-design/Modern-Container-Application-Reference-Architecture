@@ -22,6 +22,7 @@
       vars:
         group: master
         gitops: enable
+        canary: enable
         auto_issuance: true
         external_dns: enable
         update_secret: false
