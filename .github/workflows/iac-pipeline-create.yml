@@ -39,6 +39,21 @@ jobs:
     needs:
       - apply-cluster-resources
 
+  setup-observability-server:
+    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-server.yml@main
+    with:
+      domain: 'svc.plus'
+      cluster_name: 'monitor'
+      ssh_host_name: 'monitor'
+    secrets:
+      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      DNS_AK: ${{ secrets.DNS_AK }}
+      DNS_SK: ${{ secrets.DNS_SK }}
+      SSH_USER: ${{ secrets.HOST_USER }}
+    needs:
+      - setup-monitor-cluster
+
   setup-devops-cluster:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
     with:
