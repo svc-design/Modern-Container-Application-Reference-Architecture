@@ -21,12 +21,12 @@
         name: k3s-addon
       vars:
         group: master
-        gitops: enable
-        config_repo: https://github.com/svc-design/gitops.git
         ingress: nginx
-        domain: svc.plus
-        namespace: ingress
+        gitops: enable
+        canary: enable
         auto_issuance: true
-        update_secret: false
         external_dns: enable
+        external_dns: enable
+        update_secret: false
         svc_discovery: disable
+        config_repo: https://github.com/svc-design/gitops.git
