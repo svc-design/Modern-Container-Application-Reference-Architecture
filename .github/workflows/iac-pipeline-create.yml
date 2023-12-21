@@ -27,7 +27,7 @@ jobs:
   setup-monitor-cluster:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
     with:
-      domain: 'svc.plus'
+      domain: 'svc.ink'
       cluster_name: 'monitor'
       ssh_host_name: 'monitor'
     secrets:
@@ -42,7 +42,7 @@ jobs:
   setup-observability-server:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-server.yml@main
     with:
-      domain: 'svc.plus'
+      domain: 'svc.ink'
       cluster_name: 'monitor'
       ssh_host_name: 'monitor'
     secrets:
@@ -57,7 +57,7 @@ jobs:
   setup-devops-cluster:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
     with:
-      domain: 'svc.plus'
+      domain: 'svc.ink'
       cluster_name: 'devops'
       ssh_host_name: 'devops'
     secrets:
@@ -102,7 +102,7 @@ jobs:
   setup-prod-cluster:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
     with:
-      domain: 'svc.plus'
+      domain: 'svc.ink'
       cluster_name: 'prod'
       ssh_host_name: 'prod'
     secrets:
