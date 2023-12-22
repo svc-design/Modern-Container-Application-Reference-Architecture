@@ -69,6 +69,21 @@ jobs:
     needs:
       - apply-cluster-resources
 
+  setup-devops-cluster-observability-agent:
+    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-agent.yml@main
+    with:
+      domain: 'svc.ink'
+      cluster_name: 'monitor'
+      ssh_host_name: 'monitor'
+    secrets:
+      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      DNS_AK: ${{ secrets.DNS_AK }}
+      DNS_SK: ${{ secrets.DNS_SK }}
+      SSH_USER: ${{ secrets.HOST_USER }}
+    needs:
+      - setup-devops-cluster
+
   setup-sit-cluster:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
     with:
@@ -83,6 +98,21 @@ jobs:
       SSH_USER: ${{ secrets.HOST_USER }}
     needs:
       - apply-cluster-resources
+
+  setup-sit-cluster-observability-agent:
+    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-agent.yml@main
+    with:
+      domain: 'svc.ink'
+      cluster_name: 'monitor'
+      ssh_host_name: 'monitor'
+    secrets:
+      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      DNS_AK: ${{ secrets.DNS_AK }}
+      DNS_SK: ${{ secrets.DNS_SK }}
+      SSH_USER: ${{ secrets.HOST_USER }}
+    needs:
+      - setup-sit-cluster
 
   setup-uat-cluster:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
@@ -99,6 +129,21 @@ jobs:
     needs:
       - apply-cluster-resources
 
+  setup-uat-cluster-observability-agent:
+    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-agent.yml@main
+    with:
+      domain: 'svc.ink'
+      cluster_name: 'monitor'
+      ssh_host_name: 'monitor'
+    secrets:
+      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      DNS_AK: ${{ secrets.DNS_AK }}
+      DNS_SK: ${{ secrets.DNS_SK }}
+      SSH_USER: ${{ secrets.HOST_USER }}
+    needs:
+      - setup-uat-cluster
+
   setup-prod-cluster:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
     with:
@@ -113,3 +158,18 @@ jobs:
       SSH_USER: ${{ secrets.HOST_USER }}
     needs:
       - apply-cluster-resources
+
+  setup-prod-cluster-observability-agent:
+    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-agent.yml@main
+    with:
+      domain: 'svc.ink'
+      cluster_name: 'monitor'
+      ssh_host_name: 'monitor'
+    secrets:
+      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      DNS_AK: ${{ secrets.DNS_AK }}
+      DNS_SK: ${{ secrets.DNS_SK }}
+      SSH_USER: ${{ secrets.HOST_USER }}
+    needs:
+      - setup-prod-cluster
