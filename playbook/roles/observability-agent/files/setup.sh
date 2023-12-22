@@ -35,7 +35,7 @@ kubectl create namespace monitoring || echo true
 kubectl label nodes $node prometheus=true --overwrite || echo true
 helm repo add stable https://charts.onwalk.net/ || echo true
 helm repo update
-helm upgrade --install observableagent stable/observabilityagent -n monitoring -f values.yaml
+helm upgrade --install observabilityagent stable/observabilityagent -n monitoring -f values.yaml
 
 cat > prometheus-agent-values.yaml << EOF
 prometheus:
