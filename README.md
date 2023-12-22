@@ -66,3 +66,5 @@ We welcome contributions from the community to enhance this reference architectu
 # License
 
 This reference architecture is released under the GPL V3 License.
+
+https://github.com/fluxcd/flux2-monitoring-example
