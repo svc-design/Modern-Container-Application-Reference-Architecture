@@ -24,7 +24,7 @@
         ingress: nginx
         gitops: enable
         canary: enable
-        auto_issuance: false
+        auto_issuance: true
         external_dns: enable
         external_dns: enable
         update_secret: false

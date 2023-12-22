@@ -38,6 +38,8 @@ helm repo update
 helm upgrade --install observabilityagent stable/observabilityagent -n monitoring -f values.yaml
 
 cat > prometheus-agent-values.yaml << EOF
+global:
+  imageRegistry: "artifact.onwalk.net/base"
 prometheus:
   agentMode: true
   prometheusSpec:
@@ -69,4 +71,4 @@ kubectl label nodes $node prometheus=true --overwrite || echo true
 helm repo add stable https://charts.onwalk.net/ || echo true
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 helm repo update
-helm upgrade --install prometheus-agent prometheus-community/kube-prometheus-stack -n monitoring -f prometheus-agent-values.yaml
+helm upgrade --install kube-prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring -f prometheus-agent-values.yaml
