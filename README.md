@@ -68,3 +68,7 @@ We welcome contributions from the community to enhance this reference architectu
 This reference architecture is released under the GPL V3 License.
 
 https://github.com/fluxcd/flux2-monitoring-example
+
+# Doc
+
+- 多集群运维(一)：自动化交付，构建，部署，发布，监控: https://cloud.tencent.com/developer/article/2373761
