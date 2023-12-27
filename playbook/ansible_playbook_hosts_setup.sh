@@ -9,7 +9,7 @@ check_empty() {
 }
 
 # List of variables to check
-variables=("DNS_AK" "DNS_SK" "DOMAIN" "SSH_USER" "SSH_HOST_IP" "SSH_HOST_DOMAIN" "SSH_PRIVATE_KEY")
+variables=("SSH_USER" "SSH_HOST_IP" "SSH_HOST_DOMAIN" "SSH_PRIVATE_KEY")
 
 # Loop through variables and check if each one is empty
 for var in "${variables[@]}"; do
