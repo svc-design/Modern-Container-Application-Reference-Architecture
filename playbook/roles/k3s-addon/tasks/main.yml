@@ -2,6 +2,10 @@
   script: files/setup-fluxcd.sh {{ config_repo }} {{ cluster_name }}
   when: inventory_hostname in groups[group] and ( gitops == 'enable' )
 
+- name: Setup Prometheus Operator
+  script: files/setup-prometheus-operator.sh {{ cluster_name }}
+  when: inventory_hostname in groups[group] and ( gitops == 'enable' )
+
 - name: Set K3S Ingress
   script: files/setup-ingress.sh {{ ingress }}  {{ ingress_ip }}
   when: inventory_hostname in groups[group] and ( ingress == 'nginx' )
