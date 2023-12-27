@@ -24,7 +24,7 @@ on:
         required: true
 
 jobs:
-  setup-app-cluster:
+  init-k3s-cluster:
     runs-on: ubuntu-latest
     env:
       DOMAIN: ${{ inputs.domain }}

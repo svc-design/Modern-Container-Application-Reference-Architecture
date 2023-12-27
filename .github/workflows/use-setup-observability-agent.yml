@@ -24,7 +24,7 @@ on:
         required: true
 
 jobs:
-  setup-app-cluster:
+  init-observability-agent:
     runs-on: ubuntu-latest
     env:
       DOMAIN: ${{ inputs.domain }}
