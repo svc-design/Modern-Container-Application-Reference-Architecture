@@ -64,7 +64,9 @@ jobs:
         working-directory: iac_modules/terraform/gcp/vhost/
 
       - name: Update playbook hosts
-        run: bash observability-platform-pre_setup.sh
+        run: 
+          - bash ansible_playbook_hosts_setup.sh
+          - bash ansible_playbook_tasks_setup_observability_platform.sh
         working-directory: playbook/ 
 
       - name: Setup Observability Server 
