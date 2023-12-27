@@ -20,7 +20,7 @@
         name: flagger-loadtester 
       vars:
         group: master
-        update_secret: true
+        update_secret: false
         auto_issuance: false
         namespace: loadtester
         tls:
