@@ -27,6 +27,7 @@ jobs:
   setup-app-cluster:
     runs-on: ubuntu-latest
     env:
+      DOMAIN: ${{ inputs.domain }}
       DNS_AK: ${{ secrets.DNS_AK }}
       DNS_SK: ${{ secrets.DNS_SK }}
       SSH_USER: ${{ secrets.SSH_USER }}

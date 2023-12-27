@@ -9,7 +9,7 @@ check_empty() {
 }
 
 # List of variables to check
-variables=("domain")
+variables=("DOMAIN")
 
 # Loop through variables and check if each one is empty
 for var in "${variables[@]}"; do
@@ -33,8 +33,8 @@ cat > init_observability-server << EOF
         db_namespace: database
         tls:
           - secret_name: obs-tls
-            keyfile: /etc/ssl/${domain}.key
-            certfile: /etc/ssl/${domain}.pem
+            keyfile: /etc/ssl/${DOMAIN}.key
+            certfile: /etc/ssl/${DOMAIN}.pem
     - include_role:
         name: flagger-loadtester
       vars:
@@ -44,6 +44,6 @@ cat > init_observability-server << EOF
         namespace: loadtester
         tls:
           - secret_name: obs-tls
-            keyfile: /etc/ssl/${domain}.key
-            certfile: /etc/ssl/${domain}.pem
+            keyfile: /etc/ssl/${DOMAIN}.key
+            certfile: /etc/ssl/${DOMAIN}.pem
 EOF
