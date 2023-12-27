@@ -9,7 +9,7 @@ check_empty() {
 }
 
 # List of variables to check
-variables=("DNS_AK" "DNS_SK" "SSH_USER" "SSH_HOST_IP" "SSH_HOST_DOMAIN" "SSH_PRIVATE_KEY")
+variables=("DNS_AK" "DNS_SK" "DOMAIN" "SSH_USER" "SSH_HOST_IP" "SSH_HOST_DOMAIN" "SSH_PRIVATE_KEY")
 
 # Loop through variables and check if each one is empty
 for var in "${variables[@]}"; do
@@ -37,6 +37,4 @@ ansible_ssh_user=$SSH_USER
 ansible_ssh_private_key_file=~/.ssh/id_rsa
 ansible_host_key_checking=False
 ingress_ip=$SSH_HOST_IP
-dns_ak=$DNS_AK
-dns_sk=$DNS_SK
 EOF

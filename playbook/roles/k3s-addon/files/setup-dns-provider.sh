@@ -10,14 +10,10 @@ check_empty() {
 
 # List of variables to check ; Loop through variables and check if each one is empty
 
-variables=("ak" "sk" "domain")
+variables=("DNS_AK" "DNS_SK" "DOMAIN")
 for var in "${variables[@]}"; do
     check_empty "$var"
 done
-
-ak=$1
-sk=$2
-domain=$3
 
 cat > external-dns-values.yaml << EOF
 clusterDomain: admin.local
@@ -25,12 +21,12 @@ sources:
   - service
   - ingress
 domainFilters:
-  - $domain
+  - $DOMAIN
 policy: upsert-only
 provider: alibabacloud
 alibabacloud:
-  accessKeyId: $ak
-  accessKeySecret: $sk
+  accessKeyId: $DNS_AK
+  accessKeySecret: $DNS_SK
   regionId: rg-acfm2akhd255pgi
   zoneType: public
 EOF
