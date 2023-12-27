@@ -3,7 +3,21 @@ cat > prometheus-values.yaml << EOF
 global:
   imageRegistry: "artifact.onwalk.net/base"
 prometheus:
-  enabled: false
+  enabled: true
+  agentMode: true
+  prometheusSpec:
+    remoteWrite:
+    - name: remote_prometheus
+      url: 'https://prometheus.svc.ink/api/v1/write'
+    retention: 24h
+    resources:
+      requests:
+        cpu: 200m
+        memory: 200Mi
+    podMonitorNamespaceSelector: { }
+    podMonitorSelector:
+      matchLabels:
+        app.kubernetes.io/component: monitoring
 defaultRules:
   create: false
 grafana:
