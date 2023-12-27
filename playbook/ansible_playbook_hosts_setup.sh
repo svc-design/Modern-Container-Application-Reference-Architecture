@@ -38,3 +38,5 @@ ansible_ssh_private_key_file=~/.ssh/id_rsa
 ansible_host_key_checking=False
 ingress_ip=$SSH_HOST_IP
 EOF
+
+cat hosts/inventory

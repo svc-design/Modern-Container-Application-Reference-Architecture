@@ -1,20 +1,19 @@
 #!/bin/bash
 
-# Function to check if a variable is empty
-check_empty() {
-    if [ -z "${!1}" ]; then
-        echo "$1 is empty. Aborting."
-        exit 1
-    fi
+# 检查参数是否为空
+check_not_empty() {
+  if [[ -z $1 ]]; then
+    echo "Error: $2 is empty. Please provide a value."
+    exit 1
+  fi
 }
 
-# List of variables to check ; Loop through variables and check if each one is empty
+# 检查参数是否为空
+check_not_empty "$1" "DNS_AK" && DNS_AK=$1
+check_not_empty "$2" "DNS_SK" && DNS_SK=$2
+check_not_empty "$3" "DOMAIN" && DOMAIN=$3
 
-variables=("DNS_AK" "DNS_SK" "DOMAIN")
-for var in "${variables[@]}"; do
-    check_empty "$var"
-done
-
+# Deploy external-dns
 cat > external-dns-values.yaml << EOF
 clusterDomain: admin.local
 sources:
