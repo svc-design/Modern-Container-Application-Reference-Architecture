@@ -24,6 +24,5 @@
         ingress: nginx
         gitops: enable
         external_dns: enable
-        auto_issuance: false
-        update_secret: false
+        auto_issuance: true
         config_repo: https://github.com/svc-design/gitops.git

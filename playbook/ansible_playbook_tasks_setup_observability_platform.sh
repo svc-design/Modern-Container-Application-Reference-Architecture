@@ -39,7 +39,7 @@ cat > init_observability-server << EOF
         name: flagger-loadtester
       vars:
         group: master
-        update_secret: false
+        update_secret: true
         auto_issuance: false
         namespace: loadtester
         tls:
