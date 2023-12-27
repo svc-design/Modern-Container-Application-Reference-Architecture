@@ -19,4 +19,4 @@ helm upgrade -i flagger flagger/flagger           \
 --namespace ingress                               \
 --set prometheus.install=false                    \
 --set meshProvider=nginx                          \
---set metricsServer="https://prometheus.svc.plus"
+--set metricsServer="https://prometheus.svc.ink"
