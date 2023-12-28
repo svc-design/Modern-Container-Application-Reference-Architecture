@@ -15,9 +15,9 @@ prometheus:
   server:
     name: agent
     extraFlags:
-    - enable-feature=agent
-    - enable-feature=expand-external-labels
     - web.enable-lifecycle
+    - storage.tsdb.retention.time=30m
+    - enable-feature=expand-external-labels
     remoteWrite:
     - name: remote_prometheus
       url: 'https://prometheus.${domain}/api/v1/write'
