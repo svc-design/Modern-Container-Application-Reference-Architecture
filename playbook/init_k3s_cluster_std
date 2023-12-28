@@ -21,8 +21,8 @@
         name: k3s-addon
       vars:
         group: master
-        ingress: nginx
+        ingress: apisix
         gitops: enable
-        external_dns: enable
         auto_issuance: true
+        external_dns: enable
         config_repo: https://github.com/svc-design/gitops.git
