@@ -14,7 +14,7 @@ check_not_empty "$1" "DOMAIN" && DOMAIN=$3
 
 helm repo add flagger https://flagger.app
 kubectl create ns monitoring || true
-helm upgrade -i flagger-loadtester flagger/loadtester --namespace=monitoring
+helm upgrade -i flaggerloadtester flagger/loadtester --namespace=monitoring
 
 cat > flagger-loadtester-ingress.yaml << EOF
 apiVersion: networking.k8s.io/v1
@@ -27,7 +27,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: flagger-loadtester.${DOMAIN}
+  - host: flaggerloadtester.${DOMAIN}
     http:
       paths:
       - backend:
@@ -39,7 +39,7 @@ spec:
         pathType: Prefix
   tls:
   - hosts:
-    - flagger-loadtester.${DOMAIN}
+    - flaggerloadtester.${DOMAIN}
     secretName: obs-tls
 EOF
 
