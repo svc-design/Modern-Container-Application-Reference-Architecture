@@ -16,6 +16,9 @@ service:
   tls:
     servicePort: 443
     nodePort: 443
+apisix:
+  ssl:
+    enabled: true
 ingress-controller:
   enabled: true
 metrics:
