@@ -1,4 +1,16 @@
 #!/bin/bash
+
+# 检查参数是否为空
+check_not_empty() {
+  if [[ -z $1 ]]; then
+    echo "Error: $2 is empty. Please provide a value."
+    exit 1
+  fi
+}
+
+# 检查参数是否为空
+check_not_empty "$1" "DOMAIN" && DOMAIN=$1
+
 cat > prometheus-values.yaml << EOF
 global:
   imageRegistry: "artifact.onwalk.net/base"
@@ -8,7 +20,7 @@ prometheus:
   prometheusSpec:
     remoteWrite:
     - name: remote_prometheus
-      url: 'https://prometheus.svc.ink/api/v1/write'
+      url: 'https://prometheus.${DOMAIN}/api/v1/write'
     retention: 24h
     resources:
       requests:
