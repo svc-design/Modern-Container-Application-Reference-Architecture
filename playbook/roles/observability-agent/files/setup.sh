@@ -14,9 +14,9 @@ prometheus:
   enabled: true
   server:
     name: agent
+    retention: "30m"
     extraFlags:
     - web.enable-lifecycle
-    - storage.tsdb.retention.time=30m
     - enable-feature=expand-external-labels
     remoteWrite:
     - name: remote_prometheus
