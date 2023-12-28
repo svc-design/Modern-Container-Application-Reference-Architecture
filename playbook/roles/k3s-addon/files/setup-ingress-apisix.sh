@@ -19,6 +19,8 @@ service:
 apisix:
   ssl:
     enabled: true
+  prometheus:
+    enabled: true
 ingress-controller:
   enabled: true
   config:
