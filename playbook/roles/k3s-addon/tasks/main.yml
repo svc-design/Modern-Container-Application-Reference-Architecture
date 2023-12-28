@@ -6,6 +6,10 @@
   script: files/setup-prometheus-operator.sh {{ cluster_name }}
   when: inventory_hostname in groups[group] and ( gitops == 'enable' )
 
+- name: Setup KEDA Operator
+  script: files/setup-keda-operator.sh {{ cluster_name }}
+  when: inventory_hostname in groups[group] and ( gitops == 'enable' )
+
 - name: Set K3S Ingress
   script: files/setup-ingress.sh {{ ingress }}  {{ ingress_ip }}
   when: inventory_hostname in groups[group] and ( ingress == 'nginx' )
