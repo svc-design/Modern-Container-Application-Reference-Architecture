@@ -29,6 +29,6 @@ ingress-controller:
 metrics:
   serviceMonitor:
     enabled: true
-    namespace: "monitoring"
+    namespace: "ingress"
 EOF
 helm upgrade --install apisix apisix/apisix --namespace ingress -f values.yaml
