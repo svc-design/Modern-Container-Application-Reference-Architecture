@@ -10,7 +10,7 @@ check_not_empty() {
 }
 
 # 检查参数是否为空
-check_not_empty "$1" "DOMAIN" && DOMAIN=$3
+check_not_empty "$1" "DOMAIN" && DOMAIN=$1
 
 helm repo add flagger https://flagger.app
 kubectl create ns monitoring || true
