@@ -9,6 +9,7 @@ helm repo up
 
 cat > value.yaml <<EOF
 controller:
+  enableLatencyMetrics: true
   name: controller
   config:
     use-http2: true
