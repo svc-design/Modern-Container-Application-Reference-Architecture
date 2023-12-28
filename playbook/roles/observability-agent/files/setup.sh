@@ -13,12 +13,16 @@ deepflow-agent:
 prometheus:
   enabled: true
   server:
+    name: agent
     extraFlags:
+    - enable-feature=agent
     - enable-feature=expand-external-labels
     - web.enable-lifecycle
     remoteWrite:
     - name: remote_prometheus
       url: 'https://prometheus.${domain}/api/v1/write'
+    persistentVolume:
+      enabled: false
   alertmanager:
     enabled: false
   rometheus-pushgateway:
