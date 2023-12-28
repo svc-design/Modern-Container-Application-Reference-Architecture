@@ -11,7 +11,7 @@ deepflow-agent:
     - $deepflowserverip
   deepflowK8sClusterID: $deepflowk8sclusterid
 prometheus:
-  enabled: false
+  enabled: true
   server:
     extraFlags:
     - enable-feature=expand-external-labels

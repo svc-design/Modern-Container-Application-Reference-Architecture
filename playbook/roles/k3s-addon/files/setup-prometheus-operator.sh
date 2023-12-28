@@ -38,6 +38,10 @@ prometheus-windows-exporter:
   enabled: false
 alertmanager:
   enabled: false
+nodeExporter:
+  enabled: false
+kubeStateMetrics:
+  enabled: true
 EOF
 
 node_name=`kubectl get nodes | awk 'NR>1 {print $1}'`
