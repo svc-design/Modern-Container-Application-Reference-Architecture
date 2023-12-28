@@ -16,6 +16,8 @@ service:
   tls:
     servicePort: 443
     nodePort: 443
+ingress-controller:
+  enabled: true
 metrics:
   serviceMonitor:
     enabled: true
