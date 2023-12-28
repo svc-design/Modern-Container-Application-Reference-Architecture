@@ -6,27 +6,16 @@ helm repo add apisix https://charts.apiseven.com || echo true
 helm repo update
 kubectl create ns ingress || echo true
 cat > values.yaml << EOF
-ingress-controller:
-  enabled: true
-  config:
-    apisix:
-      serviceNamespace: ingress
-etcd:
-  replicaCount: 1
 gateway:
-  enabled: true
   type: NodePort
-  http:
-    enabled: true
-    nodePort: 80
   tls:
     enabled: true
     nodePort: 443
   externalIPs:
     - $ingress_ip
-discovery:
+serviceMonitor:
   enabled: true
-admin:
-  enabled: false
+  namespace: "monitoring"
+  interval: 15s
 EOF
-helm upgrade --install apisix apisix/apisix --namespace ingress -f values.yaml
+helm upgrade --install apisix apisix/apisix-ingress-controller --namespace ingress -f values.yaml

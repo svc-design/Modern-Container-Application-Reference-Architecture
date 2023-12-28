@@ -25,7 +25,7 @@ metadata:
   name: flagger
   namespace: monitoring
 spec:
-  ingressClassName: nginx
+  ingressClassName: apisix
   rules:
   - host: flaggerloadtester.${DOMAIN}
     http:

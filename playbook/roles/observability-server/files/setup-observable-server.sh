@@ -22,7 +22,7 @@ deepflow:
     enabled: true
     ingress:
       enabled: true
-      ingressClassName: nginx
+      ingressClassName: apisix
       hosts:
         - grafana.${domain}
       tls:
@@ -63,7 +63,7 @@ prometheus:
       enable-feature: remote-write-receiver
     ingress:
       enabled: true
-      ingressClassName: nginx
+      ingressClassName: apisix
       hosts:
         - prometheus.${domain}
       tls:
