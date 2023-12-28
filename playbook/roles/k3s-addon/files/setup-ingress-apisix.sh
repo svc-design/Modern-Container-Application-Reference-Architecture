@@ -6,6 +6,12 @@ helm repo add apisix https://charts.apiseven.com || echo true
 helm repo update
 kubectl create ns ingress || echo true
 cat > values.yaml << EOF
+config:
+  etcdserver:
+    enabled: false
+  apisix:
+    serviceName: apisix-admin
+    serviceNamespace: ingress
 gateway:
   type: NodePort
   tls:
