@@ -24,6 +24,8 @@ ingress-controller:
   config:
     apisix:
       serviceNamespace: "ingress"
+    kubernetes:
+      enableGatewayAPI: true
 metrics:
   serviceMonitor:
     enabled: true
