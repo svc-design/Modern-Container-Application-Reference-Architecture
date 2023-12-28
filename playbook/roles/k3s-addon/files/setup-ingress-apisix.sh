@@ -23,7 +23,7 @@ ingress-controller:
   enabled: true
   config:
     apisix:
-     namespace: "ingress"
+      serviceNamespace: "ingress"
 metrics:
   serviceMonitor:
     enabled: true
