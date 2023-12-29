@@ -1,6 +1,6 @@
 # Create a VPC network
 resource "google_compute_network" "default" {
-  name                    = "dev-vpc"
+  name                    = "dev"
   project                 = local.config.project_id
   auto_create_subnetworks = false
   delete_default_routes_on_create = true
