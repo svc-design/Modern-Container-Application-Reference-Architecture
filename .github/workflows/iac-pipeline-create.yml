@@ -52,7 +52,7 @@ jobs:
       DNS_SK: ${{ secrets.DNS_SK }}
       SSH_USER: ${{ secrets.HOST_USER }}
     needs:
-      - apply-cluster-resources
+      - setup-monitor-cluster
 
   setup-devops-cluster:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
@@ -67,7 +67,7 @@ jobs:
       DNS_SK: ${{ secrets.DNS_SK }}
       SSH_USER: ${{ secrets.HOST_USER }}
     needs:
-      - setup-monitor-cluster
+      - apply-cluster-resources
 
   setup-devops-cluster-observability-agent:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-agent.yml@main
