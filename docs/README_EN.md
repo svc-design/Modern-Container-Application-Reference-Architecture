@@ -51,6 +51,9 @@ Follow these steps to start using this reference architecture.
 
 ## To Do
 - Multi-cluster Operations (III) to (VI) covering progressive release, multidimensional monitoring, vulnerability testing, and AIOps.
+- SSL Certificate Management
+  - Apply for Let's Encrypt certificates and save them to Vault
+  - Configure CertManager to read certificates from Vault
 
 ## Contributions
 Contributions to this reference architecture are welcome. Feel free to submit pull requests for suggestions, improvements, or bug fixes.
