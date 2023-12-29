@@ -7,33 +7,33 @@ instances:
     zone: "asia-northeast1-a"
     image: "ubuntu-2004-lts"
     disk_size_gb: 100
-    network: "custom"
+    network: "dev"
     subnetwork: internet-subnet
   - name: "monitor"
     type: "e2-standard-4"
     zone: "asia-northeast1-a"
     image: "ubuntu-2004-lts"
     disk_size_gb: 100
-    network: "custom"
+    network: "dev"
     subnetwork: internet-subnet
   - name: "sit"
     image: "ubuntu-2004-lts"
     disk_size_gb: 100
     type: "e2-standard-2"
     zone: "asia-northeast1-a"
-    network: "custom"
+    network: "dev"
     subnetwork: internet-subnet
   - name: "uat"
     type: "e2-standard-4"
     zone: "asia-northeast1-a"
     image: "ubuntu-2004-lts"
     disk_size_gb: 100
-    network: "custom"
+    network: "dev"
     subnetwork: internet-subnet
   - name: "prod"
     type: "e2-standard-4"
     zone: "asia-northeast1-a"
     image: "ubuntu-2004-lts"
     disk_size_gb: 100
-    network: "custom"
+    network: "dev"
     subnetwork: internet-subnet

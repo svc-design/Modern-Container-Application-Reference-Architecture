@@ -3,7 +3,7 @@ project_id: "cloudsvcsandbox"
 bucket_name: "iac_gcp_terraform_state"
 firewall_rules:
   - name: allow-ingress
-    network: "custom"
+    network: "dev"
     allow:
       - protocol: tcp
         ports: [ "22", "8022", "80", "443" ]

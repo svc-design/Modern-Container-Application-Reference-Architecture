@@ -1,10 +1,10 @@
 # Create a VPC network
 resource "google_compute_network" "default" {
-  name                    = "custom"
+  name                    = "dev-vpc"
   project                 = local.config.project_id
   auto_create_subnetworks = false
   delete_default_routes_on_create = true
-  description             = "My custom network"
+  description             = "My custom network for Dev"
 }
 
 # 子网1：路由到互联网网关出口的子网
@@ -27,5 +27,3 @@ resource "google_compute_subnetwork" "private_subnet" {
   ip_cidr_range = "10.0.3.0/24"  # 请根据实际需要调整 IP 范围
   network       = google_compute_network.default.id
 }
-
-
