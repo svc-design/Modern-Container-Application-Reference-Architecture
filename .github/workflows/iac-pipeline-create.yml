@@ -68,6 +68,7 @@ jobs:
       SSH_USER: ${{ secrets.HOST_USER }}
     needs:
       - apply-cluster-resources
+      - setup-monitor-cluster
 
   setup-devops-cluster-observability-agent:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-agent.yml@main
@@ -98,6 +99,8 @@ jobs:
       SSH_USER: ${{ secrets.HOST_USER }}
     needs:
       - apply-cluster-resources
+      - setup-monitor-cluster
+      - setup-devops-cluster
 
   setup-sit-cluster-observability-agent:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-agent.yml@main
@@ -128,6 +131,8 @@ jobs:
       SSH_USER: ${{ secrets.HOST_USER }}
     needs:
       - apply-cluster-resources
+      - setup-monitor-cluster
+      - setup-devops-cluster
 
   setup-uat-cluster-observability-agent:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-agent.yml@main
@@ -158,6 +163,8 @@ jobs:
       SSH_USER: ${{ secrets.HOST_USER }}
     needs:
       - apply-cluster-resources
+      - setup-monitor-cluster
+      - setup-devops-cluster
 
   setup-prod-cluster-observability-agent:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-agent.yml@main
