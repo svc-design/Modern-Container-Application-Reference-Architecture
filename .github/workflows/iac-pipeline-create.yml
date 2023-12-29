@@ -52,6 +52,7 @@ jobs:
       DNS_SK: ${{ secrets.DNS_SK }}
       SSH_USER: ${{ secrets.HOST_USER }}
     needs:
+      - apply-cluster-resources
       - setup-monitor-cluster
 
   setup-devops-cluster:
@@ -83,6 +84,7 @@ jobs:
       DNS_SK: ${{ secrets.DNS_SK }}
       SSH_USER: ${{ secrets.HOST_USER }}
     needs:
+      - apply-cluster-resources
       - setup-devops-cluster
 
   setup-sit-cluster:
