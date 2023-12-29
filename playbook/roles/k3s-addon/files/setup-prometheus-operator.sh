@@ -16,12 +16,12 @@ global:
   imageRegistry: "artifact.onwalk.net/base"
 prometheus:
   enabled: true
-  agentMode: true
+  agentMode: false
   prometheusSpec:
     remoteWrite:
     - name: remote_prometheus
       url: 'https://prometheus.${DOMAIN}/api/v1/write'
-    retention: 24h
+    retention: 30m
     resources:
       requests:
         cpu: 200m
@@ -30,18 +30,18 @@ prometheus:
     podMonitorSelector:
       matchLabels:
         app.kubernetes.io/component: monitoring
-defaultRules:
-  create: false
+nodeExporter:
+  enabled: true
+kubeStateMetrics:
+  enabled: true
 grafana:
   enabled: false
 prometheus-windows-exporter:
   enabled: false
 alertmanager:
   enabled: false
-nodeExporter:
-  enabled: false
-kubeStateMetrics:
-  enabled: true
+defaultRules:
+  create: false
 EOF
 
 node_name=`kubectl get nodes | awk 'NR>1 {print $1}'`

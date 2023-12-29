@@ -27,6 +27,10 @@ prometheus:
     enabled: false
   rometheus-pushgateway:
     enabled: false
+  kube-state-metrics:
+    enabled: false
+  prometheus-node-exporter:
+    enabled: false
 promtail:
   enabled: true
   config:
