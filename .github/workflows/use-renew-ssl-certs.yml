@@ -34,6 +34,18 @@ jobs:
       - name: Renew SSL Cert
         run: |
           set -x
+
+          # 检查参数是否为空
+          check_not_empty() {
+            if [[ -z $1 ]]; then
+              echo "Error: $2 is empty. Please provide a value."
+              exit 1
+            fi
+          }
+          # 检查参数是否为空
+          check_not_empty "$DNS_AK" "DNS_AK" Ali_Key=$DNS_AK
+          check_not_empty "$DNS_SK" "DNS_SK" Ali_Secret=$DNS_SK
+
           rm -fv ${DOMAIN}.key ${DOMAIN}.pem -f
           rm -fv /etc/ssl/${DOMAIN}.* -f
           # Try to issue a certificate from ZeroSSL. If it fails, try Let's Encrypt.
