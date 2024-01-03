@@ -14,13 +14,9 @@ jobs:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-renew-ssl-certs.yml@main
     with:
       domain: 'onwalk.net'
-      ssh_host_ip: 'monitor'
-      ssh_host_name: 'monitor'
     secrets:
       DNS_AK: ${{ secrets.DNS_AK }}
       DNS_SK: ${{ secrets.DNS_SK }}
       VAULT_URL: ${{ secrets.VAULT_URL }}
       VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
-      SSH_USER: ${{ secrets.HOST_USER }}
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 

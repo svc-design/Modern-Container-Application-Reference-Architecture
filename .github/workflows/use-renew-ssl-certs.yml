@@ -5,20 +5,10 @@ on:
       domain:
         required: true
         type: string
-      ssh_host_ip:
-        required: true
-        type: string
-      ssh_host_name:
-        required: true
-        type: string
     secrets:
-      SSH_PRIVATE_KEY:
-        required: true
       DNS_AK:
         required: true
       DNS_SK:
-        required: true
-      SSH_USER:
         required: true
       VAULT_URL:
         required: true
@@ -34,10 +24,6 @@ jobs:
       DNS_SK: ${{ secrets.DNS_SK }}
       VAULT_URL: ${{ secrets.VAULT_URL }}
       VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
-      SSH_USER: ${{ secrets.SSH_USER }}
-      SSH_HOST_IP: "${{ inputs.ssh_host_ip }}"
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      SSH_HOST_DOMAIN: "${{ inputs.ssh_host_name }}.${{ inputs.domain }}"
     
     steps:
       - name: Checkout code
@@ -45,65 +31,29 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Pre Setup
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip jq
-          python -m pip install --upgrade pip jinja2
-
-      - name: Update playbook hosts
-        run: bash ansible_playbook_hosts_setup.sh
-        working-directory: playbook/ 
-
-
-      - name: run playbook
-        shell: bash
-        run: |
-          export ANSIBLE_HOST_KEY_CHECKING=False
-          sudo apt install jq ansible -y
-
-          mkdir -pv ~/.ssh/
-          cat > ~/.ssh/id_rsa << EOF
-          ${SSH_PRIVATE_KEY}
-          EOF
-          sudo chmod 0400 ~/.ssh/id_rsa
-          md5sum ~/.ssh/id_rsa
-
-          mkdir -pv hosts/
-          cat > hosts/inventory << EOF
-          [master]
-          $SSH_HOST_DOMAIN               ansible_host=$SSH_HOST_IP
-
-          [all:vars]
-          ansible_port=22
-          ansible_ssh_user=root
-          ansible_ssh_private_key_file=~/.ssh/id_rsa
-          ansible_host_key_checking=False
-          dns_ak=$DNS_AK
-          dns_sk=$DNS_SK
-          EOF
-
-          cat > init_ssl_cert
-          - name: create ssl cert
-            hosts: all
-            user: root
-            become: yes
-            gather_facts: yes
-            tasks:
-              - include_role:
-                  name: cert-manager
-                vars:
-                  group: master
-                  domain: $DOMAIN
-                  auto_issuance: true
-          EOF
-
       - name: Renew SSL Cert
-        shell: bash
         run: |
-          export ANSIBLE_HOST_KEY_CHECKING=False
-          ansible-playbook -i hosts/inventory init_ssl_cert -e "domain=${{inputs.domain}}" -D
-        working-directory: playbook/ 
+          set -x
+          rm -fv ${DOMAIN}.key ${DOMAIN}.pem -f
+          rm -fv /etc/ssl/${DOMAIN}.* -f
+          # Try to issue a certificate from ZeroSSL. If it fails, try Let's Encrypt.
+          curl https://get.acme.sh | sh -s email=156405189@qq.com
+          sh ~/.acme.sh/acme.sh --set-default-ca --server zerossl --issue --force --dns dns_ali -d ${DOMAIN} -d "*.${DOMAIN}"
+          if [ $? -eq 0 ]; then
+              echo "Certificate from letsencrypt successfully issued"
+          else
+            sh ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt --issue --force --dns dns_ali -d ${DOMAIN} -d "*.${DOMAIN}"
+            if [ $? -eq 0 ]; then
+                echo "Certificate from zerossl successfully issued"
+            else
+                echo "Command failed"
+                exit 1
+            fi
+          fi
+          cat ~/.acme.sh/${DOMAIN}_ecc/${DOMAIN}.cer > ${DOMAIN}.pem
+          cat ~/.acme.sh/${DOMAIN}_ecc/ca.cer >> ${DOMAIN}.pem
+          cat ~/.acme.sh/${DOMAIN}_ecc/${DOMAIN}.key > ${DOMAIN}.key
+          sudo cp ${DOMAIN}.pem /etc/ssl/ -f && sudo cp ${DOMAIN}.key /etc/ssl/ -f
 
       - name: Update certificate in Vault
         run: |
