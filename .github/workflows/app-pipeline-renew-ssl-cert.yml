@@ -10,7 +10,7 @@ on:
       - main
 
 jobs:
-  setup-vault-server:
+  renew-ssl-certs:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-renew-ssl-certs.yml@main
     with:
       domain: 'onwalk.net'

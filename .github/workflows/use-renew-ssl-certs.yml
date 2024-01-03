@@ -43,8 +43,8 @@ jobs:
             fi
           }
           # 检查参数是否为空
-          check_not_empty "$DNS_AK" "DNS_AK" Ali_Key=$DNS_AK
-          check_not_empty "$DNS_SK" "DNS_SK" Ali_Secret=$DNS_SK
+          check_not_empty "$DNS_AK" "DNS_AK" && export Ali_Key=$DNS_AK
+          check_not_empty "$DNS_SK" "DNS_SK" && export Ali_Secret=$DNS_SK
 
           rm -fv ${DOMAIN}.key ${DOMAIN}.pem -f
           rm -fv /etc/ssl/${DOMAIN}.* -f
