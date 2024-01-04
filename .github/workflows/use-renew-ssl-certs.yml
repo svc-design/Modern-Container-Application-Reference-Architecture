@@ -76,5 +76,6 @@ jobs:
 
       - name: Write certificate into Vault Server
         run: |
-          vault login ${VAULT_TOKEN} -address=${VAULT_URL}
+          export VAULT_ADDR=${VAULT_URL}
+          vault login ${VAULT_TOKEN}
           vault write pki/cert/${DOMAIN} certificate=@/etc/ssl/${DOMAIN}.pem private_key=@/etc/ssl/${DOMAIN}.key
