@@ -1,4 +1,4 @@
-name: Workflow Call Setup Observability Agent
+name: Workflow Call Renew SSL Certs
 on:
   workflow_call:
     inputs:
@@ -16,7 +16,7 @@ on:
         required: true
 
 jobs:
-  renew-ssl-certs-for-vault-store:
+  renew-ssl-certs:
     runs-on: ubuntu-latest
     env:
       DOMAIN: ${{ inputs.domain }}
