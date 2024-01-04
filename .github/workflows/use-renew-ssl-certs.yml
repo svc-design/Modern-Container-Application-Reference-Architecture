@@ -82,9 +82,7 @@ jobs:
           # Write Certificate and Private Key to Vault
 
           vault login ${VAULT_TOKEN}
-          vault secrets disable pki
-          vault secrets destroy pki
-          vault secrets enable -path=certs kv
+          vault secrets enable -path=certs kv || true
           vault kv put ${CERT_PATH}                             \
               certificate=@/etc/ssl/${DOMAIN}.pem               \
               private_key=@/etc/ssl/${DOMAIN}.key
