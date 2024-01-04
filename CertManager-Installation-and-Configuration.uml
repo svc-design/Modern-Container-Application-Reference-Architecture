@@ -1,0 +1,21 @@
+@startuml
+
+actor Operator
+actor Helm
+actor kubectl
+actor CertManager
+actor Vault
+
+Operator --> Helm: helm repo add jetstack https://charts.jetstack.io
+Helm --> Helm: helm repo update
+Helm --> kubectl: kubectl create namespace cert-manager || true
+Helm --> Helm: helm install cert-manager jetstack/cert-manager --namespace cert-manager
+
+Operator --> kubectl: kubectl create secret generic vault-token --from-literal=token=<YOUR_VAULT_TOKEN>
+
+Operator --> CertManager: Create ClusterIssuer
+CertManager --> Vault: Read certificates
+Vault --> CertManager: Return certificates
+CertManager --> kubectl: Store certificates as secrets
+
+@enduml

@@ -1,0 +1,34 @@
+@startuml
+
+package "Kubernetes Cluster" {
+    [Helm]
+    [Kubernetes]
+}
+
+package "Cert-Manager Components" {
+    [Cert-Manager]
+    [Secret]
+}
+
+package "Vault Components" {
+    [Vault]
+}
+
+package "Cert-Manager Operator" {
+    [Cert-Manager Operator]
+}
+
+Cert-Manager Operator -> Helm : Adds Helm repo
+Cert-Manager Operator -> Helm : Helm repo update
+Cert-Manager Operator -> Kubernetes : Create namespace
+Cert-Manager Operator -> Helm : Helm install
+
+Kubernetes -> Secret : Create Secret
+
+Cert-Manager -> Vault : Configure Vault as Issuer
+Vault -> Cert-Manager : Return Certificates
+
+Cert-Manager -> Secret : Store Certificates
+
+@enduml
+
