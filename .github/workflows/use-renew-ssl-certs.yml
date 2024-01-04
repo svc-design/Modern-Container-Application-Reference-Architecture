@@ -79,15 +79,10 @@ jobs:
           export VAULT_ADDR=${VAULT_URL}
           export CERT_PATH="pki/certs/${DOMAIN}"
 
-          # Login to Vault
-          vault login ${VAULT_TOKEN}
-
-          # Check if path exists, create if not
-          if vault path-help ${CERT_PATH} 2>&1 | grep -q "no help topic for"; then
-              echo "Path does not exist. Creating..."
-              vault secrets enable -path=${CERT_PATH} pki
-          fi
           # Write Certificate and Private Key to Vault
+
+          vault login ${VAULT_TOKEN}
+          vault secrets enable -path=${CERT_PATH} pki || true
           vault write ${CERT_PATH} \
               common_name=${DOMAIN} \
               ttl=720h \
