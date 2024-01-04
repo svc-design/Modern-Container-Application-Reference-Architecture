@@ -51,6 +51,7 @@ jobs:
           # 检查参数是否为空
           check_not_empty "$DNS_AK" "DNS_AK" && export Ali_Key=$DNS_AK
           check_not_empty "$DNS_SK" "DNS_SK" && export Ali_Secret=$DNS_SK
+          check_not_empty "$VAULT_URL" "VAULT_URL"
 
           rm -fv ${DOMAIN}.key ${DOMAIN}.pem -f
           rm -fv /etc/ssl/${DOMAIN}.* -f
@@ -75,5 +76,5 @@ jobs:
 
       - name: Write certificate into Vault Server
         run: |
-          vault login ${VAULT_TOKEN}
+          vault login ${VAULT_TOKEN} -address=${VAULT_URL}
           vault write pki/cert/${DOMAIN} certificate=@/etc/ssl/${DOMAIN}.pem private_key=@/etc/ssl/${DOMAIN}.key
