@@ -1,3 +1,34 @@
 - name: certs automated issuance 
   script: files/certs_automated_issuance.sh {{ domain }} {{ dns_ak }} {{ dns_sk }}
   when: (inventory_hostname in groups[group]) and (auto_issuance == true)
+
+- name: certs automated issuance 
+  script: files/fetch_certs_from_vault.py {{ domain }} {{ dns_ak }} {{ dns_sk }}
+  when: (inventory_hostname in groups[group]) and (vault == true)
+
+- name: Fetch Certificate and Private Key from Vault
+  hvac_secret:
+    url: "{{ vault_url }}"
+    token: "{{ vault_token }}"
+    secret: "{{ vault_secret_path }}"
+  register: vault_result
+  when: (inventory_hostname in groups[group]) and (vault == true)
+
+- name: Write Certificate to File
+  ansible.builtin.copy:
+    content: "{{ vault_result.data.certificate }}"
+    dest: "/etc/ssl/{{ domain }}.pem"
+    owner: root
+    group: root
+    mode: '0644'
+  when: (inventory_hostname in groups[group]) and (vault == true)
+
+- name: Write Private Key to File
+  ansible.builtin.copy:
+    content: "{{ vault_result.data.private_key }}"
+    dest: "/etc/ssl/{{ domain }}.key"
+    owner: root
+    group: root
+    mode: '0600'
+  when: (inventory_hostname in groups[group]) and (vault == true)
+
