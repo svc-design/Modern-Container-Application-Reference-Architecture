@@ -22,6 +22,10 @@ on:
         required: true
       SSH_USER:
         required: true
+      VAULT_URL:
+        required: true
+      VAULT_TOKEN:
+        required: true
 
 jobs:
   init-k3s-cluster:
@@ -30,6 +34,9 @@ jobs:
       DOMAIN: ${{ inputs.domain }}
       DNS_AK: ${{ secrets.DNS_AK }}
       DNS_SK: ${{ secrets.DNS_SK }}
+      VAULT_URL: ${{ secrets.VAULT_URL }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+      VAULT_SECRET_PATH: certs/data/${{ inputs.domain }}
       SSH_USER: ${{ secrets.SSH_USER }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       SSH_HOST_DOMAIN: "${{ inputs.ssh_host_name }}.${{ inputs.domain }}"
@@ -73,8 +80,11 @@ jobs:
         run: |
           export ANSIBLE_HOST_KEY_CHECKING=False
           ansible-playbook -i hosts/inventory init_k3s_cluster_std     \
-                           -e "cluster_name=${{inputs.ssh_host_name}}" \
                            -e "dns_ak=$DNS_AK"                         \
                            -e "dns_sk=$DNS_SK"                         \
+                           -e "vault_url=$VAULT_URL                    \
+                           -e "vault_token=$VAULT_TOKEN                \
+                           -e "vault_secret_path=$VAULT_SECRET_PATH    \
+                           -e "cluster_name=${{inputs.ssh_host_name}}" \
                            -e "domain=${{inputs.domain}}" -D
         working-directory: playbook/ 
