@@ -82,9 +82,9 @@ jobs:
           ansible-playbook -i hosts/inventory init_k3s_cluster_std     \
                            -e "dns_ak=$DNS_AK"                         \
                            -e "dns_sk=$DNS_SK"                         \
-                           -e "vault_url=$VAULT_URL                    \
-                           -e "vault_token=$VAULT_TOKEN                \
-                           -e "vault_secret_path=$VAULT_SECRET_PATH    \
+                           -e "vault_url=$VAULT_URL"                   \
+                           -e "vault_token=$VAULT_TOKEN"               \
+                           -e "vault_secret_path=$VAULT_SECRET_PATH"   \
                            -e "cluster_name=${{inputs.ssh_host_name}}" \
                            -e "domain=${{inputs.domain}}" -D
         working-directory: playbook/ 
