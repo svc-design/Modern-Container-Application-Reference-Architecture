@@ -7,10 +7,10 @@
 #  when: (inventory_hostname in groups[group]) and (vault == true)
 
 - name: Fetch Certificate and Private Key from Vault
-  hvac_secret:
+  community.hashi_vault.vault_read:
     url: "{{ vault_url }}"
     token: "{{ vault_token }}"
-    secret: "{{ vault_secret_path }}"
+    path: "{{ vault_secret_path }}"
   register: vault_result
   when: (inventory_hostname in groups[group]) and (vault == true)
 

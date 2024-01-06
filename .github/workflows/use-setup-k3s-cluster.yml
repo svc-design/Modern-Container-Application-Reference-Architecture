@@ -53,7 +53,6 @@ jobs:
           sudo apt-get install -y python3-pip jq
           python -m pip install --upgrade pip jinja2
           pip install hvac
-          ansible-galaxy collection install community.general
           ansible-galaxy collection install community.hashi_vault
 
       - name: Set up Terraform
