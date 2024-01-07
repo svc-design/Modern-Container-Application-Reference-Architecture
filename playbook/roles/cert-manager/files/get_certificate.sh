@@ -1,12 +1,5 @@
 #!/bin/bash
 
-sudo apt-get update
-sudo apt install -y software-properties-common
-curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/hashicorp-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list > /dev/null
-sudo apt-get update
-sudo apt-get install -y python3-pip jq vault
-
 check_empty() {
   if [ -z "$1" ]; then
     echo "$2"
