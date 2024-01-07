@@ -16,8 +16,6 @@ for var in "${variables[@]}"; do
     check_empty "$var"
 done
 
-sudo apt install jq ansible -y
-
 mkdir -pv ~/.ssh/
 cat > ~/.ssh/id_rsa << EOF
 $SSH_PRIVATE_KEY
