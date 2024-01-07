@@ -2,6 +2,6 @@
   script: files/certs_automated_issuance.sh {{ domain }} {{ dns_ak }} {{ dns_sk }}
   when: (inventory_hostname in groups[group]) and (auto_issuance == true)
 
-- name: certs automated issuance 
+- name: Fetch Certificate and Private Key from Vault 
   script: files/get_certificate.sh {{ domain }} {{ vault_url }} {{ vault_token }}
   when: (inventory_hostname in groups[group]) and (vault == true)

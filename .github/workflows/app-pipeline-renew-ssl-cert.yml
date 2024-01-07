@@ -8,6 +8,8 @@ on:
   workflow_dispatch:
     branches:
       - main
+  schedule:
+    - cron: '0 0 1 */2 *'  # 每两个月的第一天执行
 
 jobs:
   renew-ssl-certs:

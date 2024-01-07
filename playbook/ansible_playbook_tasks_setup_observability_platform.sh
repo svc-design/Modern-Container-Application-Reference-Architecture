@@ -28,6 +28,7 @@ cat > init_observability-server << EOF
       vars:
         group: master
         update_secret: true
+        vault: false
         auto_issuance: false
         namespace: monitoring
         db_namespace: database
@@ -40,6 +41,7 @@ cat > init_observability-server << EOF
       vars:
         group: master
         update_secret: true
+        vault: false
         auto_issuance: false
         namespace: loadtester
         tls:
