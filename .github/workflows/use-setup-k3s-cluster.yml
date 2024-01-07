@@ -50,9 +50,10 @@ jobs:
       - name: Pre Setup
         run: |
           sudo apt-get update
+          sudo apt-get remove -y ansible --purge
           sudo apt-get install -y python3-pip jq
-          sudo python3 -m pip install --upgrade pip
-          sudo python3 -m pip install ansible jinja2 hvac
+          python3 -m pip install --upgrade pip
+          python3 -m pip install ansible jinja2 hvac
           ansible-galaxy collection install community.hashi_vault
 
       - name: Set up Terraform
