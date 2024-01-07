@@ -13,7 +13,7 @@ jobs:
   renew-ssl-certs:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-renew-ssl-certs.yml@main
     with:
-      domain: 'svc-dev.ink'
+      domain: 'onwalk.net'
     secrets:
       DNS_AK: ${{ secrets.DNS_AK }}
       DNS_SK: ${{ secrets.DNS_SK }}
