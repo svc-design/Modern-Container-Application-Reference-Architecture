@@ -7,9 +7,9 @@ check_empty() {
   fi
 }
 
-check_empty "$1" "Please provide DOMAIN" && DOMAIN=$1
-check_empty "$2" "Please provide VAULT_ADDR" && VAULT_ADDR=$2
-check_empty "$3" "Please provide VAULT_TOKEN" && VAULT_TOKEN=$3
+check_empty "$1" "Please provide DOMAIN" && export DOMAIN=$1
+check_empty "$2" "Please provide VAULT_ADDR" && export VAULT_ADDR=$2
+check_empty "$3" "Please provide VAULT_TOKEN" && export VAULT_TOKEN=$3
 
 SECRET_PATH="certs/$DOMAIN"
 
@@ -17,7 +17,7 @@ SECRET_PATH="certs/$DOMAIN"
 CERTIFICATE_PATH="/etc/ssl/${DOMAIN}.pem"
 PRIVATE_KEY_PATH="/etc/ssl/${DOMAIN}.key"
 
-vault login $VAULT_TOKEN
+vault login -address=$VAULT_ADDR $VAULT_TOKEN
 # Read certificate from Vault
 vault kv get -field=certificate certs/${DOMAIN} > "$CERTIFICATE_PATH"
 # Read private key from Vault
