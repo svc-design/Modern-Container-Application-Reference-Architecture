@@ -17,7 +17,7 @@ SECRET_PATH="certs/$DOMAIN"
 CERTIFICATE_PATH="/etc/ssl/${DOMAIN}.pem"
 PRIVATE_KEY_PATH="/etc/ssl/${DOMAIN}.key"
 
-vault login
+vault login $VAULT_TOKEN
 # Read certificate from Vault
 vault kv get -field=certificate certs/${DOMAIN} > "$CERTIFICATE_PATH"
 # Read private key from Vault
