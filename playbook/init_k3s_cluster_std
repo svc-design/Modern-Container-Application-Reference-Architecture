@@ -21,7 +21,7 @@
         name: k3s-addon
       vars:
         group: master
-        ingress: apisix
+        ingress: nginx
         vault: true
         gitops: enable
         auto_issuance: false
