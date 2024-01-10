@@ -99,6 +99,7 @@ EOF
 
 helm repo add nginx-stable https://helm.nginx.com/stable || echo true
 helm repo up
+helm delete apisix -n ingress || echo true
 kubectl create namespace ingress || echo true
 helm upgrade --install nginx nginx-stable/nginx-ingress --version=0.15.0 --namespace ingress -f value.yaml
 kubectl apply -f nginx-cm.yaml
@@ -106,43 +107,39 @@ kubectl patch svc nginx-nginx-ingress -n ingress --patch-file nginx-svc-patch.ya
 
 elif [[ $ingress == "apisix" ]]; then
 
-helm repo add apisix https://charts.apiseven.com || echo true
-helm repo update
-kubectl create ns ingress || echo true
 cat > values.yaml << EOF
+service:
+  type: NodePort
+  externalIPs:
+    - $ingress_ip
+  http:
+    enabled: true
+    servicePort: 80
+  tls:
+    servicePort: 443
+    nodePort: 443
+apisix:
+  ssl:
+    enabled: true
+  prometheus:
+    enabled: true
 ingress-controller:
   enabled: true
   config:
     apisix:
-      serviceNamespace: ingress
-etcd:
-  replicaCount: 1
-gateway:
-  enabled: true
-  type: NodePort
-  http:
+      serviceNamespace: "ingress"
+    kubernetes:
+      enableGatewayAPI: true
+metrics:
+  serviceMonitor:
     enabled: true
-    nodePort: 80
-  tls:
-    enabled: true
-    nodePort: 443
-  externalIPs:
-    - $ingress_ip
-discovery:
-  enabled: true
-admin:
-  enabled: true
-  ingress:
-    className: apisix
-    enabled: true
-    hosts:
-      - host: apisix-admin.onwalk.net
-        paths:
-          - "/apisix"
-    tls:
-      - secretName: apisix-tls
-        hosts:
-          - apisix-admin.onwalk.net
+    namespace: "ingress"
 EOF
+
+helm repo add apisix https://charts.apiseven.com || echo true
+helm repo update
+kubectl create ns ingress || echo true
+helm delete nginx -n ingress || echo true
 helm upgrade --install apisix apisix/apisix --namespace ingress -f values.yaml
+
 fi
