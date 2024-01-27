@@ -1,4 +1,4 @@
-project_id: "cloudsvcsandbox"
+project_id: "cloudsvcworkspace"
 region: "asia-northeast1"
 key_pairs:
   - name: dev_ssh_keys

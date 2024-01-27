@@ -1,4 +1,4 @@
-region: "asia-northeast1"
+region: "cloudsvcworkspace"
 project_id: "cloudsvcsandbox"
 bucket_name: "iac_gcp_terraform_state"
 firewall_rules:
