@@ -40,7 +40,7 @@ jobs:
 
     - name: Check Bucket Existence and Set Environment Variable
       run: |
-        BUCKET_NAME="iac_google_cloud_terraform_status"
+        BUCKET_NAME="iac_status_terraform_gcp"
         BUCKET_EXISTS=$(gsutil ls -b gs://${BUCKET_NAME} &> /dev/null && echo "true" || echo "false")
         echo "BUCKET_EXISTS=${BUCKET_EXISTS}" >> $GITHUB_ENV
       shell: bash

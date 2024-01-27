@@ -51,8 +51,8 @@ jobs:
 
     - name: Delete Google Cloud Storage Bucket
       run: |
-        gsutil -m rm -r gs://iac_google_cloud_terraform_status || true
-        gcloud storage buckets delete gs://iac_google_cloud_terraform_status --quiet || true
+        gsutil -m rm -r gs://iac_status_terraform_gcp || true
+        gcloud storage buckets delete gs://iac_status_terraform_gcp --quiet || true
   network:
     runs-on: ubuntu-latest
     needs:
