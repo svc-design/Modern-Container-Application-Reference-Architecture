@@ -1,6 +1,6 @@
 region: "asia-northeast1"
 project_id: "cloudsvcworkspace"
-bucket_name: "iac_google_cloud_terraform_status"
+bucket_name: "iac_status_terraform_gcp"
 instances:
   - name: "monitor"
     type: "e2-standard-4"

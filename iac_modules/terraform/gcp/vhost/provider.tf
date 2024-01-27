@@ -5,7 +5,7 @@ provider "google" {
 
 terraform {
   backend "gcs" {
-    bucket = "iac_google_cloud_terraform_status"  # 替换为你的 GCS 存储桶名称
+    bucket = "iac_status_terraform_gcp"  # 替换为你的 GCS 存储桶名称
     prefix = "vhosts/"                     # 根据需要调整前缀
   }
   required_providers {
