@@ -1,14 +1,7 @@
 region: "asia-northeast1"
-project_id: "cloudsvcsandbox"
+project_id: "cloudsvcworkspace"
 bucket_name: "iac_gcp_terraform_state"
 instances:
-  - name: "devops"
-    type: "e2-standard-4"
-    zone: "asia-northeast1-a"
-    image: "ubuntu-2004-lts"
-    disk_size_gb: 100
-    network: "dev"
-    subnetwork: internet-subnet
   - name: "monitor"
     type: "e2-standard-4"
     zone: "asia-northeast1-a"
