@@ -89,11 +89,6 @@ jobs:
       run: |
         gcloud compute routers delete nat-router --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
         gcloud compute routers delete public-router --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
-        gcloud compute addresses delete sit --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
-        gcloud compute addresses delete uat --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
-        gcloud compute addresses delete prod --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
-        gcloud compute addresses delete monitor --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
-        gcloud compute addresses delete nat-manual-ip-0 --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
   vhost:
     runs-on: ubuntu-latest
 
@@ -127,6 +122,14 @@ jobs:
       run: |
         python3 scripts/init.py && bash scripts/run_terraform.sh
       working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+
+    - name: Delete Google Cloud Network static addresses Resources
+      run: |
+        gcloud compute addresses delete sit --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
+        gcloud compute addresses delete uat --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
+        gcloud compute addresses delete prod --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
+        gcloud compute addresses delete monitor --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
+        gcloud compute addresses delete nat-manual-ip-0 --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
 
   key_pair:
     runs-on: ubuntu-latest
