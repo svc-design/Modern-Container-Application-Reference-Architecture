@@ -1,4 +1,4 @@
-name: Destroy Resources by IAC tools 
+name: MultiCluster Pipeline Destroy with IAC tools
 
 env:
   STATE: "destroy"   # 可以根据需要更改初始状态, 可选create，update, destroy
