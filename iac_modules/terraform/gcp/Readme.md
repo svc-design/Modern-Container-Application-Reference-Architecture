@@ -1,3 +1,6 @@
+# GCP 新建项目配置
+ 
+0. https://console.cloud.google.com/apis/library/compute.googleapis.com?project=cloudsvcworkspace -> 启用 Compute Engine API
 
 # GCP 服务账号凭据的 JSON 文件：
 
