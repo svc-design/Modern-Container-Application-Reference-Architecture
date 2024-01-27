@@ -56,37 +56,37 @@ jobs:
     needs:
       - setup-monitor-cluster
 
-  setup-devops-cluster:
-    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
-    with:
-      domain: 'svc-dev.ink'
-      cluster_name: 'devops'
-      ssh_host_name: 'devops'
-    secrets:
-      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      DNS_AK: ${{ secrets.DNS_AK }}
-      DNS_SK: ${{ secrets.DNS_SK }}
-      VAULT_URL: ${{ secrets.VAULT_URL }}
-      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
-      SSH_USER: ${{ secrets.HOST_USER }}
-    needs:
-      - apply-cluster-resources
-
-  setup-devops-cluster-observability-agent:
-    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-agent.yml@main
-    with:
-      domain: 'svc-dev.ink'
-      cluster_name: 'devops'
-      ssh_host_name: 'devops'
-    secrets:
-      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      DNS_AK: ${{ secrets.DNS_AK }}
-      DNS_SK: ${{ secrets.DNS_SK }}
-      SSH_USER: ${{ secrets.HOST_USER }}
-    needs:
-      - setup-devops-cluster
+#  setup-devops-cluster:
+#    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
+#    with:
+#      domain: 'svc-dev.ink'
+#      cluster_name: 'devops'
+#      ssh_host_name: 'devops'
+#    secrets:
+#      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+#      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+#      DNS_AK: ${{ secrets.DNS_AK }}
+#      DNS_SK: ${{ secrets.DNS_SK }}
+#      VAULT_URL: ${{ secrets.VAULT_URL }}
+#      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+#      SSH_USER: ${{ secrets.HOST_USER }}
+#    needs:
+#      - apply-cluster-resources
+#
+#  setup-devops-cluster-observability-agent:
+#    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-agent.yml@main
+#    with:
+#      domain: 'svc-dev.ink'
+#      cluster_name: 'devops'
+#      ssh_host_name: 'devops'
+#    secrets:
+#      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+#      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+#      DNS_AK: ${{ secrets.DNS_AK }}
+#      DNS_SK: ${{ secrets.DNS_SK }}
+#      SSH_USER: ${{ secrets.HOST_USER }}
+#    needs:
+#      - setup-devops-cluster
 
   setup-sit-cluster:
     uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
