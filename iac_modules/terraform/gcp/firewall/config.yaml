@@ -1,5 +1,5 @@
-region: "cloudsvcworkspace"
-project_id: "cloudsvcsandbox"
+project_id: "cloudsvcworkspace"
+region: "asia-northeast1"
 bucket_name: "iac_status_terraform_gcp"
 firewall_rules:
   - name: allow-ingress

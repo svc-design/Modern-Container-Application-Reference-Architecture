@@ -84,6 +84,12 @@ jobs:
       run: |
         bash run_terraform.sh
       working-directory: iac_modules/terraform/${{ env.CLOUD }}/network/
+
+    - name: Delete Google Cloud Network Resources
+      run: |
+        gcloud compute routers delete nat-router --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
+        gcloud compute routers delete public-router --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
+        gcloud compute addresses delete nat-manual-ip-0 --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
   vhost:
     runs-on: ubuntu-latest
 
