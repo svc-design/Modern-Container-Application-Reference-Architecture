@@ -1,6 +1,6 @@
 region: "cloudsvcworkspace"
 project_id: "cloudsvcsandbox"
-bucket_name: "iac_gcp_terraform_state"
+bucket_name: "iac_google_cloud_terraform_status"
 firewall_rules:
   - name: allow-ingress
     network: "dev"
