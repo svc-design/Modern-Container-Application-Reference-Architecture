@@ -1,5 +1,5 @@
-venv/
 *.pyc
+venv/
 .DS_Store
 infrastructure/.DS_Store
 ./playbook/.DS_Storevenv/

@@ -1,5 +1,0 @@
-sg_id: ["{{ vars.sg_id }}"]
-ec2_type: "{{ vars.ec2_type }}"
-image_id: "{{ vars.image_id }}"
-subnet_id: {{ vars.subnet_id }}
-key_name: {{ vars.key_name }}

@@ -1,5 +1,0 @@
-project_id: "cloudsvcworkspace"
-region: "asia-northeast1"
-key_pairs:
-  - name: dev_ssh_keys
-    key_file: ssh_keys.pub

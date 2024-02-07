@@ -1,3 +1,0 @@
-project_id: "cloudsvcworkspace"
-region: "asia-northeast1"
-bucket_name: "iac_status_terraform_gcp"

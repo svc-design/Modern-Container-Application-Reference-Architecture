@@ -1,7 +1,0 @@
-global:
-  env: "{{ vars.global.env }}"
-  email: "{{ vars.global.email }}"
-  region: "{{ vars.global.region }}"
-  appowner: "{{ vars.global.appowner }}"
-  application: "{{ vars.global.application }}"
-  businessunit: "{{ vars.global.businessunit }}"

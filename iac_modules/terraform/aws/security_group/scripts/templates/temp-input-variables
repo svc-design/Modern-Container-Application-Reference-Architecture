@@ -1,2 +1,0 @@
-vpc_id: '{{ vars.vpc_id }}'
-az: '{{ vars.count.az }}'
