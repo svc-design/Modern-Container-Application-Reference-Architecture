@@ -1,4 +1,0 @@
-- name: Setup Loadtester Server
-  script: files/setup.sh {{ domain }}
-  when: inventory_hostname in groups[group]
-
