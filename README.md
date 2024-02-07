@@ -11,6 +11,7 @@ For more detailed information, please refer to the documentation available in tw
 
 ## Getting Started
 
+git submodule add --force https://github.com/svc-design/iac_modules.git
 Follow the links above to the documentation in your preferred language to get started with using this reference architecture.
 
 ## Contributing
