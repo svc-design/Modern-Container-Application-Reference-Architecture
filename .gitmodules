@@ -1,3 +1,6 @@
 [submodule "iac_modules"]
 	path = iac_modules
 	url = https://github.com/svc-design/iac_modules.git
+[submodule "playbook"]
+	path = playbook
+	url = https://github.com/svc-design/playbook.git
