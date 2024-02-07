@@ -19,13 +19,13 @@ on:
 
 jobs:
   apply-cluster-resources:
-    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-gcp-cloud.yml@main
+    uses: svc-design/actions/.github/workflows/setup-gcp-cloud.yml@main
     secrets:
       SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
 
   setup-monitor-cluster:
-    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
+    uses: svc-design/actions/.github/workflows/setup-k3s-cluster.yml@main
     with:
       domain: 'svc-dev.ink'
       cluster_name: 'monitor'
@@ -42,7 +42,7 @@ jobs:
       - apply-cluster-resources
 
   setup-observability-server:
-    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-server.yml@main
+    uses: svc-design/actions/.github/workflows/setup-observability-server.yml@main
     with:
       domain: 'svc-dev.ink'
       cluster_name: 'monitor'
@@ -57,7 +57,7 @@ jobs:
       - setup-monitor-cluster
 
 #  setup-devops-cluster:
-#    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
+#    uses: svc-design/actions/.github/workflows/setup-k3s-cluster.yml@main
 #    with:
 #      domain: 'svc-dev.ink'
 #      cluster_name: 'devops'
@@ -74,7 +74,7 @@ jobs:
 #      - apply-cluster-resources
 #
 #  setup-devops-cluster-observability-agent:
-#    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-agent.yml@main
+#    uses: svc-design/actions/.github/workflows/setup-observability-agent.yml@main
 #    with:
 #      domain: 'svc-dev.ink'
 #      cluster_name: 'devops'
@@ -89,7 +89,7 @@ jobs:
 #      - setup-devops-cluster
 
   setup-sit-cluster:
-    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
+    uses: svc-design/actions/.github/workflows/setup-k3s-cluster.yml@main
     with:
       domain: 'svc-dev.ink'
       cluster_name: 'sit'
@@ -106,7 +106,7 @@ jobs:
       - apply-cluster-resources
 
   setup-sit-cluster-observability-agent:
-    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-agent.yml@main
+    uses: svc-design/actions/.github/workflows/setup-observability-agent.yml@main
     with:
       domain: 'svc-dev.ink'
       cluster_name: 'sit'
@@ -121,7 +121,7 @@ jobs:
       - setup-sit-cluster
 
   setup-uat-cluster:
-    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
+    uses: svc-design/actions/.github/workflows/setup-k3s-cluster.yml@main
     with:
       domain: 'svc-dev.ink'
       cluster_name: 'uat'
@@ -138,7 +138,7 @@ jobs:
       - apply-cluster-resources
 
   setup-uat-cluster-observability-agent:
-    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-agent.yml@main
+    uses: svc-design/actions/.github/workflows/setup-observability-agent.yml@main
     with:
       domain: 'svc-dev.ink'
       cluster_name: 'uat'
@@ -153,7 +153,7 @@ jobs:
       - setup-uat-cluster
 
   setup-prod-cluster:
-    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-k3s-cluster.yml@main
+    uses: svc-design/actions/.github/workflows/setup-k3s-cluster.yml@main
     with:
       domain: 'svc-dev.ink'
       cluster_name: 'prod'
@@ -170,7 +170,7 @@ jobs:
       - apply-cluster-resources
 
   setup-prod-cluster-observability-agent:
-    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-setup-observability-agent.yml@main
+    uses: svc-design/actions/.github/workflows/setup-observability-agent.yml@main
     with:
       domain: 'svc-dev.ink'
       cluster_name: 'prod'

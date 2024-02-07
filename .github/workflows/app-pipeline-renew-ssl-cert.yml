@@ -13,7 +13,7 @@ on:
 
 jobs:
   renew-ssl-certs:
-    uses: open-source-solution-design/Modern-Container-Application-Reference-Architecture/.github/workflows/use-renew-ssl-certs.yml@main
+    uses: svc-design/actions/.github/workflows/renew-ssl-certs.yml@main
     with:
       domain: 'onwalk.net'
     secrets:
