@@ -11,7 +11,7 @@ on:
 
 jobs:
   setup-vault-server:
-    uses: svc-design/actions/.github/workflows/use-setup-vault.yml@main
+    uses: svc-design/actions/.github/workflows/setup-vault.yml@main
     with:
       domain: 'onwalk.net'
       cluster_name: 'monitor'
