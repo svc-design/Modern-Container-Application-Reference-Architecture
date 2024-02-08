@@ -20,6 +20,8 @@ on:
 jobs:
   apply-cluster-resources:
     uses: svc-design/actions/.github/workflows/setup-gcp-cloud.yml@main
+    with:
+      config: 'signal-cluster-config.yaml'
     secrets:
       SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
