@@ -82,7 +82,8 @@ jobs:
 
     - name: Terraform Init And Apply
       run: |
-        bash run_terraform.sh
+        python3 scripts/init.py -c 'multi-cluster-config.yaml'
+        bash scripts/run_terraform.sh
       working-directory: iac_modules/terraform/${{ env.CLOUD }}/network/
 
     - name: Delete Google Cloud Network Resources
@@ -120,7 +121,8 @@ jobs:
 
     - name: Terraform Init And Apply
       run: |
-        python3 scripts/init.py && bash scripts/run_terraform.sh
+        python3 scripts/init.py -c 'multi-cluster-config.yaml'
+        bash scripts/run_terraform.sh
       working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
 
     - name: Delete Google Cloud Network static addresses Resources
@@ -165,7 +167,7 @@ jobs:
 
     - name: Check if SSH Metadata exists
       id: check_ssh_metadata
-      run: bash scripts/check_ssh_metadata.sh
+      run: bash scripts/check_ssh_metadata.sh multi-cluster-config.yaml
       working-directory: iac_modules/terraform/${{ env.CLOUD }}/key_pair/
 
     - name: Fetch SSH Keys
@@ -176,7 +178,8 @@ jobs:
     - name: Terraform Init And Apply
       if: steps.check_ssh_metadata.outputs.ssh_metadata_exists == 'false'
       run: |
-        python3 scripts/init.py && bash scripts/run_terraform.sh
+        python3 scripts/init.py -c 'multi-cluster-config.yaml'
+        bash scripts/run_terraform.sh
       working-directory: iac_modules/terraform/${{ env.CLOUD }}/key_pair/
 
   firewall:
@@ -208,5 +211,6 @@ jobs:
 
     - name: Terraform Init And Apply
       run: |
-        python3 scripts/init.py && bash scripts/run_terraform.sh
+        python3 scripts/init.py -c 'multi-cluster-config.yaml'
+        bash scripts/run_terraform.sh
       working-directory: iac_modules/terraform/${{ env.CLOUD }}/firewall/
