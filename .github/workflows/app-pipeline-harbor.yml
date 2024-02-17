@@ -27,7 +27,7 @@ jobs:
       SSH_USER: ${{ secrets.HOST_USER }}
 
   setup-harbor-server:
-    uses: svc-design/actions/.github/workflows/setup-observability-server.yml@main
+    uses: svc-design/actions/.github/workflows/setup-harbor-server.yml@main
     with:
       domain: 'onwalk.net'
       cluster_name: 'harbor'
