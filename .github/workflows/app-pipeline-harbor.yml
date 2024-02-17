@@ -1,4 +1,4 @@
-name: Setup Vault Server 
+name: Setup Harbor Server
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ on:
       - main
 
 jobs:
-  etup-k3s-cluster:
+  setup-k3s-cluster:
     uses: svc-design/actions/.github/workflows/setup-k3s-cluster.yml@main
     with:
       domain: 'onwalk.net'
