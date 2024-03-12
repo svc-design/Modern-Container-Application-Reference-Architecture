@@ -29,7 +29,7 @@ jobs:
   setup-k3s-cluster:
     uses: svc-design/actions/.github/workflows/setup-k3s-cluster.yml@main
     with:
-      domain: 'svc-dev.ink'
+      domain: 'onwalk.net'
       cluster_name: 'monitor'
       ssh_host_name: 'monitor'
     secrets:
@@ -42,18 +42,3 @@ jobs:
       SSH_USER: ${{ secrets.HOST_USER }}
     needs:
       - apply-cluster-resources
-
-  setup-observability-tools:
-    uses: svc-design/actions/.github/workflows/setup-observability-server.yml@main
-    with:
-      domain: 'svc-dev.ink'
-      cluster_name: 'monitor'
-      ssh_host_name: 'monitor'
-    secrets:
-      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      DNS_AK: ${{ secrets.DNS_AK }}
-      DNS_SK: ${{ secrets.DNS_SK }}
-      SSH_USER: ${{ secrets.HOST_USER }}
-    needs:
-      - setup-k3s-cluster
