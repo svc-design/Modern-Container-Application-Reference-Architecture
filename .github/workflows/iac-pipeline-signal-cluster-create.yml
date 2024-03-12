@@ -42,3 +42,15 @@ jobs:
       SSH_USER: ${{ secrets.HOST_USER }}
     needs:
       - apply-cluster-resources
+
+  argocd-job:
+    name:
+    uses: svc-design/actions/.github/workflows/workflows-call-gitops.yaml@main
+    with:
+      namespace: "itsm-dev"
+      helmfile: "helm_releases/apps/redis"
+      config_repo: "https://github.com/svc-design/gitops.git"
+    secrets:
+      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+    needs:
+      - setup-k3s-cluster
