@@ -11,6 +11,7 @@ jobs:
     name: 
     uses: svc-design/actions/.github/workflows/workflows-call-gitops.yaml@main
     with:
+      apiserver: "https://35.200.69.238:6443"
       namespace: "itsm-dev"
       helmfile: "helm_releases/apps/redis"
       config_repo: "https://github.com/svc-design/gitops.git"
