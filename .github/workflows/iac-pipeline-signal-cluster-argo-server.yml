@@ -27,7 +27,7 @@ jobs:
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
 
   setup-k3s-cluster-with-argo-server:
-    uses: svc-design/actions/.github/workflows/init_k3s_cluster_with_argo_server@main
+    uses: svc-design/actions/.github/workflows/setup-k3s-cluster-argocd.yml@main
     with:
       domain: 'onwalk.net'
       cluster_name: 'argocd'
