@@ -21,7 +21,7 @@ jobs:
   apply-cluster-resources:
     uses: svc-design/actions/.github/workflows/setup-gcp-cloud.yml@main
     with:
-      config: 'signal-cluster-config.yaml'
+      config: 'signal-cluster-config-jenkins-server.yaml'
     secrets:
       SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
@@ -30,8 +30,8 @@ jobs:
     uses: svc-design/actions/.github/workflows/setup-k3s-cluster.yml@main
     with:
       domain: 'onwalk.net'
-      cluster_name: 'monitor'
-      ssh_host_name: 'monitor'
+      cluster_name: 'jenkins'
+      ssh_host_name: 'jenkins'
     secrets:
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
