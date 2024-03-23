@@ -1,4 +1,4 @@
-name: Signal K3S Cluster Pipeline Jenkins with IAC tools
+name: Setup ArgoCD Server
 
 env:
   STATE: "create"   # 可以根据需要更改初始状态, 可选create，update, destroy
