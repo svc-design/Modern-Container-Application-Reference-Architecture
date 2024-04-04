@@ -44,7 +44,7 @@ jobs:
       - apply-cluster-resources
 
   setup-iac-pipeline-signal-cluster-chaos-mesh-server:
-    uses: svc-design/actions/.github/workflows/setup-chaos-mesh-server.yaml@main
+    uses: svc-design/actions/.github/workflows/setup-chaos-mesh.yaml@main
     with:
       domain: 'onwalk.net'
       cluster_name: 'chaos-mesh'
