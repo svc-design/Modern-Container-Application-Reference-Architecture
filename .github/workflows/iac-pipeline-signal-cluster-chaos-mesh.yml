@@ -55,6 +55,5 @@ jobs:
       DNS_AK: ${{ secrets.DNS_AK }}
       DNS_SK: ${{ secrets.DNS_SK }}
       SSH_USER: ${{ secrets.HOST_USER }}
-      ADMIN_PASSWORD: ${{ secrets.ADMIN_INIT_PASSWORD }}
     needs:
       - setup-k3s-cluster
