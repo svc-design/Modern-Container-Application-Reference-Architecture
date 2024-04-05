@@ -57,3 +57,18 @@ jobs:
       SSH_USER: ${{ secrets.HOST_USER }}
     needs:
       - setup-k3s-cluster
+
+  setup-observability-server:
+    uses: svc-design/actions/.github/workflows/setup-observability-server.yml@main
+    with:
+      domain: 'onwalk.net'
+      cluster_name: 'chaosmesh'
+      ssh_host_name: 'chaosmesh'
+    secrets:
+      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      DNS_AK: ${{ secrets.DNS_AK }}
+      DNS_SK: ${{ secrets.DNS_SK }}
+      SSH_USER: ${{ secrets.HOST_USER }}
+    needs:
+      - setup-k3s-cluster
