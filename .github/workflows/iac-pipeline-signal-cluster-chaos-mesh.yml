@@ -47,8 +47,8 @@ jobs:
     uses: svc-design/actions/.github/workflows/setup-chaos-mesh.yaml@main
     with:
       domain: 'onwalk.net'
-      cluster_name: 'chaos-mesh'
-      ssh_host_name: 'chaos-mesh'
+      cluster_name: 'chaosmesh'
+      ssh_host_name: 'chaosmesh'
     secrets:
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
