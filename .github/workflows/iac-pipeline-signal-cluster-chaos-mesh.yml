@@ -58,8 +58,8 @@ jobs:
     needs:
       - setup-k3s-cluster
 
-  setup-observability-server:
-    uses: svc-design/actions/.github/workflows/setup-observability-server.yml@main
+  setup-deepflow-server:
+    uses: svc-design/actions/.github/workflows/setup-deepflow-server.yml@main
     with:
       domain: 'onwalk.net'
       cluster_name: 'chaosmesh'
