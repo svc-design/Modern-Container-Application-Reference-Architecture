@@ -26,7 +26,7 @@ jobs:
       SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
 
-  setup-k3s-cluster:
+  setup-k3s-cluster-chaosmesh:
     uses: svc-design/actions/.github/workflows/setup-k3s-cluster.yml@main
     with:
       domain: 'onwalk.net'
@@ -56,7 +56,24 @@ jobs:
       DNS_SK: ${{ secrets.DNS_SK }}
       SSH_USER: ${{ secrets.HOST_USER }}
     needs:
-      - setup-k3s-cluster
+      - setup-k3s-cluster-chaosmesh
+
+  setup-k3s-cluster-deepflow:
+    uses: svc-design/actions/.github/workflows/setup-k3s-cluster.yml@main
+    with:
+      domain: 'onwalk.net'
+      cluster_name: 'deepflow'
+      ssh_host_name: 'deepflow'
+    secrets:
+      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      DNS_AK: ${{ secrets.DNS_AK }}
+      DNS_SK: ${{ secrets.DNS_SK }}
+      VAULT_URL: ${{ secrets.VAULT_URL }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+      SSH_USER: ${{ secrets.HOST_USER }}
+    needs:
+      - apply-cluster-resources
 
   setup-deepflow-server:
     uses: svc-design/actions/.github/workflows/setup-deepflow-server.yml@main
@@ -71,4 +88,4 @@ jobs:
       DNS_SK: ${{ secrets.DNS_SK }}
       SSH_USER: ${{ secrets.HOST_USER }}
     needs:
-      - setup-k3s-cluster
+      - setup-k3s-cluster-deepflow
