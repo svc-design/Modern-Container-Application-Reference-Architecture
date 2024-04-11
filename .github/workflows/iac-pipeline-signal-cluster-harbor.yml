@@ -1,4 +1,4 @@
-name: Setup harbor Server
+name: Setup harbor Server with IAC
 
 env:
   STATE: "create"   # 可以根据需要更改初始状态, 可选create，update, destroy
