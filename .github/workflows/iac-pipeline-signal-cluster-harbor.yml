@@ -43,7 +43,7 @@ jobs:
     needs:
       - apply-cluster-resources
 
-  setup-iac-pipeline-signal-cluster-chaos-mesh-server:
+  setup-iac-pipeline-signal-cluster-harbor-server:
     uses: svc-design/actions/.github/workflows/setup-harbor-server.yml@main
     with:
       domain: 'onwalk.net'
@@ -52,6 +52,8 @@ jobs:
     secrets:
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      OSS_AK: ${{ secrets.OSS_AK }}
+      OSS_SK: ${{ secrets.OSS_SK }}
       DNS_AK: ${{ secrets.DNS_AK }}
       DNS_SK: ${{ secrets.DNS_SK }}
       SSH_USER: ${{ secrets.HOST_USER }}
