@@ -1,0 +1,59 @@
+name: Setup harbor Server
+
+env:
+  STATE: "create"   # 可以根据需要更改初始状态, 可选create，update, destroy
+  CLOUD: "gcp"       # 选择云服务商, 可选: gcp, aws, ali, azure
+  DNS_AK: ${{ secrets.DNS_AK }}
+  DNS_SK: ${{ secrets.DNS_SK }}
+  SSH_USER: ${{ secrets.HOST_USER }}
+  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+on:
+  pull_request:
+  push:
+    paths:
+      - '.github/workflows/setup-harbor-server.yml'
+  workflow_dispatch:
+    branches:
+      - main
+
+jobs:
+  apply-cluster-resources:
+    uses: svc-design/actions/.github/workflows/setup-gcp-cloud.yml@main
+    with:
+      config: 'signal-cluster-config-chaosmesh-server.yaml'
+    secrets:
+      SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+  setup-k3s-cluster:
+    uses: svc-design/actions/.github/workflows/setup-k3s-cluster.yml@main
+    with:
+      domain: 'onwalk.net'
+      cluster_name: 'chaosmesh'
+      ssh_host_name: 'chaosmesh'
+    secrets:
+      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      DNS_AK: ${{ secrets.DNS_AK }}
+      DNS_SK: ${{ secrets.DNS_SK }}
+      VAULT_URL: ${{ secrets.VAULT_URL }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+      SSH_USER: ${{ secrets.HOST_USER }}
+    needs:
+      - apply-cluster-resources
+
+  setup-iac-pipeline-signal-cluster-chaos-mesh-server:
+    uses: svc-design/actions/.github/workflows/harbor-server.yml@main
+    with:
+      domain: 'onwalk.net'
+      cluster_name: 'chaosmesh'
+      ssh_host_name: 'chaosmesh'
+    secrets:
+      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      DNS_AK: ${{ secrets.DNS_AK }}
+      DNS_SK: ${{ secrets.DNS_SK }}
+      SSH_USER: ${{ secrets.HOST_USER }}
+    needs:
+      - setup-k3s-cluster
