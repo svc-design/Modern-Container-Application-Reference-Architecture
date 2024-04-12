@@ -1,4 +1,4 @@
-name: Signal K3S Cluster Pipeline Create with IAC tools
+name: Setup harbor Server with IAC
 
 env:
   STATE: "create"   # 可以根据需要更改初始状态, 可选create，update, destroy
@@ -12,7 +12,7 @@ on:
   pull_request:
   push:
     paths:
-      - '.github/workflows/iac-pipeline-signal-cluster-create.yml'
+      - '.github/workflows/setup-harbor-server.yml'
   workflow_dispatch:
     branches:
       - main
@@ -21,7 +21,7 @@ jobs:
   apply-cluster-resources:
     uses: svc-design/actions/.github/workflows/setup-gcp-cloud.yml@main
     with:
-      config: 'signal-cluster-config.yaml'
+      config: 'signal-cluster-config-chaosmesh-server.yaml'
     secrets:
       SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
@@ -30,8 +30,8 @@ jobs:
     uses: svc-design/actions/.github/workflows/setup-k3s-cluster.yml@main
     with:
       domain: 'onwalk.net'
-      cluster_name: 'monitor'
-      ssh_host_name: 'monitor'
+      cluster_name: 'chaosmesh'
+      ssh_host_name: 'chaosmesh'
     secrets:
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -43,15 +43,19 @@ jobs:
     needs:
       - apply-cluster-resources
 
-#  argocd-job:
-#    name:
-#    uses: svc-design/actions/.github/workflows/workflows-call-gitops.yaml@main
-#    with:
-#      apiserver: "https://35.200.69.238:6443"
-#      namespace: "itsm-dev"
-#      helmfile: "helm_releases/apps/redis"
-#      config_repo: "https://github.com/svc-design/gitops.git"
-#    secrets:
-#      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-#    needs:
-#      - setup-k3s-cluster
+  setup-iac-pipeline-signal-cluster-harbor-server:
+    uses: svc-design/actions/.github/workflows/setup-harbor-server.yml@main
+    with:
+      domain: 'onwalk.net'
+      cluster_name: 'chaosmesh'
+      ssh_host_name: 'chaosmesh'
+    secrets:
+      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      OSS_AK: ${{ secrets.OSS_AK }}
+      OSS_SK: ${{ secrets.OSS_SK }}
+      DNS_AK: ${{ secrets.DNS_AK }}
+      DNS_SK: ${{ secrets.DNS_SK }}
+      SSH_USER: ${{ secrets.HOST_USER }}
+    needs:
+      - setup-k3s-cluster

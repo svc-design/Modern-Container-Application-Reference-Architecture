@@ -1,4 +1,4 @@
-name: Signal K3S Cluster Pipeline Create with IAC tools
+name: Signal K3S Cluster Pipeline Keycloak with IAC tools
 
 env:
   STATE: "create"   # 可以根据需要更改初始状态, 可选create，update, destroy
@@ -12,7 +12,7 @@ on:
   pull_request:
   push:
     paths:
-      - '.github/workflows/iac-pipeline-signal-cluster-create.yml'
+      - '.github/workflows/iac-pipeline-signal-cluster-keycloak.yml'
   workflow_dispatch:
     branches:
       - main
@@ -29,7 +29,7 @@ jobs:
   setup-k3s-cluster:
     uses: svc-design/actions/.github/workflows/setup-k3s-cluster.yml@main
     with:
-      domain: 'onwalk.net'
+      domain: 'svc-dev.ink'
       cluster_name: 'monitor'
       ssh_host_name: 'monitor'
     secrets:
@@ -43,15 +43,18 @@ jobs:
     needs:
       - apply-cluster-resources
 
-#  argocd-job:
-#    name:
-#    uses: svc-design/actions/.github/workflows/workflows-call-gitops.yaml@main
-#    with:
-#      apiserver: "https://35.200.69.238:6443"
-#      namespace: "itsm-dev"
-#      helmfile: "helm_releases/apps/redis"
-#      config_repo: "https://github.com/svc-design/gitops.git"
-#    secrets:
-#      KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
-#    needs:
-#      - setup-k3s-cluster
+  setup-keycloak-server:
+    uses: svc-design/actions/.github/workflows/setup-keycloak-server.yml@main
+    with:
+      domain: 'svc-dev.ink'
+      cluster_name: 'monitor'
+      ssh_host_name: 'monitor'
+    secrets:
+      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      DNS_AK: ${{ secrets.DNS_AK }}
+      DNS_SK: ${{ secrets.DNS_SK }}
+      SSH_USER: ${{ secrets.HOST_USER }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_INIT_PASSWORD }}
+    needs:
+      - setup-k3s-cluster
