@@ -16,7 +16,7 @@ jobs:
       domain: 'onwalk.net'
       cluster_name: 'artifact'
       ssh_host_ip: '47.76.37.251'
-      ssh_host_name: 'harbor'
+      ssh_host_name: 'artifact'
     secrets:
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
