@@ -24,7 +24,7 @@ jobs:
       DNS_SK: ${{ secrets.DNS_SK }}
       VAULT_URL: ${{ secrets.VAULT_URL }}
       VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
-      SSH_USER: ${{ secrets.HOST_USER }}
+      SSH_USER: ${{ secrets.SSH_USER }}
 
   setup-harbor-server:
     uses: svc-design/actions/.github/workflows/setup-harbor-server.yml@main
