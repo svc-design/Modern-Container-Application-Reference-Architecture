@@ -2,7 +2,6 @@ name: Setup Harbor Server
 
 on:
   pull_request:
-  push:
     paths:
       - '.github/workflows/app-pipeline-harbor.yml'
   workflow_dispatch:
@@ -40,6 +39,6 @@ jobs:
       DNS_SK: ${{ secrets.DNS_SK }}
       OSS_AK: ${{ secrets.OSS_AK }}
       OSS_SK: ${{ secrets.OSS_SK }}
-      SSH_USER: ${{ secrets.HOST_USER }}
+      SSH_USER: ${{ secrets.SSH_USER }}
     needs:
       - setup-k3s-cluster
