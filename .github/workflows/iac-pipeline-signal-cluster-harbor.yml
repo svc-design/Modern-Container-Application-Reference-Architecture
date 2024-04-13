@@ -5,7 +5,7 @@ env:
   CLOUD: "gcp"       # 选择云服务商, 可选: gcp, aws, ali, azure
   DNS_AK: ${{ secrets.DNS_AK }}
   DNS_SK: ${{ secrets.DNS_SK }}
-  SSH_USER: ${{ secrets.HOST_USER }}
+  SSH_USER: ${{ secrets.SSH_USER }}
   SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
 on:
@@ -56,6 +56,6 @@ jobs:
       OSS_SK: ${{ secrets.OSS_SK }}
       DNS_AK: ${{ secrets.DNS_AK }}
       DNS_SK: ${{ secrets.DNS_SK }}
-      SSH_USER: ${{ secrets.HOST_USER }}
+      SSH_USER: ${{ secrets.SSH_USER }}
     needs:
       - setup-k3s-cluster
