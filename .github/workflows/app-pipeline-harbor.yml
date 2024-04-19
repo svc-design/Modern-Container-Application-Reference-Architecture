@@ -14,7 +14,7 @@ jobs:
     with:
       domain: 'onwalk.net'
       cluster_name: 'artifact'
-      ssh_host_ip: '18.181.85.35'
+      ssh_host_ip: '35.74.62.32'
       ssh_host_name: 'artifact'
     secrets:
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
@@ -30,7 +30,7 @@ jobs:
     with:
       domain: 'onwalk.net'
       cluster_name: 'artifact'
-      ssh_host_ip: '18.181.85.35'
+      ssh_host_ip: '35.74.62.32'
       ssh_host_name: 'artifact'
     secrets:
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
