@@ -1,0 +1,23 @@
+name: Setup Chartmuseum Server
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/app-pipeline-chartmuseum.yml'
+  workflow_dispatch:
+    branches:
+      - main
+
+jobs:
+  setup-chartmuseum-server:
+    uses: svc-design/actions/.github/workflows/setup-chartmuseum-server.yml@main
+    with:
+      domain: 'onwalk.net'
+      cluster_name: 'mirrors'
+      ssh_host_ip: '8.130.36.45'
+      ssh_host_name: 'mirrors'
+    secrets:
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      DNS_AK: ${{ secrets.DNS_AK }}
+      DNS_SK: ${{ secrets.DNS_SK }}
+      SSH_USER: ${{ secrets.SSH_USER }}
