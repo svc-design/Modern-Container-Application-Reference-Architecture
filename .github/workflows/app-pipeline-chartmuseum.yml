@@ -21,4 +21,4 @@ jobs:
       DNS_SK: ${{ secrets.DNS_SK }}
       SSH_USER: ${{ secrets.SSH_USER }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+      ADMIN_PASSWORD: ${{ secrets.ADMIN_INIT_PASSWORD }}
