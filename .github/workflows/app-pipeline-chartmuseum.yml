@@ -13,9 +13,9 @@ jobs:
     uses: svc-design/actions/.github/workflows/setup-chartmuseum-server.yml@main
     with:
       domain: 'onwalk.net'
-      cluster_name: 'mirrors'
+      cluster_name: 'www'
       ssh_host_ip: '8.130.36.45'
-      ssh_host_name: 'mirrors'
+      ssh_host_name: 'www'
     secrets:
       DNS_AK: ${{ secrets.DNS_AK }}
       DNS_SK: ${{ secrets.DNS_SK }}
