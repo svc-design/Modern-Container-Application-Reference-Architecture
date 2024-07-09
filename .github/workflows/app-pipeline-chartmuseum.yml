@@ -23,3 +23,4 @@ jobs:
       SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       ADMIN_PASSWORD: ${{ secrets.ADMIN_INIT_PASSWORD }}
+      ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
