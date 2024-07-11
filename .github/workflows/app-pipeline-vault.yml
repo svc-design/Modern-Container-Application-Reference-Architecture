@@ -18,7 +18,7 @@ jobs:
       ssh_host_ip: '8.130.36.45'
       ssh_host_name: 'www'
     secrets:
-      SSH_USER: ${{ secrets.HOST_USER }}
+      SSH_USER: ${{ secrets.SSH_USER }}
       SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
