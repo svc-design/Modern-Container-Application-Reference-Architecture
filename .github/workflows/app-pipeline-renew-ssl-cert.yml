@@ -2,7 +2,6 @@ name: Renew SSL Certs
 
 on:
   pull_request:
-  push:
     paths:
       - '.github/workflows/app-pipeline-renew-ssl-cert.yml'
   workflow_dispatch:

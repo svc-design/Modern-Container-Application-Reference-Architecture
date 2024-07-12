@@ -10,7 +10,6 @@ env:
 
 on:
   pull_request:
-  push:
     paths:
       - '.github/workflows/iac-pipeline-signal-cluster-argo-server.yml'
   workflow_dispatch:
