@@ -22,6 +22,8 @@ jobs:
       SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+      VAULT_URL: ${{ secrets.VAULT_URL }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
 
   renew-nodes-ssl-certs-xproxy-onwalk-net:
     uses: svc-design/actions/.github/workflows/renew-nodes-ssl-certs.yml@main
@@ -35,6 +37,8 @@ jobs:
       SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+      VAULT_URL: ${{ secrets.VAULT_URL }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
 
   renew-nodes-ssl-certs-www-onwalk-net:
     uses: svc-design/actions/.github/workflows/renew-nodes-ssl-certs.yml@main
@@ -48,6 +52,8 @@ jobs:
       SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+      VAULT_URL: ${{ secrets.VAULT_URL }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
 
   renew-nodes-ssl-certs-www-svc-plus:
     uses: svc-design/actions/.github/workflows/renew-nodes-ssl-certs.yml@main
@@ -61,6 +67,8 @@ jobs:
       SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+      VAULT_URL: ${{ secrets.VAULT_URL }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
 
   renew-nodes-ssl-certs-www-svc-ink:
     uses: svc-design/actions/.github/workflows/renew-nodes-ssl-certs.yml@main
@@ -74,3 +82,5 @@ jobs:
       SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+      VAULT_URL: ${{ secrets.VAULT_URL }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
