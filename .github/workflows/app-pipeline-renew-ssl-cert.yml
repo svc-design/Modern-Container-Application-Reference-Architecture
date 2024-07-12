@@ -12,7 +12,7 @@ on:
     - cron: '0 0 1 */2 *'  # 每两个月的第一天执行
 
 jobs:
-  renew-ssl-certs:
+  renew-ssl-certs-onwalk-net:
     uses: svc-design/actions/.github/workflows/renew-ssl-certs.yml@main
     with:
       domain: 'onwalk.net'
@@ -22,3 +22,22 @@ jobs:
       VAULT_URL: ${{ secrets.VAULT_URL }}
       VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
 
+  renew-ssl-certs-svc-plus:
+    uses: svc-design/actions/.github/workflows/renew-ssl-certs.yml@main
+    with:
+      domain: 'svc.plus'
+    secrets:
+      DNS_AK: ${{ secrets.DNS_AK }}
+      DNS_SK: ${{ secrets.DNS_SK }}
+      VAULT_URL: ${{ secrets.VAULT_URL }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+
+  renew-ssl-certs-svc-ink:
+    uses: svc-design/actions/.github/workflows/renew-ssl-certs.yml@main
+    with:
+      domain: 'svc.ink'
+    secrets:
+      DNS_AK: ${{ secrets.DNS_AK }}
+      DNS_SK: ${{ secrets.DNS_SK }}
+      VAULT_URL: ${{ secrets.VAULT_URL }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
