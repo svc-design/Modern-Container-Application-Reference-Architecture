@@ -1,0 +1,76 @@
+name: Renew node ssl cert 
+
+on:
+  pull_request:
+  push:
+    paths:
+      - '.github/workflows/app-pipeline-renew-node-ssl-certs.yml'
+  workflow_dispatch:
+    branches:
+      - main
+
+jobs:
+  renew-nodes-ssl-certs:
+    uses: svc-design/actions/.github/workflows/renew-nodes-ssl-certs.yml@main
+    with:
+      domain: 'onwalk.net'
+      cluster_name: 'artifact'
+      ssh_host_ip: '35.74.62.32'
+      ssh_host_name: 'artifact'
+    secrets:
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+
+  renew-nodes-ssl-certs:
+    uses: svc-design/actions/.github/workflows/renew-nodes-ssl-certs.yml@main
+    with:
+      domain: 'onwalk.net'
+      cluster_name: 'xproxy'
+      ssh_host_ip: '43.206.158.21'
+      ssh_host_name: 'xproxy'
+    secrets:
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+
+  renew-nodes-ssl-certs:
+    uses: svc-design/actions/.github/workflows/renew-nodes-ssl-certs.yml@main
+    with:
+      domain: 'onwalk.net'
+      cluster_name: 'www'
+      ssh_host_ip: '8.130.36.45'
+      ssh_host_name: 'www'
+    secrets:
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+
+  renew-nodes-ssl-certs:
+    uses: svc-design/actions/.github/workflows/renew-nodes-ssl-certs.yml@main
+    with:
+      domain: 'svc.plus'
+      cluster_name: 'www'
+      ssh_host_ip: '8.130.36.45'
+      ssh_host_name: 'www'
+    secrets:
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+
+  renew-nodes-ssl-certs:
+    uses: svc-design/actions/.github/workflows/renew-nodes-ssl-certs.yml@main
+    with:
+      domain: 'svc.ink'
+      cluster_name: 'www'
+      ssh_host_ip: '8.130.36.45'
+      ssh_host_name: 'www'
+    secrets:
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
