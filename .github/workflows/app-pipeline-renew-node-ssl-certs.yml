@@ -10,7 +10,7 @@ on:
       - main
 
 jobs:
-  renew-nodes-ssl-certs:
+  renew-node-ssl-certs-artifact-onwalk-net:
     uses: svc-design/actions/.github/workflows/renew-nodes-ssl-certs.yml@main
     with:
       domain: 'onwalk.net'
@@ -23,7 +23,7 @@ jobs:
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
 
-  renew-nodes-ssl-certs:
+  renew-nodes-ssl-certs-xproxy-onwalk.net:
     uses: svc-design/actions/.github/workflows/renew-nodes-ssl-certs.yml@main
     with:
       domain: 'onwalk.net'
@@ -36,7 +36,7 @@ jobs:
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
 
-  renew-nodes-ssl-certs:
+  renew-nodes-ssl-certs-www-onwalk-net:
     uses: svc-design/actions/.github/workflows/renew-nodes-ssl-certs.yml@main
     with:
       domain: 'onwalk.net'
@@ -49,7 +49,7 @@ jobs:
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
 
-  renew-nodes-ssl-certs:
+  renew-nodes-ssl-certs-www-svc-plus:
     uses: svc-design/actions/.github/workflows/renew-nodes-ssl-certs.yml@main
     with:
       domain: 'svc.plus'
@@ -62,7 +62,7 @@ jobs:
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
 
-  renew-nodes-ssl-certs:
+  renew-nodes-ssl-certs-www-svc-ink:
     uses: svc-design/actions/.github/workflows/renew-nodes-ssl-certs.yml@main
     with:
       domain: 'svc.ink'
