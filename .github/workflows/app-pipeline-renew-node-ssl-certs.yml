@@ -23,7 +23,7 @@ jobs:
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
 
-  renew-nodes-ssl-certs-xproxy-onwalk.net:
+  renew-nodes-ssl-certs-xproxy-onwalk-net:
     uses: svc-design/actions/.github/workflows/renew-nodes-ssl-certs.yml@main
     with:
       domain: 'onwalk.net'
