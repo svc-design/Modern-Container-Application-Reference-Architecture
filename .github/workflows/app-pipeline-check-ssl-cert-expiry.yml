@@ -3,7 +3,7 @@ name: Check SSL Cert Expiry
 on:
   pull_request:
     paths:
-      - '.github/workflows/check-ssl-cert-expiry-main.yml'
+      - '.github/workflows/app-pipeline-check-ssl-cert-expiry.yml'
   workflow_dispatch:
     branches:
       - main
@@ -12,18 +12,18 @@ on:
 
 jobs:
   check-ssl-cert-expiry-www-onwalk-net:
-    uses: svc-design/actions/.github/workflows/check-ssl-cert-expiry.yml
+    uses: svc-design/actions/.github/workflows/check-ssl-cert-expiry.yml@main
     with:
       domain: 'www.onwalk.net'
   check-ssl-cert-expiry-mirrors-onwalk-net:
-    uses: svc-design/actions/.github/workflows/check-ssl-cert-expiry.yml
+    uses: svc-design/actions/.github/workflows/check-ssl-cert-expiry.yml@main
     with:
       domain: 'mirrors.onwalk.net'
   check-ssl-cert-expiry-harbor-onwalk-net:
-    uses: svc-design/actions/.github/workflows/check-ssl-cert-expiry.yml
+    uses: svc-design/actions/.github/workflows/check-ssl-cert-expiry.yml@main
     with:
       domain: 'harbor.onwalk.net'
   check-ssl-cert-expiry-charts-onwalk-net:
-    uses: svc-design/actions/.github/workflows/check-ssl-cert-expiry.yml
+    uses: svc-design/actions/.github/workflows/check-ssl-cert-expiry.yml@main
     with:
       domain: 'charts.onwalk.net'
