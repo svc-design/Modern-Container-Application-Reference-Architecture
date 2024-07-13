@@ -27,3 +27,7 @@ jobs:
     uses: svc-design/actions/.github/workflows/check-ssl-cert-expiry.yml@main
     with:
       domain: 'charts.onwalk.net'
+  check-ssl-cert-expiry-keycloak-onwalk-net:
+    uses: svc-design/actions/.github/workflows/check-ssl-cert-expiry.yml@main
+    with:
+      domain: 'keycloak.onwalk.net'
