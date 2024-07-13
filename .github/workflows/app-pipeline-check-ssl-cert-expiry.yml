@@ -1,0 +1,29 @@
+name: Check SSL Cert Expiry
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/check-ssl-cert-expiry-main.yml'
+  workflow_dispatch:
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * *'  # 每天执行
+
+jobs:
+  check-ssl-cert-expiry-www-onwalk-net:
+    uses: svc-design/actions/.github/workflows/check-ssl-cert-expiry.yml
+    with:
+      domain: 'www.onwalk.net'
+  check-ssl-cert-expiry-mirrors-onwalk-net:
+    uses: svc-design/actions/.github/workflows/check-ssl-cert-expiry.yml
+    with:
+      domain: 'mirrors.onwalk.net'
+  check-ssl-cert-expiry-harbor-onwalk-net:
+    uses: svc-design/actions/.github/workflows/check-ssl-cert-expiry.yml
+    with:
+      domain: 'harbor.onwalk.net'
+  check-ssl-cert-expiry-charts-onwalk-net:
+    uses: svc-design/actions/.github/workflows/check-ssl-cert-expiry.yml
+    with:
+      domain: 'charts.onwalk.net'
