@@ -14,7 +14,7 @@ jobs:
     with:
       domain: 'svc.plus'
       cluster_name: 'k3s-server'
-      ssh_host_ip: '35.74.62.32'
+      ssh_host_ip: '35.77.36.144'
       ssh_host_name: 'k3s-server'
       ssh_host_domain: 'k3s-server.svc.plus'
     secrets:
