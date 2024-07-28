@@ -14,10 +14,10 @@ jobs:
     uses: svc-design/actions/.github/workflows/setup-vault.yml@main
     with:
       domain: 'svc.plus'
-      cluster_name: 'www'
-      ssh_host_ip: '8.130.36.45'
-      ssh_host_name: 'www'
-      ssh_host_domain: 'www.onwalk.net'
+      cluster_name: 'k3s-server'
+      ssh_host_ip: '35.74.62.32'
+      ssh_host_name: 'k3s-server'
+      ssh_host_domain: 'k3s-server.svc.plus'
     secrets:
       SSH_USER: ${{ secrets.SSH_USER }}
       SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}

@@ -12,10 +12,11 @@ jobs:
   setup-chartmuseum-server:
     uses: svc-design/actions/.github/workflows/setup-chartmuseum-server.yml@main
     with:
-      domain: 'onwalk.net'
-      cluster_name: 'www'
-      ssh_host_ip: '8.130.36.45'
-      ssh_host_name: 'www'
+      domain: 'svc.plus'
+      cluster_name: 'k3s-server'
+      ssh_host_ip: '35.74.62.32'
+      ssh_host_name: 'k3s-server'
+      ssh_host_domain: 'k3s-server.svc.plus'
     secrets:
       DNS_AK: ${{ secrets.DNS_AK }}
       DNS_SK: ${{ secrets.DNS_SK }}
