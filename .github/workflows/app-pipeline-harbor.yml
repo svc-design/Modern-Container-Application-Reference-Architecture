@@ -22,4 +22,5 @@ jobs:
       OSS_SK: ${{ secrets.OSS_SK }}
       SSH_USER: ${{ secrets.SSH_USER }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
       ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
