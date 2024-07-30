@@ -13,10 +13,10 @@ jobs:
     uses: svc-design/actions/.github/workflows/setup-harbor-server.yml@main
     with:
       domain: 'svc.plus'
-      cluster_name: 'k3s-server'
-      ssh_host_ip: '35.77.36.144'
-      ssh_host_name: 'k3s-server'
-      ssh_host_domain: 'k3s-server.svc.plus'
+      cluster_name: 'cn-k3s-server'
+      ssh_host_ip: '8.130.93.47'
+      ssh_host_name: 'cn-k3s-server'
+      ssh_host_domain: 'cn-k3s-server.svc.plus'
     secrets:
       OSS_AK: ${{ secrets.OSS_AK }}
       OSS_SK: ${{ secrets.OSS_SK }}
