@@ -9,14 +9,30 @@ on:
       - main
 
 jobs:
-  setup-harbor-server:
+  setup-global-harbor-server:
     uses: svc-design/actions/.github/workflows/setup-harbor-server.yml@main
     with:
       domain: 'svc.plus'
-      cluster_name: 'gloabl-k3s-server'
-      ssh_host_ip: '52.196.108.28'
+      cluster_name: 'global-k3s-server'
+      ssh_host_ip: '18.181.249.98'
       ssh_host_name: 'k3s-server'
-      ssh_host_domain: 'gloabl-k3s-server.svc.plus'
+      ssh_host_domain: 'global-k3s-server.svc.plus'
+    secrets:
+      OSS_AK: ${{ secrets.OSS_AK }}
+      OSS_SK: ${{ secrets.OSS_SK }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
+      ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+
+  setup-cn-harbor-server:
+    uses: svc-design/actions/.github/workflows/setup-harbor-server.yml@main
+    with:
+      domain: 'svc.plus'
+      cluster_name: 'cn-k3s-server'
+      ssh_host_ip: '8.130.93.47'
+      ssh_host_name: 'cn-k3s-server'
+      ssh_host_domain: 'cn-k3s-server.svc.plus'
     secrets:
       OSS_AK: ${{ secrets.OSS_AK }}
       OSS_SK: ${{ secrets.OSS_SK }}
