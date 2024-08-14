@@ -1,9 +1,9 @@
-name: Deploy VPN Gateway
+name: Deploy Wireguard VPN Gateway
 
 on:
   pull_request:
     paths:
-      - '.github/workflows/deploy-vpn-gateway.yml'
+      - '.github/workflows/app-pipeline-wireguard-vpn.yml'
   workflow_dispatch:
     branches:
       - main
@@ -18,7 +18,7 @@ jobs:
       ssh_host_ip: '52.196.108.28'  # 根据实际情况定义 SSH 主机 IP
       dry-run: 'true'  # 控制是否进行干运行，可以设置为 'true' 或 'false'
     secrets:
-      GATEWAY_PRIVATE_KEY: ${{ secrets.GATEWAY_PRIVATE_KEY }}
+      GATEWAY_PRIVATE_KEY: ${{ secrets.GLOBAL_GATEWAY_PRIVATE_KEY }}
       GLOBAL_K3S_SERVER_DB_PUBLIC_KEY: ${{ secrets.GLOBAL_K3S_SERVER_DB_PUBLIC_KEY }}
       GLOBAL_K3S_SERVER_PUBLIC_KEY: ${{ secrets.GLOBAL_K3S_SERVER_PUBLIC_KEY }}
       DESKTOP_MACBOOK_PUBLIC_KEY: ${{ secrets.DESKTOP_MACBOOK_PUBLIC_KEY }}
