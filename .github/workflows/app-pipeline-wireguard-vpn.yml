@@ -10,20 +10,44 @@ on:
 
 jobs:
   deploy-global-vpn-gateway:
-    uses: svc-design/actions/.github/workflows/setup-vpn-gateway.yml@main
+    uses: svc-design/actions/.github/workflows/setup-vpn-gateway-new.yml@main
     with:
-      domain: 'svc.plus'  # 如果需要，可以根据需要添加域名
-      cluster_name: 'global-gateway'  # 根据实际情况定义集群名称
-      ssh_host_name: 'global-gateway'  # 根据实际情况定义 SSH 主机名称
-      ssh_host_ip: '52.196.108.28'  # 根据实际情况定义 SSH 主机 IP
-      dry-run: 'true'  # 控制是否进行干运行，可以设置为 'true' 或 'false'
+      domain: 'svc.plus'
+      cluster_name: 'global-gateway'
+      ssh_host_name: 'global-gateway'
+      ssh_host_ip: '52.196.108.28'
+      dry-run: 'true'
+      gateway_public_config: |
+        network: "10.255.0.1/32"
+        listen_port: 51820
+        tunnel: "wg0"
+        interface: "eth0"
+        mtu: 1200
+        postup_rules:
+          - "iptables -A FORWARD -i wg0 -j ACCEPT"
+          - "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
+          - "/usr/local/bin/udp2raw -s -l 0.0.0.0:2443 -r 52.196.108.28:51820 -k \"udp2raw\" --raw-mode faketcp -a --log-level 3 > /tmp/udp.log &"
+        postdown_rules:
+          - "iptables -D FORWARD -i wg0 -j ACCEPT"
+          - "iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE"
+          - "killall udp2raw || true"
+        peers:
+          - public_key: "${{ secrets.GLOBAL_K3S_SERVER_DB_PUBLIC_KEY }}"
+            allowed_ips: "10.255.0.2/32"
+            persistent_keepalive: 25
+          - public_key: "${{ secrets.GLOBAL_K3S_SERVER_PUBLIC_KEY }}"
+            allowed_ips: "10.255.0.3/32"
+            persistent_keepalive: 25
+          - public_key: "${{ secrets.DESKTOP_MACBOOK_PUBLIC_KEY }}"
+            allowed_ips: "10.255.0.200/32"
+            persistent_keepalive: 25
+          - public_key: "${{ secrets.CN_GATEWAY_PUBLIC_KEY }}"
+            allowed_ips: "10.254.0.0/16, 10.255.0.0/16"
+            endpoint: "127.0.0.1:51831"
+            persistent_keepalive: 25
     secrets:
       SSH_USER: ${{ secrets.SSH_USER }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
       ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
-      GLOBAL_GATEWAY_PRIVATE_KEY: ${{ secrets.GLOBAL_GATEWAY_PRIVATE_KEY }}
-      GLOBAL_K3S_SERVER_DB_PUBLIC_KEY: ${{ secrets.GLOBAL_K3S_SERVER_DB_PUBLIC_KEY }}
-      GLOBAL_K3S_SERVER_PUBLIC_KEY: ${{ secrets.GLOBAL_K3S_SERVER_PUBLIC_KEY }}
-      DESKTOP_MACBOOK_PUBLIC_KEY: ${{ secrets.DESKTOP_MACBOOK_PUBLIC_KEY }}
-      CN_GATEWAY_PUBLIC_KEY: ${{ secrets.CN_GATEWAY_PUBLIC_KEY }}
+      GATEWAY_PRIVATE_KEY: ${{ secrets.GLOBAL_GATEWAY_PRIVATE_KEY }}
