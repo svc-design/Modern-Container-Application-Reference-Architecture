@@ -18,36 +18,36 @@ jobs:
       ssh_host_ip: '52.196.108.28'
       dry-run: 'true'
       gateway_public_config: |
-        network: "10.255.0.1/32"
+        network: '10.255.0.1/32'
         listen_port: 51820
-        tunnel: "wg0"
-        interface: "eth0"
+        tunnel: wg0
+        interface: eth0
         mtu: 1200
         postup_rules:
-          - "iptables -A FORWARD -i wg0 -j ACCEPT"
-          - "iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE"
-          - "/usr/local/bin/udp2raw -s -l 0.0.0.0:2443 -r 52.196.108.28:51820 -k \"udp2raw\" --raw-mode faketcp -a --log-level 3 > /tmp/udp.log &"
+          - 'iptables -A FORWARD -i wg0 -j ACCEPT'
+          - 'iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE'
+          - '/usr/local/bin/udp2raw -s -l 0.0.0.0:2443 -r 52.196.108.28:51820 -k \"udp2raw\" --raw-mode faketcp -a --log-level 3 > /tmp/udp.log &'
         postdown_rules:
-          - "iptables -D FORWARD -i wg0 -j ACCEPT"
-          - "iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE"
-          - "killall udp2raw || true"
+          - 'iptables -D FORWARD -i wg0 -j ACCEPT'
+          - 'iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE'
+          - 'killall udp2raw || true'
         peers:
           - name: 'GLOBAL_K3S_SERVER_DB'
-            public_key: "KCKOZ424iXZ+ZwHRr477Y58E2tsh4UMcs2UqVvC+5U8="
-            allowed_ips: "10.255.0.2/32"
+            public_key: 'KCKOZ424iXZ+ZwHRr477Y58E2tsh4UMcs2UqVvC+5U8='
+            allowed_ips: '10.255.0.2/32'
             persistent_keepalive: 25
           - name: 'GLOBAL_K3S_SERVER'
-            public_key: "yQebw3UakBGn2/6Ysf5tYJuHHKKuoJ/zhpNhQUcIlG0="
-            allowed_ips: "10.255.0.3/32"
+            public_key: 'yQebw3UakBGn2/6Ysf5tYJuHHKKuoJ/zhpNhQUcIlG0='
+            allowed_ips: '10.255.0.3/32'
             persistent_keepalive: 25
           - name: 'DESKTOP_MACBOOK'
-            public_key: "Mj4FRAdcRtcgMHMF39eAaTMQ24t56c6VOrVI5547c30="
-            allowed_ips: "10.255.0.200/32"
+            public_key: 'Mj4FRAdcRtcgMHMF39eAaTMQ24t56c6VOrVI5547c30='
+            allowed_ips: '10.255.0.200/32'
             persistent_keepalive: 25
-          - name: "CN_GATEWAY"
-            public_key: "yQebw3UakBGn2/6Ysf5tYJuHHKKuoJ/zhpNhQUcIlG0="
-            allowed_ips: "10.254.0.0/16, 10.255.0.0/16"
-            endpoint: "127.0.0.1:51831"
+          - name: 'CN_GATEWAY'
+            public_key: 'yQebw3UakBGn2/6Ysf5tYJuHHKKuoJ/zhpNhQUcIlG0='
+            allowed_ips: '10.254.0.0/16, 10.255.0.0/16'
+            endpoint: '127.0.0.1:51831'
             persistent_keepalive: 25
     secrets:
       SSH_USER: ${{ secrets.SSH_USER }}
