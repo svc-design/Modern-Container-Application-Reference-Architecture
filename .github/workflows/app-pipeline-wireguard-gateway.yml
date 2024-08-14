@@ -1,0 +1,26 @@
+name: Deploy VPN Gateway
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/deploy-vpn-gateway.yml'
+  workflow_dispatch:
+    branches:
+      - main
+
+jobs:
+  deploy-global-vpn-gateway:
+    uses: svc-design/actions/.github/workflows/setup-vpn-gateway.yml@main
+    with:
+      domain: 'svc.plus'  # 如果需要，可以根据需要添加域名
+      cluster_name: 'global-gateway'  # 根据实际情况定义集群名称
+      ssh_host_name: 'global-gateway'  # 根据实际情况定义 SSH 主机名称
+      ssh_host_ip: '52.196.108.28'  # 根据实际情况定义 SSH 主机 IP
+      dry-run: 'true'  # 控制是否进行干运行，可以设置为 'true' 或 'false'
+    secrets:
+      GATEWAY_PRIVATE_KEY: ${{ secrets.GATEWAY_PRIVATE_KEY }}
+      GLOBAL_K3S_SERVER_DB_PUBLIC_KEY: ${{ secrets.GLOBAL_K3S_SERVER_DB_PUBLIC_KEY }}
+      GLOBAL_K3S_SERVER_PUBLIC_KEY: ${{ secrets.GLOBAL_K3S_SERVER_PUBLIC_KEY }}
+      DESKTOP_MACBOOK_PUBLIC_KEY: ${{ secrets.DESKTOP_MACBOOK_PUBLIC_KEY }}
+      CN_GATEWAY_PUBLIC_KEY: ${{ secrets.CN_GATEWAY_PUBLIC_KEY }}
+      ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}  # 添加 ANSIBLE_VAULT_PASSWORD 的密钥
