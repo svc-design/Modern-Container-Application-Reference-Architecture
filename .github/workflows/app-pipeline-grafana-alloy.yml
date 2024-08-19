@@ -19,7 +19,8 @@ jobs:
       loki_journal_sources: |
         loki_journal_sources_vpn.yml
         loki_journal_sources_gateway.yml
-      dry-run: 'true'
+        loki_journal_sources_k3s_agent.yml
+      dry-run: 'false'
     secrets:
       SSH_USER: ${{ secrets.SSH_USER }}
       SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
@@ -36,7 +37,7 @@ jobs:
       loki_journal_sources: |
         loki_journal_sources_vpn.yml
         loki_journal_sources_k3s_server.yml
-      dry-run: 'true'
+      dry-run: 'false'
     secrets:
       SSH_USER: ${{ secrets.SSH_USER }}
       SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
@@ -53,7 +54,7 @@ jobs:
       loki_journal_sources: |
         loki_journal_sources_vpn.yml
         loki_journal_sources_k3s_agent.yml
-      dry-run: 'true'
+      dry-run: 'false'
     secrets:
       SSH_USER: ${{ secrets.SSH_USER }}
       SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
@@ -70,7 +71,8 @@ jobs:
       loki_journal_sources: |
         loki_journal_sources_vpn.yml
         loki_journal_sources_gateway.yml
-      dry-run: 'true'
+        loki_journal_sources_k3s_agent.yml
+      dry-run: 'false'
     secrets:
       SSH_USER: ${{ secrets.SSH_USER }}
       SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
@@ -88,7 +90,7 @@ jobs:
         loki_journal_sources_vpn.yml
         loki_journal_sources_k3s_server.yml
         loki_journal_sources_postgresql.yml
-      dry-run: 'true'
+      dry-run: 'false'
     secrets:
       SSH_USER: ${{ secrets.SSH_USER }}
       SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
