@@ -17,8 +17,8 @@ jobs:
       ssh_host_name: 'cn-gateway'
       ssh_host_ip: '110.42.238.110'
       loki_journal_sources: |
-        'loki_journal_sources_vpn.yml'
-        'loki_journal_sources_gateway.yml'
+        loki_journal_sources_vpn.yml
+        loki_journal_sources_gateway.yml
       dry-run: 'true'
     secrets:
       SSH_USER: ${{ secrets.SSH_USER }}
@@ -34,8 +34,8 @@ jobs:
       ssh_host_name: 'cn-k3s-server'
       ssh_host_ip: '8.130.93.47'
       loki_journal_sources: |
-        'loki_journal_sources_vpn.yml'
-        'loki_journal_sources_k3s_server.yml'
+        loki_journal_sources_vpn.yml
+        loki_journal_sources_k3s_server.yml
       dry-run: 'true'
     secrets:
       SSH_USER: ${{ secrets.SSH_USER }}
@@ -51,8 +51,8 @@ jobs:
       ssh_host_name: 'cn-hw-node'
       ssh_host_ip: '139.9.139.22'
       loki_journal_sources: |
-        'loki_journal_sources_vpn.yml'
-        'loki_journal_sources_k3s_agent.yml'
+        loki_journal_sources_vpn.yml
+        loki_journal_sources_k3s_agent.yml
       dry-run: 'true'
     secrets:
       SSH_USER: ${{ secrets.SSH_USER }}
@@ -68,8 +68,8 @@ jobs:
       ssh_host_name: 'global-gateway'
       ssh_host_ip: '52.196.108.28'
       loki_journal_sources: |
-        'loki_journal_sources_vpn.yml'
-        'loki_journal_sources_gateway.yml'
+        loki_journal_sources_vpn.yml
+        loki_journal_sources_gateway.yml
       dry-run: 'true'
     secrets:
       SSH_USER: ${{ secrets.SSH_USER }}
@@ -85,9 +85,9 @@ jobs:
       ssh_host_name: 'k3s-server'
       ssh_host_ip: '43.207.193.125'
       loki_journal_sources: |
-        'loki_journal_sources_vpn.yml'
-        'loki_journal_sources_k3s_server.yml'
-        'loki_journal_sources_postgresql.yml'
+        loki_journal_sources_vpn.yml
+        loki_journal_sources_k3s_server.yml
+        loki_journal_sources_postgresql.yml
       dry-run: 'true'
     secrets:
       SSH_USER: ${{ secrets.SSH_USER }}
