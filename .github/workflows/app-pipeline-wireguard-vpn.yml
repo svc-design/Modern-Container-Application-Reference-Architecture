@@ -17,7 +17,8 @@ jobs:
       ssh_host_name: 'global-gateway'
       ssh_host_ip: '52.196.108.28'
       dry-run: 'true'
-      gateway_public_config: |
+      vpn_gateway_config: |
+        name: 'global_gateway' 
         network: '10.255.0.1/32'
         listen_port: 51820
         tunnel: wg0
@@ -32,26 +33,24 @@ jobs:
           - 'iptables -t nat -D POSTROUTING -o eth0 -j MASQUERADE'
           - 'killall udp2raw || true'
         peers:
-          - name: 'GLOBAL_K3S_SERVER_DB'
-            public_key: 'KCKOZ424iXZ+ZwHRr477Y58E2tsh4UMcs2UqVvC+5U8='
+          - name: 'global_k3s_server_db'
             allowed_ips: '10.255.0.2/32'
             persistent_keepalive: 25
-          - name: 'GLOBAL_K3S_SERVER'
-            public_key: 'yQebw3UakBGn2/6Ysf5tYJuHHKKuoJ/zhpNhQUcIlG0='
+          - name: 'global_k3s_server'
             allowed_ips: '10.255.0.3/32'
             persistent_keepalive: 25
-          - name: 'DESKTOP_MACBOOK'
-            public_key: 'Mj4FRAdcRtcgMHMF39eAaTMQ24t56c6VOrVI5547c30='
+          - name: 'desktop_macbook'
             allowed_ips: '10.255.0.200/32'
             persistent_keepalive: 25
-          - name: 'CN_GATEWAY'
-            public_key: 'yQebw3UakBGn2/6Ysf5tYJuHHKKuoJ/zhpNhQUcIlG0='
+          - name: 'cn_gateway'
             allowed_ips: '10.254.0.0/16, 10.255.0.0/16'
             endpoint: '127.0.0.1:51831'
             persistent_keepalive: 25
     secrets:
       SSH_USER: ${{ secrets.SSH_USER }}
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      HCP_API_URL:  ${{ secrets.HCP_API_URL }}
+      HCP_CLIENT_ID:  ${{ secrets.HCP_CLIENT_ID }}
+      HCP_CLIENT_SECRET: ${{ secrets.HCP_CLIENT_SECRET }}
       ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
-      GATEWAY_PRIVATE_KEY: ${{ secrets.GLOBAL_GATEWAY_PRIVATE_KEY }}
