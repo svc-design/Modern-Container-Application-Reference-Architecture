@@ -33,6 +33,7 @@ jobs:
       ssh_host_ip: '8.130.93.47'
       ssh_host_name: 'cn-k3s-server'
       ssh_host_domain: 'cn-k3s-server.svc.plus'
+      registry: 'registry.cn-wulanchabu.aliyuncs.com/svc-design'
     secrets:
       OSS_AK: ${{ secrets.OSS_AK }}
       OSS_SK: ${{ secrets.OSS_SK }}
