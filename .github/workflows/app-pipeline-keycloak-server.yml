@@ -1,0 +1,23 @@
+name: Setup Keycloak Server
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/app-pipeline-keycloak-server.yml'
+  workflow_dispatch:
+    branches:
+      - main
+
+jobs:
+  setup-keycloak-server:
+    uses: svc-design/actions/.github/workflows/deploy-docker-keycloak-server.yml@main
+    with:
+      domain: 'onwalk.net'
+      ssh_host_ip: '110.42.238.110'
+      ssh_host_name: 'cn-gateway'
+      ssh_host_domain: 'cn-gateway.svc.plus'
+    secrets:
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}

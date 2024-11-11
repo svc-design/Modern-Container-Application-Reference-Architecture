@@ -27,13 +27,13 @@ In this first phase, we focus on implementing OpenID Connect (OIDC) login functi
 | **5. CI/CD (Continuous Integration/Delivery)**| Automated build, test, and deployment pipelines.                                                                  | GitHub Actions                               |
 ## key Components Service
 
-| **Name**            | **Domain**                     | **Version**           | **Deploy**                | **Docker Compose**      | **Chart**                  | **CI/CD**                 |
-|-------------------|--------------------------------|-------------|-----------------------|---------------------|------------------------|-----------------------|
-| **1. Keycloak**       | keycloak.onwalk.net            | 26.0        | Docker                | Yes                 | Yes                    | GitHub Actions        |
-| **2. Harbor**         | images.onwalk.net              | 2.12        | Docker                | Yes                 | Yes                    | GitHub Actions        |
-| **3. ChartMuseum**    | charts.onwalk.net              | 0.14.0      | Docker                | Yes                 | Yes                    | GitHub Actions        |
-| **4. Vault**          | vault.onwalk.net               | 1.15        | Docker                | Yes                 | Yes                    | GitHub Actions        |
-| **5. Nginx/OSS**      | mirrors.onwalk.net             | 1.21        | Kubernetes            | Yes                 | Yes                    | GitHub Actions        |
+| **Name**              | **Domain**                 | **Version**     | **Deploy**                | **Docker Compose**      | **Chart**                  | **CI/CD**                 |
+|-------------------|------------------------|-------------|-----------------------|---------------------|------------------------|-----------------------|
+| **1. Keycloak**       | keycloak.onwalk.net    | 26.0        | Docker                | Yes                 | Yes                    | GitHub Actions        |
+| **2. Harbor**         | images.onwalk.net      | 2.12        | Docker                | Yes                 | Yes                    | GitHub Actions        |
+| **3. ChartMuseum**    | charts.onwalk.net      | 0.14.0      | Docker                | Yes                 | Yes                    | GitHub Actions        |
+| **4. Vault**          | vault.onwalk.net       | 1.15        | Docker                | Yes                 | Yes                    | GitHub Actions        |
+| **5. Nginx/OSS**      | mirrors.onwalk.net     | 1.21        | Kubernetes            | Yes                 | Yes                    | GitHub Actions        |
 
 | **Name**            | **Domain**                           |   **Version   |      Deploy               |  Docker Compose** | **Chart**              | **CI/CD**             |
 |-------------------|--------------------------------|-------------|---------------------------|---------------------|------------------------|-----------------------|
@@ -108,6 +108,7 @@ For more detailed information, please refer to the documentation available in tw
 
 ## Getting Started
 
+git submodule add --force https://github.com/svc-design/ansible.git
 git submodule add --force https://github.com/svc-design/iac_modules.git
 git submodule init
 git submodule update
