@@ -1,3 +1,5 @@
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
 kubectl create namespace redis
 helm install redis bitnami/redis-cluster --namespace redis \
   --set cluster.enabled=true \

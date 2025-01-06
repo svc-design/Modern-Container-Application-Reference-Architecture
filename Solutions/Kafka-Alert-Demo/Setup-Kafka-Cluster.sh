@@ -1,3 +1,5 @@
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo update
 kubectl create namespace kafka
 helm install kafka bitnami/kafka --namespace kafka \
   --set replicaCount=3 \
