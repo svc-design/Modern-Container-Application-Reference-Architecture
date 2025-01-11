@@ -14,3 +14,14 @@
 - Kafka-Python 库
 - Redis (可选，用于去重)
 - smtplib (Python 标准库)
+
+# Install
+
+apt install python3-pip python3.12-venv -y
+
+# Create a virtual environment
+python3 -m venv kafka-env
+
+# Activate the virtual environment
+source kafka-env/bin/activate
+pip install kafka-python-ng
