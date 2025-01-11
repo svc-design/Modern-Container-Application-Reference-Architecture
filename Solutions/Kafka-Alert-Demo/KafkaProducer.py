@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Kafka Producer 配置
 producer = KafkaProducer(
-    bootstrap_servers='8.130.111.218:44204',
+    bootstrap_servers='10.43.16.127:9092',
     value_serializer=lambda v: json.dumps(v).encode('utf-8'),
     sasl_mechanism='PLAIN',
     sasl_plain_username='user1',

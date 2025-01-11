@@ -9,7 +9,7 @@ from email.mime.multipart import MIMEMultipart
 logging.basicConfig(level=logging.INFO)
 
 # Kafka 配置
-KAFKA_SERVER = '8.130.111.218:9092'
+KAFKA_SERVER = '10.43.16.127:9092'
 ALARM_TOPIC = 'your_topic_name'
 KAFKA_GROUP_ID = 'your_consumer_group'  # 消费者组 ID
 
@@ -17,7 +17,7 @@ KAFKA_GROUP_ID = 'your_consumer_group'  # 消费者组 ID
 SMTP_SERVER = 'smtp.qq.com'
 SMTP_PORT = 465  # 465端口支持SSL加密
 EMAIL_ADDRESS = 'manbuzhe2009@qq.com'
-EMAIL_PASSWORD = 'xxxxxx'  # QQ授权码
+EMAIL_PASSWORD = 'xxxxxxxxxxxxxxxxxx'  # QQ授权码
 RECIPIENT_EMAIL = '156405189@qq.com'
 
 # Kafka Consumer 配置
@@ -36,12 +36,28 @@ def create_kafka_consumer():
 
 # 消费 Kafka 消息并发送邮件
 def consume_messages_and_send_email(consumer):
+    """
+    消费 Kafka 消息并发送邮件，每接收到一条新消息，就发送邮件。
+    """
     for message in consumer:
-        logging.info(f"Consumed message: {message.value}")  # 输出接收到的消息
-        # 将消息发送到邮件
-        subject = f"Kafka Alert - New message at offset {message.offset}"
-        body = f"A new message was received in topic '{ALARM_TOPIC}' at offset {message.offset}. The message is:\n\n{json.dumps(message.value, indent=2)}"
-        send_email(subject, body)
+        try:
+            # 打印日志，显示接收到的消息
+            logging.info(f"Consumed message: {message.value}")
+
+            # 构建邮件主题和正文
+            subject = f"Kafka Alert - New message at offset {message.offset}"
+            body = (
+                f"A new message was received in topic '{ALARM_TOPIC}' "
+                f"at offset {message.offset}.\n\n"
+                f"Message Content:\n{json.dumps(message.value, indent=2)}"
+            )
+
+            # 发送邮件
+            send_email(subject, body)
+        except Exception as e:
+            logging.error(f"Error processing message: {e}")
+
+
 
 # 发送邮件
 def send_email(subject, body):
