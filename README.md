@@ -4,7 +4,7 @@ Welcome to the repository for the Modern Container Application Reference Archite
 
 ## Overview
 
-The project aims to create a multi-cloud environment that leverages containers for deploying modern applications. The key objective is to set up a unified authentication system using **OIDC** via **Auth0 by Okta** for **AWS**, **GCP**, **Azure**, **GitHub**, and **Grafana Cloud**.
+The project aims to create a multi-cloud environment that leverages containers for deploying modern applications. The key objective is to set up a unified authentication system using **OIDC** via **Auth0 by Okta** for **AWS**, **GCP**, **Azure**, **GitHub**, and **Grafana **.
 
 ## Phase 1: Implementing OIDC Login
 
@@ -15,6 +15,15 @@ In this first phase, we focus on implementing OpenID Connect (OIDC) login functi
 - [GitHub](docs/github-oidc-setup.md)
 - [Grafana Cloud](docs/grafana-oidc-setup.md)
 
+## Cloud Resouces
+
+| Network | Cloud | Host Name**                      | Pubic Ip      | Vpn IP      | Costs | Service                                                 |
+| ---     |  ---  | ---                            | ---           | ---         | ---   |                                                         |
+| ---     |  ALI  | cn-gateway.svc.plus            | 8.130.10.142  | 10.254.0.1  | ---   |                                                         |
+| ---     |  HW   | images.onwalk.net              | 139.9.139.22  | ---         | ---   |                                                         |
+| ---     |  AWS  | global-gateway.svc.plus        | 52.196.108.28 | 10.255.0.1  | ---   |                                                         |
+| ---     |  AWS  | us-gateway.svc.plus            | 54.183.199.99 | ---         | ---   |                                                         |
+| ---     |  AWS  | canada-gateway.svc.plus        | 3.99.177.151  | ---         | ---   |                                                         |
 
 ## Key Components Overview
 
