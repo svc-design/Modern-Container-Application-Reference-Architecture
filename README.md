@@ -23,7 +23,7 @@ In this first phase, we focus on implementing OpenID Connect (OIDC) login functi
 | ---     | HW    | hw-node.onwalk.net      | 139.9.139.22   | ---          | ---   |  images.onwalk.net                                                                        |
 | ---     | AWS   | global-gateway.svc.plus | 52.196.108.28  | 10.255.0.1   | ---   |  tky-connector.onwalk.net, global-images.onwalk.net                                       |
 | ---     | AWS   | us-gateway.svc.plus     | 54.183.199.99  | ---          | ---   |  us-connector.onwalk.net, grafana.onwalk.net, metrics.onwalk.net                          |
-| ---     | AWS   | canada-gateway.svc.plus | 3.99.177.151   | ---          | ---   |  ca-connector.onwalk.net                                                                  |
+| ---     | AWS   | canada-gateway.svc.plus | 3.99.177.151   | ---          | ---   |  ca-connector.onwalk.net, logs.onwalk.net                                                 |
 
 ## Key Components Overview
 
