@@ -17,13 +17,13 @@ In this first phase, we focus on implementing OpenID Connect (OIDC) login functi
 
 ## Cloud Resouces
 
-| Network | Cloud | Host Name               | Public IP      | VPN IP       | Costs | Service |
-|---------|-------|-------------------------|----------------|--------------|-------|---------|
-| ---     | ALI   | cn-gateway.svc.plus     | 8.130.10.142   | 10.254.0.1   | ---   |         |
-| ---     | HW    | images.onwalk.net       | 139.9.139.22   | ---          | ---   |  images.onwalk.net,       |
-| ---     | AWS   | global-gateway.svc.plus | 52.196.108.28  | 10.255.0.1   | ---   |         |
-| ---     | AWS   | us-gateway.svc.plus     | 54.183.199.99  | ---          | ---   |  metrics.onwalk.net,       |
-| ---     | AWS   | canada-gateway.svc.plus | 3.99.177.151   | ---          | ---   |         |
+| Network | Cloud | Host Name               | Public IP      | VPN IP       | Costs | Service                                                                                   |
+|---------|-------|-------------------------|----------------|--------------|-------|-------------------------------------------------------------------------------------------|
+| ---     | ALI   | cn-gateway.svc.plus     | 8.130.10.142   | 10.254.0.1   | ---   |  cn-proxy.onwalk.net                                                                      |
+| ---     | HW    | hw-node.onwalk.net      | 139.9.139.22   | ---          | ---   |  images.onwalk.net                                                                        |
+| ---     | AWS   | global-gateway.svc.plus | 52.196.108.28  | 10.255.0.1   | ---   |  tky-connector.onwalk.net, global-images.onwalk.net                                       |
+| ---     | AWS   | us-gateway.svc.plus     | 54.183.199.99  | ---          | ---   |  us-connector.onwalk.net, grafana.onwalk.net, metrics.onwalk.net                          |
+| ---     | AWS   | canada-gateway.svc.plus | 3.99.177.151   | ---          | ---   |  ca-connector.onwalk.net                                                                  |
 
 ## Key Components Overview
 
