@@ -13,9 +13,9 @@ jobs:
     uses: svc-design/actions/.github/workflows/deploy-docker-keycloak-server.yml@main
     with:
       domain: 'onwalk.net'
-      ssh_host_ip: '110.42.238.110'
-      ssh_host_name: 'cn-gateway'
-      ssh_host_domain: 'cn-gateway.svc.plus'
+      ssh_host_ip: '139.9.139.22'
+      ssh_host_name: 'hw-node'
+      ssh_host_domain: 'hw-node.svc.plus'
     secrets:
       SSH_USER: ${{ secrets.SSH_USER }}
       SUDO_PASSWORD: ${{ secrets.SUDO_PASSWORD }}
