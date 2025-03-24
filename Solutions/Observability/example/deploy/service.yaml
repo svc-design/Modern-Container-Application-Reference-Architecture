@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: ticketing
+    app.kubernetes.io/name: itsm
+  name: ticketing
+spec:
+  ports:
+    - name: http
+      port: 8000
+      protocol: TCP
+      targetPort: http
+    - name: grpc
+      port: 9000
+      protocol: TCP
+      targetPort: grpc
+  selector:
+    app.kubernetes.io/instance: ticketing
+    app.kubernetes.io/name: itsm
+  sessionAffinity: None
+  type: ClusterIP

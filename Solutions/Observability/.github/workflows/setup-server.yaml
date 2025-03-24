@@ -1,0 +1,70 @@
+name: Only Setup Server
+
+on:
+  pull_request:
+  push:
+    paths:
+      - '.github/workflows/setup-server.yaml'
+  workflow_dispatch:
+    branches:
+      - main
+
+defaults:
+  run:
+    working-directory: ./playbook
+
+env:
+  TZ: Asia/Shanghai
+  REPO: "artifact.onwalk.net"
+  IMAGE: base/${{ github.repository }} 
+  TAG: ${{ github.sha }}
+  DNS_AK: ${{ secrets.DNS_AK }}
+  DNS_SK: ${{ secrets.DNS_SK }}
+  PASSWORD: ${{ secrets.ADMIN_INIT_PASSWORD }}
+  DEBIAN_FRONTEND: noninteractive
+  HELM_EXPERIMENTAL_OCI: 1
+
+jobs:
+  setup-server:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: update submodule
+        run: |
+          sudo apt-get update && sudo apt-get install -y git && git submodule update --init --recursive
+
+      - name: Pre setup for Ansible playbook
+        run: |
+          sudo apt install jq ansible -y
+
+          mkdir -pv ~/.ssh/
+          cat > ~/.ssh/id_rsa << EOF
+          ${{ secrets.SSH_PRIVATE_KEY }}
+          EOF
+          sudo chmod 0400 ~/.ssh/id_rsa
+          md5sum ~/.ssh/id_rsa
+
+
+      - name: Deploy Observability Server
+        shell: bash
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+
+          mkdir -pv hosts/
+          cat > hosts/server << EOF
+          [master]
+          ${{ secrets.HOST_DOMAIN }}               ansible_host=${{ secrets.HOST_IP }}
+
+          [all:vars]
+          ansible_port=22
+          ansible_ssh_user=${{ secrets.HOST_USER }}
+          ansible_ssh_private_key_file=~/.ssh/id_rsa
+          ansible_host_key_checking=False
+          admin_password=$PASSWORD
+          dns_ak=$DNS_AK
+          dns_sk=$DNS_SK
+          EOF
+
+          ansible-playbook -i hosts/server init_observability-server -D

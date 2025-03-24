@@ -1,0 +1,133 @@
+name: Sync And Deploy
+
+on:
+  pull_request:
+  push:
+    paths:
+      - '.github/workflows/pipieline.yaml'
+  workflow_dispatch:
+    branches:
+      - main
+
+defaults:
+  run:
+    working-directory: ./playbook
+
+env:
+  TZ: Asia/Shanghai
+  REPO: "artifact.onwalk.net"
+  IMAGE: base/${{ github.repository }} 
+  TAG: ${{ github.sha }}
+  DNS_AK: ${{ secrets.DNS_AK }}
+  DNS_SK: ${{ secrets.DNS_SK }}
+  PASSWORD: ${{ secrets.ADMIN_INIT_PASSWORD }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Sync aritfacts
+        run: echo "to do"
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Test aritfacts
+        run: echo "to do"
+
+  setup-k3s:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - test
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: update submodule
+        run: |
+          sudo apt-get update && sudo apt-get install -y git && git submodule update --init --recursive
+
+      - name: Setup K3S Cluster
+        shell: bash
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          sudo apt install jq ansible -y
+
+          mkdir -pv ~/.ssh/
+          cat > ~/.ssh/id_rsa << EOF
+          ${{ secrets.SSH_PRIVATE_KEY }}
+          EOF
+          sudo chmod 0400 ~/.ssh/id_rsa
+          md5sum ~/.ssh/id_rsa
+
+          mkdir -pv hosts/
+          cat > hosts/inventory << EOF
+          [master]
+          ${{ secrets.HOST_DOMAIN }}               ansible_host=${{ secrets.HOST_IP }}
+
+          [all:vars]
+          ansible_port=22
+          ansible_ssh_user=${{ secrets.HOST_USER }}
+          ansible_ssh_private_key_file=~/.ssh/id_rsa
+          ansible_host_key_checking=False
+          ingress_ip=${{ secrets.HOST_IP }}
+          dns_ak=$DNS_AK
+          dns_sk=$DNS_SK
+          EOF
+          cat hosts/inventory
+          ansible-playbook -i hosts/inventory init_k3s_cluster_std -D
+  deploy-app:
+    runs-on: ubuntu-latest
+    needs: [setup-k3s]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: update submodule
+        run: |
+          sudo apt-get update && sudo apt-get install -y git && git submodule update --init --recursive
+
+      - name: Pre setup for Ansible playbook
+        run: |
+          sudo apt install jq ansible -y
+
+          mkdir -pv ~/.ssh/
+          cat > ~/.ssh/id_rsa << EOF
+          ${{ secrets.SSH_PRIVATE_KEY }}
+          EOF
+          sudo chmod 0400 ~/.ssh/id_rsa
+          md5sum ~/.ssh/id_rsa
+
+          mkdir -pv hosts/
+          cat > hosts/k3s << EOF
+          [master]
+          ${{ secrets.HOST_DOMAIN }}               ansible_host=${{ secrets.HOST_IP }}
+
+          [all:vars]
+          ansible_port=22
+          ansible_ssh_user=${{ secrets.HOST_USER }}
+          ansible_ssh_private_key_file=~/.ssh/id_rsa
+          ansible_host_key_checking=False
+          admin_password=$PASSWORD
+          dns_ak=$DNS_AK
+          dns_sk=$DNS_SK
+          EOF
+
+      - name: Deploy Keycloak
+        shell: bash
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          ansible-playbook -i hosts/k3s init_keycloak -D
+
+      - name: Deploy OpenLDAP
+        shell: bash
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          ansible-playbook -i hosts/k3s init_openldap -D

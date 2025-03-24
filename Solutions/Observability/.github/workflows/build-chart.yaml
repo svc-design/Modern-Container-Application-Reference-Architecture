@@ -1,0 +1,149 @@
+name: Build Chart  
+
+on:
+  pull_request:
+  push:
+    paths:
+      - '.github/workflows/build-chart.yaml'
+  workflow_dispatch:
+    branches:
+      - main
+
+env:
+  TZ: Asia/Shanghai
+  REPO: "artifact.onwalk.net"
+  IMAGE: base/${{ github.repository }} 
+  TAG: ${{ github.sha }}
+  DNS_AK: ${{ secrets.DNS_AK }}
+  DNS_SK: ${{ secrets.DNS_SK }}
+  PASSWORD: ${{ secrets.ADMIN_INIT_PASSWORD }}
+  DEBIAN_FRONTEND: noninteractive
+  HELM_EXPERIMENTAL_OCI: 1
+
+jobs:
+  build-server-agent-chart:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Initialization environment
+      shell: bash
+      run: |
+        sudo apt update
+        sudo apt install git -y
+        sudo timedatectl set-timezone "$TZ"
+        sudo curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+        helm plugin install https://github.com/chartmuseum/helm-push.git
+        helm repo add sync https://charts.onwalk.net
+        helm repo add neo4j https://helm.neo4j.com/neo4j
+        helm repo add influxdata https://helm.influxdata.com
+        helm repo add bitnami https://charts.bitnami.com/bitnami
+        helm repo add fluent https://fluent.github.io/helm-charts
+        helm repo add grafana https://grafana.github.io/helm-charts
+        helm repo add deepflow https://deepflowio.github.io/deepflow
+        helm repo add kube-state-metrics https://kubernetes.github.io/kube-state-metrics
+        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+        helm repo up
+
+    - name: Sync UPstream Server charts
+      working-directory: charts/server
+      shell: bash
+      run: |
+        ls -l ; mkdir -pv charts/ && cd charts/
+        rm -rvf neo4j ; helm fetch neo4j/neo4j --untar
+        rm -rvf grafana ; helm fetch grafana/grafana --untar
+        rm -rvf influxdb ; helm fetch influxdata/influxdb --untar
+        rm -rvf deepflow ; helm fetch deepflow/deepflow --version 6.2.6 --untar
+        rm -rvf prometheus ; helm fetch prometheus-community/prometheus  --untar
+        rm -rvf alertmanager ; helm fetch prometheus-community/alertmanager --untar
+        ls -l && rm *.tgz -f
+
+    - name: Build and Push Server chart
+      working-directory: charts/server
+      shell: bash
+      run: |
+        helm cm-push -u admin -p "${{ secrets.HELM_REPO_PASSWORD }}" --force ./ sync
+        ls -l
+
+    - name: Sync UPstream Agent charts
+      working-directory: charts/agent
+      shell: bash
+      run: |
+        ls -l ; mkdir -pv charts/ && cd charts/
+        rm -rvf promtail ; helm fetch grafana/promtail --untar
+        rm -rvf telegraf ; helm fetch influxdata/telegraf --untar
+        rm -rvf fluent-bit ; helm fetch fluent/fluent-bit --untar
+        rm -rvf grafana-agent-operator ; helm fetch grafana/grafana-agent-operator --untar
+        rm -rvf deepflow-agent ; helm fetch deepflow/deepflow-agent --version 6.2.6 --untar
+        rm -rvf prometheus-node-exporter ; helm fetch prometheus-community/prometheus-node-exporter --untar
+        rm -rvf kube-state-metrics ; helm fetch prometheus-community/kube-state-metrics --untar
+        rm -rvf prometheus ; helm fetch prometheus-community/prometheus --version=18.4.0 --untar
+        ls -l && rm *.tgz -f
+
+    - name: Build and Push chart
+      working-directory: charts/agent
+      shell: bash
+      run: |
+        helm cm-push -u admin -p "${{ secrets.HELM_REPO_PASSWORD }}" --force ./ sync
+        ls -l
+
+    - name: Merge Upstream Repo
+      shell: bash
+      run: |
+        git config user.name shenlan
+        git config user.email manbuzhe2009@qq.com
+        cd ${GITHUB_WORKSPACE}/ && rm *.tgz -f
+        rm -rvf ${GITHUB_WORKSPACE}/charts/server/*.tgz -f
+        rm -rvf ${GITHUB_WORKSPACE}/charts/agent/*.tgz -f
+        git add -A
+        git commit -a -m "Auto Merged" || echo true
+        git push
+
+  build-app-chart:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Initialization environment
+      shell: bash
+      run: |
+        sudo apt update
+        sudo apt install git -y
+        sudo curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+        helm plugin install https://github.com/chartmuseum/helm-push.git
+
+    - name: Build and Push App chart
+      working-directory: charts/app
+      shell: bash
+      run: |
+        helm repo add sync https://charts.onwalk.net
+        helm repo up
+        helm cm-push -u admin -p "${{ secrets.HELM_REPO_PASSWORD }}" --force ./ sync
+        ls -l
+  sync-images:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Initialization environment
+      env:
+        PASSWORD: ${{ secrets.IAMGE_REPO_PASSWORD }}
+      shell: bash
+      run: |
+        sudo apt update
+        sudo apt install git -y
+        sudo timedatectl set-timezone "$TZ"
+        echo "$PASSWORD" | docker login --username=admin --password-stdin artifact.onwalk.net
+
+    - name: Sync images
+      shell: bash
+      run: |
+        docker pull registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.7.0
+        docker tag  registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.7.0 artifact.onwalk.net/public/kube-state-metrics:v2.7.0
+        docker push artifact.onwalk.net/public/kube-state-metrics:v2.7.0
+
+        docker pull ghcr.io/deepflowio/deepflow-ce/deepflow-agent:v6.2-8427@sha256:ffec192f8f249160fab600dab939ee150c067b4b1900378da247b748073b256e 
+        docker tag ghcr.io/deepflowio/deepflow-ce/deepflow-agent:v6.2-8427@sha256:ffec192f8f249160fab600dab939ee150c067b4b1900378da247b748073b256e artifact.onwalk.net/public/deepflow-agent:v6.2
+        docker push artifact.onwalk.net/public/deepflow-agent:v6.2

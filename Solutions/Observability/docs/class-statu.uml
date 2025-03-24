@@ -1,0 +1,39 @@
+
+@startuml
+package "Observability platform" {
+  class ClickHouse
+  class Neo4j
+  class VectorDB
+  class Prometheus
+  class Grafana
+  class AlertManager
+  class DeepFlow
+  class CloudQuery
+  class LangChain
+}
+
+ClickHouse "1" -- "1" DeepFlow : 流式数据处理
+ClickHouse "1" -- "1" Prometheus : 流式数据处理
+
+Prometheus "1" -- "1" AlertManager : 告警
+
+Grafana "1" -- "1" ClickHouse : 数据可视化
+Grafana "1" -- "1" Neo4j : 数据可视化
+Grafana "1" -- "1" DeepFlow : 数据可视化
+
+Collector "1" -- "1" ClickHouse : 数据可视化
+
+LogQL "1" -- "1" Collector : 数据可视化
+PromQL "1" -- "1" Collector : 数据可视化
+OpenTracing "1" -- "1" Collector : 数据可视化
+
+
+CloudQuery "1" -- "1" Neo4j : 数据同步
+ClickHouse -- "1" VectorDB  : 数据同步
+Neo4j -- "1" VectorDB : 数据同步
+VectorDB "1" -- "1" LangChain : 数据处理 
+
+LangChain "1" -- "1" GitOPS : 数据处理
+
+DeepFlow "1" -- "1" Prometheus : 推送状态
+@enduml
