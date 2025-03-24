@@ -1,6 +1,0 @@
-[submodule "ansible"]
-	path = ansible
-	url = https://github.com/svc-design/ansible.git
-[submodule "iac_modules"]
-	path = iac_modules
-	url = https://github.com/svc-design/iac_modules.git
