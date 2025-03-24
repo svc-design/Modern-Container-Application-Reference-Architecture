@@ -1,0 +1,85 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: itsm
+spec:
+  rules:
+    - host: ldap-directory.example.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: ldap-directory
+                port:
+                  number: 8000
+            path: /swagger
+            pathType: ImplementationSpecific
+          - backend:
+              service:
+                name: ldap-directory
+                port:
+                  number: 8000
+            path: /metrics
+            pathType: ImplementationSpecific
+          - backend:
+              service:
+                name: ldap-directory
+                port:
+                  number: 8000
+            path: /api/v1/users
+            pathType: ImplementationSpecific
+          - backend:
+              service:
+                name: ldap-directory
+                port:
+                  number: 8000
+            path: /api/v1/groups
+            pathType: ImplementationSpecific
+    - host: platform.example.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: platform
+                port:
+                  number: 8000
+            path: /swagger
+            pathType: ImplementationSpecific
+          - backend:
+              service:
+                name: ldap-directory
+                port:
+                  number: 8000
+            path: /metrics
+            pathType: ImplementationSpecific
+          - backend:
+              service:
+                name: platform
+                port:
+                  number: 8000
+            path: /api/v1
+            pathType: ImplementationSpecific
+    - host: ticketing.example.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: ticketing
+                port:
+                  number: 8000
+            path: /swagger
+            pathType: ImplementationSpecific
+          - backend:
+              service:
+                name: ldap-directory
+                port:
+                  number: 8000
+            path: /metrics
+            pathType: ImplementationSpecific
+          - backend:
+              service:
+                name: ticketing
+                port:
+                  number: 8000
+            path: /api/v1
+            pathType: ImplementationSpecific

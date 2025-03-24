@@ -1,0 +1,111 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app.kubernetes.io/instance: mirrors
+    app.kubernetes.io/name: nginx
+  name: mirrors-onwalk-net
+  namespace: nginx
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: mirrors.onwalk.net
+    http:
+      paths:
+      - backend:
+          service:
+            name: mirrors-nginx
+            port:
+              number: 80
+        path: /
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - mirrors.onwalk.net
+    secretName: nginx-tls
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.org/proxy-read-timeout: "3600"
+    nginx.org/proxy-send-timeout: "3600"
+    nginx.org/websocket-services: photoprism
+  labels:
+    app.kubernetes.io/instance: mirrors
+    app.kubernetes.io/name: nginx
+  name: www-onwalk-net
+  namespace: nginx
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: www.onwalk.net
+    http:
+      paths:
+      - backend:
+          service:
+            name: photoprism
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - www.onwalk.net
+    secretName: nginx-tls
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app.kubernetes.io/instance: mirrors
+    app.kubernetes.io/name: nginx
+  name: www-svc-ink
+  namespace: nginx
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: www.svc.ink
+    http:
+      paths:
+      - backend:
+          service:
+            name: photoprism
+            port:
+              number: 80
+        path: /
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - www.svc.ink
+    secretName: svc-ink-tls
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app.kubernetes.io/instance: mirrors
+    app.kubernetes.io/name: nginx
+  name: www-svc-plus
+  namespace: nginx
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: www.svc.plus
+    http:
+      paths:
+      - backend:
+          service:
+            name: photoprism
+            port:
+              number: 80
+        path: /
+        pathType: ImplementationSpecific
+  tls:
+  - hosts:
+    - www.svc.plus
+    secretName: svc-plus-tls

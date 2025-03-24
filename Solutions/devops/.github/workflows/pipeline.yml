@@ -1,0 +1,360 @@
+name: Create Resources by IAC tools 
+
+env:
+  STATE: "create"   # 可以根据需要更改初始状态, 可选create，update, destroy
+  CLOUD: "gcp"       # 选择云服务商, 可选: gcp, aws, ali, azure
+  TZ: Asia/Shanghai
+  REPO: "artifact.onwalk.net"
+  IMAGE: base/${{ github.repository }} 
+  TAG: ${{ github.sha }}
+  DNS_AK: ${{ secrets.DNS_AK }}
+  DNS_SK: ${{ secrets.DNS_SK }}
+  OSS_AK: ${{ secrets.OSS_AK }}
+  OSS_SK: ${{ secrets.OSS_SK }}
+  ROOT_PASSWORD: ${{ secrets.ADMIN_INIT_PASSWORD }}
+  SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+  GITLAB_OIDC_CLIENT_TOKEN: ${{ secrets.GITLAB_OIDC_CLIENT_TOKEN }}
+  HARBOR_OIDC_CLIENT_TOKEN: ${{ secrets.HARBOR_OIDC_CLIENT_TOKEN }}
+  SSH_USER: ${{ secrets.HOST_USER }}
+  SSH_HOST_DOMAIN: ${{ secrets.HOST_DOMAIN }} 
+  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+on:
+  pull_request:
+  push:
+    paths:
+      - '.github/workflows/pipeline.yml'
+  workflow_dispatch:
+    branches:
+      - main
+
+jobs:
+  gcs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Pre Setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip jq
+        python -m pip install --upgrade pip jinja2
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.6.4
+
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+    - name: Set up Google Cloud SDK
+      uses: 'google-github-actions/setup-gcloud@v1'
+      with:
+        version: '>= 363.0.0'
+
+    - name: Check if GCS bucket exists
+      id: check_bucket
+      run: |
+        BUCKET_NAME="iac_gcp_terraform_state"
+        gsutil ls -b gs://${BUCKET_NAME} || echo "::set-output name=bucket_exists::false"
+
+    - name: Terraform Init And Apply
+      if: steps.check_bucket.outputs.bucket_exists == 'false'
+      run: |
+        bash run_terraform.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/gcs/
+  network:
+    runs-on: ubuntu-latest
+    needs:
+      - gcs
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Pre Setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip jq
+        python -m pip install --upgrade pip jinja2
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.6.4
+
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+    - name: Terraform Init And Apply
+      run: |
+        bash run_terraform.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/network/
+  vhost:
+    runs-on: ubuntu-latest
+    needs:
+      - gcs
+      - network
+      - key_pair
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Pre Setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip jq
+        python -m pip install --upgrade pip jinja2
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.6.4
+
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+    - name: Fetch SSH Keys
+      run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > ssh_keys.pub
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+
+    - name: Terraform Init And Apply
+      run: |
+        python3 scripts/init.py && bash scripts/run_terraform.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+
+  key_pair:
+    runs-on: ubuntu-latest
+    needs:
+      - gcs
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Pre Setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip jq
+        python -m pip install --upgrade pip jinja2
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.6.4
+
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+    - name: Set up Google Cloud SDK
+      uses: 'google-github-actions/setup-gcloud@v1'
+      with:
+        version: '>= 363.0.0'
+
+    - name: Check if SSH Metadata exists
+      id: check_ssh_metadata
+      run: bash scripts/check_ssh_metadata.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/key_pair/
+
+    - name: Fetch SSH Keys
+      if: steps.check_ssh_metadata.outputs.ssh_metadata_exists == 'false'
+      run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > ssh_keys.pub
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/key_pair/
+
+    - name: Terraform Init And Apply
+      if: steps.check_ssh_metadata.outputs.ssh_metadata_exists == 'false'
+      run: |
+        python3 scripts/init.py && bash scripts/run_terraform.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/key_pair/
+
+  firewall:
+    runs-on: ubuntu-latest
+    needs:
+      - gcs
+      - network
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Pre Setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip jq
+        python -m pip install --upgrade pip jinja2
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.6.4
+
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+    - name: Terraform Init And Apply
+      run: |
+        python3 scripts/init.py && bash scripts/run_terraform.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/firewall/
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Sync aritfacts
+        run: echo "to do"
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Test aritfacts
+        run: echo "to do"
+
+  setup-k3s:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - test
+      - vhost
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+
+      - name: Pre Setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip jq
+          python -m pip install --upgrade pip jinja2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.6.4
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+      - name: Set GitHub Actions output variables
+        id: terraform-output
+        run: |
+          python3 scripts/init.py && terraform init
+          terraform output | while read -r line; do
+             if [ -z "$line" ]; then
+                 break
+             else
+               k_v=$(echo "$line" | tr -d ' ' | awk -F= '{print $1"="$2}')
+               echo "$k_v" >> $GITHUB_OUTPUT
+             fi
+          done
+        working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+
+      - name: Update playbook hosts
+        run: |
+          bash pre_setup.sh
+        env:
+          SSH_HOST_IP: ${{ steps.terraform-output.outputs.server }}
+        working-directory: playbook/ 
+
+      - name: Setup K3S Cluster
+        shell: bash
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          ansible-playbook -i hosts/inventory init_k3s_cluster_std -D
+        working-directory: playbook/ 
+  deploy-Apps:
+    runs-on: ubuntu-latest
+    needs:
+      - setup-k3s
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+
+      - name: Pre Setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip jq
+          python -m pip install --upgrade pip jinja2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.6.4
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+      - name: Set GitHub Actions output variables
+        id: terraform-output
+        run: |
+          python3 scripts/init.py && terraform init
+          terraform output | while read -r line; do
+             if [ -z "$line" ]; then
+                 break
+             else
+               k_v=$(echo "$line" | tr -d ' ' | awk -F= '{print $1"="$2}')
+               echo "$k_v" >> $GITHUB_OUTPUT
+             fi
+          done
+        working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+
+      - name: Update playbook hosts
+        run: |
+          bash pre_setup.sh
+        env:
+          SSH_HOST_IP: ${{ steps.terraform-output.outputs.server }}
+        working-directory: playbook/ 
+
+      - name: Deploy Gitlab
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          ansible-playbook -i hosts/inventory init_gitlab -D
+        working-directory: playbook/ 
+
+      - name: Deploy Harbor
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          ansible-playbook -i hosts/inventory init_harbor -D
+        working-directory: playbook/ 
+
+      - name: Deploy Chartmuseum 
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          ansible-playbook -i hosts/inventory init_chartmuseum -D
+        working-directory: playbook/ 

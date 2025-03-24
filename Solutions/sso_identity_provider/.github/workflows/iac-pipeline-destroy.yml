@@ -1,0 +1,199 @@
+name: Destroy Resources by IAC tools 
+
+env:
+  STATE: "destroy"   # 可以根据需要更改初始状态, 可选create，update, destroy
+  CLOUD: "gcp"       # 选择云服务商, 可选: gcp, aws, ali, azure
+
+on:
+  pull_request:
+  push:
+    paths:
+      - '.github/workflows/iac-pipeline-destroy.yml'
+  workflow_dispatch:
+    branches:
+      - main
+
+jobs:
+  gcs:
+    runs-on: ubuntu-latest
+    needs:
+      - vhost
+      - network
+      - key_pair
+      - firewall
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Pre Setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip jq
+        python -m pip install --upgrade pip jinja2
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.6.4
+
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+    - name: Set up Google Cloud SDK
+      uses: 'google-github-actions/setup-gcloud@v1'
+      with:
+        version: '>= 363.0.0'
+
+    - name: Delete Google Cloud Storage Bucket
+      run: |
+        gsutil -m rm -r gs://iac_gcp_terraform_state || true
+        gcloud storage buckets delete gs://iac_gcp_terraform_state --quiet || true
+  network:
+    runs-on: ubuntu-latest
+    needs:
+      - vhost
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Pre Setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip jq
+        python -m pip install --upgrade pip jinja2
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.6.4
+
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+    - name: Terraform Init And Apply
+      run: |
+        bash run_terraform.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/network/
+  vhost:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Pre Setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip jq
+        python -m pip install --upgrade pip jinja2
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.6.4
+
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+    - name: Fetch SSH Keys
+      run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > ssh_keys.pub
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+
+    - name: Terraform Init And Apply
+      run: |
+        python3 scripts/init.py && bash scripts/run_terraform.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+
+  key_pair:
+    runs-on: ubuntu-latest
+    needs:
+      - vhost
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Pre Setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip jq
+        python -m pip install --upgrade pip jinja2
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.6.4
+
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+    - name: Set up Google Cloud SDK
+      uses: 'google-github-actions/setup-gcloud@v1'
+      with:
+        version: '>= 363.0.0'
+
+    - name: Check if SSH Metadata exists
+      id: check_ssh_metadata
+      run: bash scripts/check_ssh_metadata.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/key_pair/
+
+    - name: Fetch SSH Keys
+      if: steps.check_ssh_metadata.outputs.ssh_metadata_exists == 'false'
+      run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > ssh_keys.pub
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/key_pair/
+
+    - name: Terraform Init And Apply
+      if: steps.check_ssh_metadata.outputs.ssh_metadata_exists == 'false'
+      run: |
+        python3 scripts/init.py && bash scripts/run_terraform.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/key_pair/
+
+  firewall:
+    runs-on: ubuntu-latest
+    needs:
+      - vhost
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Pre Setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip jq
+        python -m pip install --upgrade pip jinja2
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.6.4
+
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+    - name: Terraform Init And Apply
+      run: |
+        python3 scripts/init.py && bash scripts/run_terraform.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/firewall/

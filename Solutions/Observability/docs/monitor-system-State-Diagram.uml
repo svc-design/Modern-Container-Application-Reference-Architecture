@@ -1,0 +1,65 @@
+@startuml
+title System State Diagram
+
+state Resource {
+  IaaS --> PrometheusAgent: push
+  PaaS --> PrometheusAgent: pull
+  PaaS --> PrometheusAgent: pull
+
+  IaaS --> LogAgent: push
+  PaaS --> LogAgent: pull
+  SaaS --> LogAgent: pull
+
+  App  --> LogAgent: pull
+  App  --> TraceAgent: SDK
+  App  --> PrometheusAgent: pull
+
+  MultiCloudResource --> ResourceCollector: sync
+  k8sClusterResource  --> ResourceCollector: sync
+  IacState  --> ResourceCollector: sync
+}
+
+state PrometheusAgent {
+  MetricWrite  --> MetricServer: Metric Sent
+}
+
+state LogAgent {
+  LogWrite --> DataServer: Metric Sent
+}
+
+state "OpenTelemetry" as TraceAgent {
+  TraceLogWrite --> DataServer: Trace Sent
+}
+
+state "cloudquery" as ResourceCollector {
+   ResourceCollector --> GraphDBServer: Resource List Sent
+}
+
+state "Prometheus" as MetricServer {
+}
+
+state "ClickHouse" as DataServer {
+}
+
+state "Neo4j" as GraphDBServer {
+}
+
+state "AlertManager" as AlertServer {
+}
+
+state "SNS" as Alert {
+}
+
+state "Grafana" as Dashboard {
+}
+
+LogAgent --> DataServer : Log Sent
+PrometheusAgent --> MetricServer : Metric Sent
+MetricServer --> AlertServer : Alert Sent
+AlertServer --> Alert
+
+MetricServer --> Dashboard : Metric Dashboard Displayed
+DataServer --> Dashboard : Trace/Log Dashboard Displayed
+AlertServer --> Dashboard : Alert Dashboard Displayed
+GraphDBServer --> Dashboard :  Resource Dashboard Displayed
+@enduml
