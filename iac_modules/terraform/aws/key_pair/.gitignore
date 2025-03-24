@@ -1,0 +1,8 @@
+build.env
+provider.tf
+.test*.sh
+.DS_Store
+examples/.DS_Store
+examples/complete/.DS_Store
+scripts/.DS_Store
+scripts/templates/.DS_Store
