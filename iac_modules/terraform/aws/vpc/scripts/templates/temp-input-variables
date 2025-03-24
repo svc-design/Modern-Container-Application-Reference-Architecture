@@ -1,0 +1,2 @@
+vpc_cidr: '{{ vars.vpc_cidr }}'
+az: '{{ vars.count.az }}'

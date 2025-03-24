@@ -1,0 +1,11 @@
+.aws
+.DS_Store
+.DS_Store
+.test*.sh
+.terraform
+.terraform.lock.hcl
+build.env
+tmp-env.sh
+provider.tf
+errored.tfstate
+modules/config/.DS_Store

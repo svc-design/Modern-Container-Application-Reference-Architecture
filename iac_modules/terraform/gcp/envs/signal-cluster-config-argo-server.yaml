@@ -1,0 +1,23 @@
+region: "asia-northeast1"
+project_id: "cloudsvcworkspace"
+bucket_name: "iac_status_terraform_gcp"
+vpc_name: "dev"
+vpc_cidr: "10.0.0.0/16"
+key_pairs:
+  - name: dev_ssh_keys
+    key_file: ssh_keys.pub
+firewall_rules:
+  - name: allow-ingress
+    network: "dev"
+    allow:
+      - protocol: tcp
+        ports: [ "22", "80", "443"]
+    source_ranges: [ "0.0.0.0/0" ]
+instances:
+  - name: "argocd"
+    type: "e2-standard-4"
+    zone: "asia-northeast1-a"
+    image: "ubuntu-2004-lts"
+    disk_size_gb: 100
+    network: "dev"
+    subnetwork: internet-subnet
