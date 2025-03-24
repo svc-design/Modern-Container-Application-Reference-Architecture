@@ -1,0 +1,159 @@
+name: Build Test And Deploy
+
+on:
+  pull_request:
+  push:
+    paths:
+      - 'Dockerfile'
+      - '.github/workflows/pipieline.yaml'
+  workflow_dispatch:
+    branches:
+      - main
+
+env:
+  TZ: Asia/Shanghai
+  REPO: "artifact.onwalk.net"
+  IMAGE: base/${{ github.repository }}
+  TAG: ${{ github.sha }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y rustc cargo
+
+      - name: Build
+        run: |
+          cargo build --release 
+          tar -czvpf my_rust_server-0.0.1.tar.gz  target/release/my_rust_server
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          asset_name: my_rust_server-0.0.1.tar.gz
+          file: my_rust_server-0.0.1.tar.gz
+          tag: ${{ github.ref }}
+          overwrite: true
+          body: "Release v0.1.0"
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y rustc cargo
+
+      - name: Run tests
+        run: |
+           echo "To do ..."
+  docker-image:
+    runs-on: ubuntu-latest
+    name: Build image
+    needs:
+      - build
+      - test
+    steps:
+      - uses: actions/checkout@master
+
+      - name: 'Artifact: build && push debian-c-sysinfo image'
+        uses: aevea/action-kaniko@master
+        with:
+          registry: ${{ secrets.HELM_REPO_REGISTRY }}
+          username: ${{ secrets.HELM_REPO_USER }}
+          password: ${{ secrets.HELM_REPO_PASSWORD }}
+          path: './'
+          build_file: 'Dockerfile'
+          image: ${{ env.IMAGE }}
+          tag: ${{ env.TAG }}
+          cache: true
+          cache_registry: cache
+
+  setup-k3s:
+    runs-on: ubuntu-latest
+    needs:
+      - docker-image
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: update submodule
+        run: |
+          sudo apt-get update && sudo apt-get install -y git && git submodule update --init --recursive
+
+      - name: Setup K3S Cluster
+        working-directory: ./scripts
+        shell: bash
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          sudo apt install jq ansible -y
+
+          mkdir -pv ~/.ssh/
+          cat > ~/.ssh/id_rsa << EOF
+          ${{ secrets.SSH_PRIVATE_KEY }}
+          EOF
+          sudo chmod 0400 ~/.ssh/id_rsa
+          md5sum ~/.ssh/id_rsa
+
+          mkdir -pv hosts/
+          cat > hosts/inventory << EOF
+          [master]
+          ${{ secrets.HOST_DOMAIN }}               ansible_host=${{ secrets.HOST_IP }}
+
+          [all:vars]
+          ansible_port=22
+          ansible_ssh_user=${{ secrets.HOST_USER }}
+          ansible_ssh_private_key_file=~/.ssh/id_rsa
+          ansible_host_key_checking=False
+          ingress_ip=${{ secrets.HOST_IP }}
+          EOF
+          cat hosts/inventory
+          ansible-playbook -i hosts/inventory init_k3s_cluster -D
+  deploy-app:
+    runs-on: ubuntu-latest
+    needs: [setup-k3s]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: update submodule
+        run: |
+          sudo apt-get update && sudo apt-get install -y git && git submodule update --init --recursive
+
+      - name: Deploy
+        working-directory: ./scripts
+        shell: bash
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          sudo apt install jq ansible -y
+
+          mkdir -pv ~/.ssh/
+          cat > ~/.ssh/id_rsa << EOF
+          ${{ secrets.SSH_PRIVATE_KEY }}
+          EOF
+          sudo chmod 0400 ~/.ssh/id_rsa
+          md5sum ~/.ssh/id_rsa
+
+          mkdir -pv hosts/
+          cat > hosts/inventory << EOF
+          [master]
+          ${{ secrets.HOST_DOMAIN }}               ansible_host=${{ secrets.HOST_IP }}
+
+          [all:vars]
+          ansible_port=22
+          ansible_ssh_user=${{ secrets.HOST_USER }}
+          ansible_ssh_private_key_file=~/.ssh/id_rsa
+          ansible_host_key_checking=False
+          app_image=${{ env.REPO }}/${{ env.IMAGE }}
+          app_tag=${{ env.TAG }}
+          EOF
+          ansible-playbook -i hosts/inventory deploy_app -D

@@ -1,0 +1,6 @@
+Flask==3.0.0
+Flask-Cors==4.0.0
+build==1.0.3
+pytest==6.2.5
+pydantic==1.8.2
+connexion==2.10.0
