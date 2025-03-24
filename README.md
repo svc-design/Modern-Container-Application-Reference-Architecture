@@ -4,7 +4,7 @@ Welcome to the repository for the Modern Container Application Reference Archite
 
 ## Overview
 
-The project aims to create a multi-cloud environment that leverages containers for deploying modern applications. The key objective is to set up a unified authentication system using **OIDC** via **Auth0 by Okta** for **AWS**, **GCP**, **Azure**, **GitHub**, and **Grafana **.
+The project aims to create a multi-cloud environment that leverages containers for deploying modern applications. The key objective is to set up a unified authentication system using **OIDC** via **Keycloak** for **AWS**, **GCP**, **Azure**, **GitHub**, **Harbor ** and **Grafana **.
 
 ## Phase 1: Implementing OIDC Login
 
@@ -20,7 +20,7 @@ In this first phase, we focus on implementing OpenID Connect (OIDC) login functi
 | Cloud | Host Name               | Public IP      | VPN IP       | Costs | Service                                                                                   |
 |-------|-------------------------|----------------|--------------|-------|-------------------------------------------------------------------------------------------|
 | ALI   | cn-gateway.svc.plus     | 8.130.10.142   | 10.254.0.1   | ---   |  cn-proxy.onwalk.net                                                                      |
-| HW    | hw-node.onwalk.net      | 139.9.139.22   | ---          | ---   |  images.onwalk.net                                                                        |
+| HW    | hw-node.svc.plus        | 139.9.139.22   | ---          | ---   |  images.onwalk.net                                                                        |
 | AWS   | global-gateway.svc.plus | 52.196.108.28  | 10.255.0.1   | ---   |  tky-connector.onwalk.net </br>global-images.onwalk.net                                   |
 | AWS   | us-gateway.svc.plus     | 54.183.199.99  | ---          | ---   |  us-connector.onwalk.net </br>grafana.onwalk.net</br>metrics.onwalk.net                   |
 | AWS   | canada-gateway.svc.plus | 35.182.201.252 | ---          | ---   |  ca-connector.onwalk.net </br>logs.onwalk.net                                             |
