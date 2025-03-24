@@ -1,0 +1,5 @@
+sg_id: ["sg-0a2f69bf892992826"]
+ec2_type: "t3.medium"
+image_id: "ami-0d11fee2d69126ec1"
+subnet_id: subnet-00e97c682059dcbe5
+key_name: devops
