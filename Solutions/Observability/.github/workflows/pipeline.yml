@@ -1,0 +1,555 @@
+name: Create Resources by IAC tools 
+
+env:
+  STATE: "create"   # 可以根据需要更改初始状态, 可选create，update, destroy
+  CLOUD: "gcp"       # 选择云服务商, 可选: gcp, aws, ali, azure
+  TZ: Asia/Shanghai
+  REPO: "artifact.onwalk.net"
+  IMAGE: base/${{ github.repository }} 
+  TAG: ${{ github.sha }}
+  DNS_AK: ${{ secrets.DNS_AK }}
+  DNS_SK: ${{ secrets.DNS_SK }}
+  SSH_USER: ${{ secrets.HOST_USER }}
+  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+on:
+  pull_request:
+  push:
+    paths:
+      - '.github/workflows/pipeline.yml'
+  workflow_dispatch:
+    branches:
+      - main
+
+jobs:
+  gcs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Pre Setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip jq
+        python -m pip install --upgrade pip jinja2
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.6.4
+
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+    - name: Set up Google Cloud SDK
+      uses: 'google-github-actions/setup-gcloud@v1'
+      with:
+        version: '>= 363.0.0'
+
+    - name: Check if GCS bucket exists
+      id: check_bucket
+      run: |
+        BUCKET_NAME="iac_gcp_terraform_state"
+        gsutil ls -b gs://${BUCKET_NAME} || echo "::set-output name=bucket_exists::false"
+
+    - name: Terraform Init And Apply
+      if: steps.check_bucket.outputs.bucket_exists == 'false'
+      run: |
+        bash run_terraform.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/gcs/
+  network:
+    runs-on: ubuntu-latest
+    needs:
+      - gcs
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Pre Setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip jq
+        python -m pip install --upgrade pip jinja2
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.6.4
+
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+    - name: Terraform Init And Apply
+      run: |
+        bash run_terraform.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/network/
+  vhost:
+    runs-on: ubuntu-latest
+    needs:
+      - gcs
+      - network
+      - key_pair
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Pre Setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip jq
+        python -m pip install --upgrade pip jinja2
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.6.4
+
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+    - name: Fetch SSH Keys
+      run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > ssh_keys.pub
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+
+    - name: Terraform Init And Apply
+      run: |
+        python3 scripts/init.py && bash scripts/run_terraform.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+
+  key_pair:
+    runs-on: ubuntu-latest
+    needs:
+      - gcs
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Pre Setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip jq
+        python -m pip install --upgrade pip jinja2
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.6.4
+
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+    - name: Set up Google Cloud SDK
+      uses: 'google-github-actions/setup-gcloud@v1'
+      with:
+        version: '>= 363.0.0'
+
+    - name: Check if SSH Metadata exists
+      id: check_ssh_metadata
+      run: bash scripts/check_ssh_metadata.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/key_pair/
+
+    - name: Fetch SSH Keys
+      if: steps.check_ssh_metadata.outputs.ssh_metadata_exists == 'false'
+      run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > ssh_keys.pub
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/key_pair/
+
+    - name: Terraform Init And Apply
+      if: steps.check_ssh_metadata.outputs.ssh_metadata_exists == 'false'
+      run: |
+        python3 scripts/init.py && bash scripts/run_terraform.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/key_pair/
+
+  firewall:
+    runs-on: ubuntu-latest
+    needs:
+      - gcs
+      - network
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Pre Setup
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-pip jq
+        python -m pip install --upgrade pip jinja2
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.6.4
+
+    - name: Authenticate with Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+    - name: Terraform Init And Apply
+      run: |
+        python3 scripts/init.py && bash scripts/run_terraform.sh
+      working-directory: iac_modules/terraform/${{ env.CLOUD }}/firewall/
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Initialization environment
+      shell: bash
+      run: |
+        sudo apt update
+        sudo apt install git -y
+        sudo timedatectl set-timezone "$TZ"
+        sudo curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+        helm plugin install https://github.com/chartmuseum/helm-push.git
+        helm repo add neo4j https://helm.neo4j.com/neo4j
+        helm repo add bitnami https://charts.bitnami.com/bitnami
+        helm repo add fluent https://fluent.github.io/helm-charts
+        helm repo add grafana https://grafana.github.io/helm-charts
+        helm repo add deepflow https://deepflowio.github.io/deepflow
+        helm repo add kube-state-metrics https://kubernetes.github.io/kube-state-metrics
+        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
+    - name: Sync UPstream Server charts
+      working-directory: charts/server
+      shell: bash
+      run: |
+        ls -l ; mkdir -pv charts/ && cd charts/
+        rm -rvf neo4j ; helm fetch neo4j/neo4j --untar
+        rm -rvf grafana ; helm fetch grafana/grafana --untar
+        rm -rvf deepflow ; helm fetch deepflow/deepflow --version 6.2.6 --untar
+        rm -rvf prometheus ; helm fetch prometheus-community/prometheus  --untar
+        rm -rvf alertmanager ; helm fetch prometheus-community/alertmanager --untar
+        ls -l && rm *.tgz -f
+
+    - name: Build and Push Server chart
+      working-directory: charts/server
+      shell: bash
+      run: |
+        helm repo add sync https://charts.onwalk.net
+        helm repo up
+        helm cm-push -u admin -p "${{ secrets.HELM_REPO_PASSWORD }}" --force ./ sync
+        ls -l
+
+    - name: Sync UPstream Agent charts
+      working-directory: charts/agent
+      shell: bash
+      run: |
+        ls -l ; mkdir -pv charts/ && cd charts/
+        rm -rvf promtail ; helm fetch grafana/promtail --untar
+        rm -rvf fluent-bit ; helm fetch fluent/fluent-bit --untar
+        rm -rvf deepflow-agent ; helm fetch deepflow/deepflow-agent --version 6.2.6 --untar
+        rm -rvf grafana-agent-operator ; helm fetch grafana/grafana-agent-operator --untar
+        rm -rvf kube-state-metrics ; helm fetch prometheus-community/kube-state-metrics --untar
+        rm -rvf prometheus ; helm fetch prometheus-community/prometheus --version=18.4.0 --untar
+        ls -l && rm *.tgz -f
+
+    - name: Build and Push chart
+      working-directory: charts/agent
+      shell: bash
+      run: |
+        helm repo add sync https://charts.onwalk.net
+        helm repo up
+        helm cm-push -u admin -p "${{ secrets.HELM_REPO_PASSWORD }}" --force ./ sync
+        ls -l
+
+    - name: Merge Upstream Repo
+      shell: bash
+      run: |
+        git config user.name shenlan
+        git config user.email manbuzhe2009@qq.com
+        cd ${GITHUB_WORKSPACE}/ && rm *.tgz -f
+        rm -rvf ${GITHUB_WORKSPACE}/charts/server/*.tgz -f
+        rm -rvf ${GITHUB_WORKSPACE}/charts/agent/*.tgz -f
+        git add -A
+        git commit -a -m "Auto Merged" || echo true
+        git push
+
+  sync-images:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Initialization environment
+      env:
+        PASSWORD: ${{ secrets.IAMGE_REPO_PASSWORD }}
+      shell: bash
+      run: |
+        sudo apt update
+        sudo apt install git -y
+        sudo timedatectl set-timezone "$TZ"
+        echo "$PASSWORD" | docker login --username=admin --password-stdin artifact.onwalk.net
+
+    - name: Sync images
+      shell: bash
+      run: |
+        docker pull registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.7.0
+        docker tag  registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.7.0 artifact.onwalk.net/public/kube-state-metrics:v2.7.0
+        docker push artifact.onwalk.net/public/kube-state-metrics:v2.7.0
+
+        docker pull ghcr.io/deepflowio/deepflow-ce/deepflow-agent:v6.2-8427@sha256:ffec192f8f249160fab600dab939ee150c067b4b1900378da247b748073b256e 
+        docker tag ghcr.io/deepflowio/deepflow-ce/deepflow-agent:v6.2-8427@sha256:ffec192f8f249160fab600dab939ee150c067b4b1900378da247b748073b256e artifact.onwalk.net/public/deepflow-agent:v6.2
+        docker push artifact.onwalk.net/public/deepflow-agent:v6.2
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Test aritfacts
+        run: echo "to do"
+
+  setup-server-cluster:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - test
+      - vhost
+    env:
+      SSH_HOST_DOMAIN: ${{ secrets.SERVER_HOST_DOMAIN }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+
+      - name: Pre Setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip jq
+          python -m pip install --upgrade pip jinja2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.6.4
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+      - name: Set GitHub Actions output variables
+        id: terraform-output
+        run: |
+          python3 scripts/init.py && terraform init
+          terraform output | while read -r line; do
+             if [ -z "$line" ]; then
+                 break
+             else
+               k_v=$(echo "$line" | tr -d ' ' | awk -F= '{print $1"="$2}')
+               echo "$k_v" >> $GITHUB_OUTPUT
+             fi
+          done
+        working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+
+      - name: Update playbook hosts
+        run: |
+          bash observability-platform-pre_setup.sh
+        env:
+          SSH_HOST_IP: ${{ steps.terraform-output.outputs.server }}
+        working-directory: playbook/ 
+
+      - name: Setup K3S Cluster
+        shell: bash
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          ansible-playbook -i hosts/inventory init_k3s_cluster_std -e "cluster_name=monitor" -D
+        working-directory: playbook/ 
+
+  setup-app-cluster:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - test
+      - vhost
+    env:
+      SSH_HOST_DOMAIN: ${{ secrets.APP_HOST_DOMAIN }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+
+      - name: Pre Setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip jq
+          python -m pip install --upgrade pip jinja2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.6.4
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+      - name: Set GitHub Actions output variables
+        id: terraform-output
+        run: |
+          python3 scripts/init.py && terraform init
+          terraform output | while read -r line; do
+             if [ -z "$line" ]; then
+                 break
+             else
+               k_v=$(echo "$line" | tr -d ' ' | awk -F= '{print $1"="$2}')
+               echo "$k_v" >> $GITHUB_OUTPUT
+             fi
+          done
+        working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+
+      - name: Update playbook hosts
+        run: |
+          bash observability-platform-pre_setup.sh
+        env:
+          SSH_HOST_IP: ${{ steps.terraform-output.outputs.app }}
+        working-directory: playbook/ 
+
+      - name: Setup K3S Cluster
+        shell: bash
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          ansible-playbook -i hosts/inventory init_k3s_cluster_std -e "cluster_name=app" -D
+        working-directory: playbook/ 
+
+  deploy-server:
+    runs-on: ubuntu-latest
+    needs:
+      - setup-server-cluster
+    env:
+      SSH_HOST_DOMAIN: ${{ secrets.SERVER_HOST_DOMAIN }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+
+      - name: Pre Setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip jq
+          python -m pip install --upgrade pip jinja2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.6.4
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+      - name: Set GitHub Actions output variables
+        id: terraform-output
+        run: |
+          python3 scripts/init.py && terraform init
+          terraform output | while read -r line; do
+             if [ -z "$line" ]; then
+                 break
+             else
+               k_v=$(echo "$line" | tr -d ' ' | awk -F= '{print $1"="$2}')
+               echo "$k_v" >> $GITHUB_OUTPUT
+             fi
+          done
+        working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+
+      - name: Update playbook hosts
+        run: bash observability-platform-pre_setup.sh
+        env:
+          SSH_HOST_IP: ${{ steps.terraform-output.outputs.server }}
+        working-directory: playbook/ 
+
+      - name: Deploy ansible-playbook Observability Server
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          ansible-playbook -i hosts/inventory init_observability-server -D
+        working-directory: playbook/ 
+
+  deploy-agent:
+    runs-on: ubuntu-latest
+    needs:
+      - setup-app-cluster
+    env:
+      SSH_HOST_DOMAIN: ${{ secrets.APP_HOST_DOMAIN }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+
+      - name: Pre Setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip jq
+          python -m pip install --upgrade pip jinja2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.6.4
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+      - name: Set GitHub Actions output variables
+        id: terraform-output
+        run: |
+          python3 scripts/init.py && terraform init
+          terraform output | while read -r line; do
+             if [ -z "$line" ]; then
+                 break
+             else
+               k_v=$(echo "$line" | tr -d ' ' | awk -F= '{print $1"="$2}')
+               echo "$k_v" >> $GITHUB_OUTPUT
+             fi
+          done
+        working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+
+      - name: Update playbook hosts
+        run: bash observability-platform-pre_setup.sh
+        env:
+          SSH_HOST_IP: ${{ steps.terraform-output.outputs.app }}
+        working-directory: playbook/ 
+
+      - name: Deploy ansible-playbook Observability Agent
+        run: |
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          ansible-playbook -i hosts/inventory init_observability-agent -D
+        working-directory: playbook/ 

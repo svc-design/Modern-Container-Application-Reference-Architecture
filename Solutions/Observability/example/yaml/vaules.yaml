@@ -1,0 +1,12 @@
+server:
+  ingress:
+    enabled: true
+    ingressClassName: "nginx"
+    hosts:
+      - host: vault.onwalk.net
+        paths:
+          - /
+    tls:
+      - secretName: vault-tls
+        hosts:
+          - vault.onwalk.net

@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alpine-tools-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alpine-tools
+  template:
+    metadata:
+      labels:
+        app: alpine-tools
+    spec:
+      containers:
+      - name: alpine
+        image: alpine:latest
+        command: ["/bin/sh", "-c", "apk update && apk add --no-cache bash curl iputils && sleep infinity"]
+        resources: {}
+      tolerations:
+      - key: "key1"
+        operator: "Equal"
+        value: "ingress"
+        effect: "NoExecute"

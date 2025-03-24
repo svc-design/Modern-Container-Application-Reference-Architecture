@@ -1,0 +1,128 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nginx
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: photoprism
+  namespace: nginx
+  labels:
+    app: photoprism
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: photoprism
+  template:
+    metadata:
+      labels:
+        app: photoprism
+    spec:
+      containers:
+      - name: photoprism
+        image: harbor.onwalk.net/public/photoprism:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 2342
+        env:
+        - name: PHOTOPRISM_ADMIN_USER
+          value: "admin" 
+        - name: PHOTOPRISM_ADMIN_PASSWORD
+          value: "admin1234" 
+        - name: PHOTOPRISM_AUTH_MODE
+          value: "password" 
+        - name: PHOTOPRISM_SITE_URL
+          value: "https://www.onwalk.net/" 
+        - name: PHOTOPRISM_DISABLE_TLS
+          value: "true" 
+        - name: PHOTOPRISM_DEFAULT_TLS
+          value: "false" 
+        - name: PHOTOPRISM_ORIGINALS_LIMIT
+          value: "5000" 
+        - name: PHOTOPRISM_HTTP_COMPRESSION
+          value: "gzip" 
+        - name: PHOTOPRISM_LOG_LEVEL
+          value: "info" 
+        - name: PHOTOPRISM_READONLY
+          value: "false" 
+        - name: PHOTOPRISM_EXPERIMENTAL
+          value: "false" 
+        - name: PHOTOPRISM_DISABLE_CHOWN
+          value: "false" 
+        - name: PHOTOPRISM_DISABLE_WEBDAV
+          value: "false" 
+        - name: PHOTOPRISM_DISABLE_SETTINGS
+          value: "false" 
+        - name: PHOTOPRISM_DISABLE_TENSORFLOW
+          value: "false" 
+        - name: PHOTOPRISM_DISABLE_FACES
+          value: "false" 
+        - name: PHOTOPRISM_DISABLE_CLASSIFICATION
+          value: "false" 
+        - name: PHOTOPRISM_DISABLE_VECTORS
+          value: "false" 
+        - name: PHOTOPRISM_DISABLE_RAW
+          value: "false" 
+        - name: PHOTOPRISM_RAW_PRESETS
+          value: "false" 
+        - name: PHOTOPRISM_SIDECAR_YAML
+          value: "true" 
+        - name: PHOTOPRISM_BACKUP_ALBUMS
+          value: "true" 
+        - name: PHOTOPRISM_BACKUP_DATABASE
+          value: "true" 
+        - name: PHOTOPRISM_BACKUP_SCHEDULE
+          value: "daily" 
+        - name: PHOTOPRISM_INDEX_SCHEDULE
+          value: "" 
+        - name: PHOTOPRISM_AUTO_INDEX
+          value: "300" 
+        - name: PHOTOPRISM_AUTO_IMPORT
+          value: "-1" 
+        - name: PHOTOPRISM_DETECT_NSFW
+          value: "false" 
+        - name: PHOTOPRISM_UPLOAD_NSFW
+          value: "true" 
+        - name: PHOTOPRISM_DATABASE_DRIVER
+          value: "sqlite" 
+        - name: PHOTOPRISM_SITE_CAPTION
+          value: "AI-Powered Photos App"
+        volumeMounts:
+        - name: originals
+          mountPath: /photoprism/originals
+        - name: storage
+          mountPath: /photoprism/storage
+        - name: import
+          mountPath: /photoprism/import
+      volumes:
+      - name: import
+        hostPath:
+          path: /data/gallery/images/
+          type: Directory
+      - name: originals
+        hostPath:
+          path: /data/gallery/originals/
+          type: Directory
+      - name: storage
+        hostPath:
+          path: /data/gallery/storage/
+          type: Directory
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: photoprism
+  namespace: nginx
+  labels:
+    app: photoprism
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 2342
+  selector:
+    app: photoprism
