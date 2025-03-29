@@ -161,7 +161,11 @@ pulumi_run() {
   cd "$PULUMI_DIR"
 
   # 设置 Python 虚拟环境路径
-  VENV_DIR="${PULUMI_DIR}/.venv"
+  VENV_DIR="$PROJECT_ROOT/.venv"
+  PYTHON_BIN="$VENV_DIR/bin/python"
+
+  # 1. 激活虚拟环境
+  echo "✅ 激活虚拟环境: $VENV_DIR"
 
   # 如果没有虚拟环境就创建并安装依赖
   if [ ! -d "$VENV_DIR" ]; then
@@ -173,6 +177,20 @@ pulumi_run() {
     echo "✅ 虚拟环境已存在，直接激活"
     source "$VENV_DIR/bin/activate"
   fi
+
+  source "$VENV_DIR/bin/activate"
+
+  # 2. 确保 pulumi 安装在虚拟环境中
+  if ! "$PYTHON_BIN" -c "import pulumi" &> /dev/null; then
+    echo "⚠️ Pulumi SDK 未安装，正在安装..."
+    "$PYTHON_BIN" -m pip install --upgrade pip
+    "$PYTHON_BIN" -m pip install pulumi pulumi-aws PyYAML
+  else
+    echo "✅ Pulumi SDK 已就绪"
+  fi
+
+  # 3. 告诉 Pulumi 使用这个 Python
+  export PULUMI_PYTHON_CMD="$PYTHON_BIN"
 
   # ✅ 明确选择 stack，若不存在则创建，避免交互式提示
   pulumi stack select "$STACK_NAME" 2>/dev/null || pulumi stack init "$STACK_NAME"
