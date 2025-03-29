@@ -1,10 +1,40 @@
 # Modern Container Application Reference Architecture
 
-Welcome to the repository for the Modern Container Application Reference Architecture. This repository contains a comprehensive guide and reference architecture for building scalable, portable, resilient, and agile containerized applications.
+Welcome to the repository for the Modern Container Application Reference Architecture. This repository contains a comprehensive guide and reference architecture for building scalable, portable, resilient, and agile containerized applications. 一个基于 Pulumi + Ansible 的基础设施自动化项目模板，支持多环境部署（dev / staging / prod），实现从基础设施创建到主机配置的全流程自动化管理。
 
+---
 ## Overview
 
 The project aims to create a multi-cloud environment that leverages containers for deploying modern applications. The key objective is to set up a unified authentication system using **OIDC** via **Keycloak** for **AWS**, **GCP**, **Azure**, **GitHub**, **Harbor ** and **Grafana **.
+
+## 🚀 项目功能
+
+- 使用 Pulumi（Python）创建 AWS 基础设施（VPC、子网、安全组、EC2）
+- 配置结构模块化：`base.yaml`, `vpc.yaml`, `firewall.yaml`, `instances.yaml`
+- 支持 Spot / On-Demand 实例，支持 TTL 标签
+- 自动输出 EC2 IP，动态生成 Ansible Inventory
+- 使用 Ansible Playbook 远程安装软件或部署服务
+- 支持多环境 stack（dev/staging/prod）
+
+## 项目结构
+
+├── config/                  # 多环境配置
+│   ├── base.yaml
+│   ├── vpc.yaml
+│   ├── firewall.yaml
+│   └── instances.yaml
+├── iac_modules/
+│   └── pulumi/
+│       ├── deploy.py              # Pulumi 主入口
+│       ├── modules/               # VPC/SG/EC2 模块
+│       ├── utils/config_loader.py
+│       └── requirements.txt
+├── scripts/
+│   ├── infra.sh                   # 一键部署脚本
+│   └── inventory.py              # 动态 Ansible inventory
+├── ansible/
+│   └── playbooks/
+│       └── setup.yml             # 应用部署 playbook
 
 ## Phase 1: Implementing OIDC Login
 

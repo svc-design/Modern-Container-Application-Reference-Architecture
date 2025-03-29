@@ -1,0 +1,24 @@
+vpc:
+  name: dev-vpc
+  cidr_block: 10.0.0.0/16
+  subnets:
+    - name: public-subnet-1
+      cidr_block: 10.0.1.0/24
+      availability_zone: us-east-1a
+      type: public
+    - name: private-subnet-1
+      cidr_block: 10.0.101.0/24
+      availability_zone: us-east-1a
+      type: private
+
+  routes:
+    - name: public-route
+      destination_cidr_block: 0.0.0.0/0
+      subnet_type: public
+      gateway: internet_gateway
+
+  peering:
+    enabled: false
+    peer_vpc_id: null
+    peer_region: null
+    auto_accept: false

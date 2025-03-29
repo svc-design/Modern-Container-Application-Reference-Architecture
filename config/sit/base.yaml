@@ -1,0 +1,7 @@
+aws:
+  access_key: YOUR_ACCESS_KEY
+  secret_key: YOUR_SECRET_KEY
+  region: us-east-1
+  key_pairs:
+    - name: dev_key
+      key_file: keys/dev_ssh.pub

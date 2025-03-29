@@ -1,0 +1,52 @@
+# 💡 提交说明模板 (Git Commit Message Template)
+#
+# 📌 标准格式：
+# <type>(<scope>): <简要描述>
+#
+# 📖 示例：
+# feat(iac): 新增支持多环境配置加载
+# feat(deploy): Add support for multi-environment config loading
+#
+# 可选结构：
+# - 中文描述（团队成员理解方便）
+# - 英文描述（CI/CD / PR 审阅更规范）
+#
+# 🧱 支持类型：
+# feat     💡 新功能 / Feature
+# fix      🐛 修复 bug / Bug fix
+# docs     📚 文档变更 / Documentation
+# style    🎨 代码格式 / Style only
+# refactor 🔨 重构 / Refactor (无功能变更)
+# perf     🚀 性能优化 / Performance
+# test     🧪 测试相关 / Add or update tests
+# chore    🔧 构建、工具、依赖更新 / Chores
+#
+# ⏱️ 每次提交只关注一类改动
+
+# ---------------------- COMMIT MESSAGE START ----------------------
+
+feat(iac): 重构目录结构并支持多环境配置加载
+feat(iac): Refactor structure and support multi-environment config loading
+
+- 新增 config/sit 等多环境配置目录结构
+- Add config/sit and other environment-specific config directories
+
+- 重构 deploy.py 适配 CONFIG_PATH 环境变量
+- Refactor deploy.py to support CONFIG_PATH environment variable
+
+- 支持自动合并 config/*/*.yaml 配置
+- Enable automatic merging of config/*/*.yaml files
+
+- 增强 run.sh 脚本，集成 Pulumi/Ansible/Terraform 初始化检查
+- Enhance run.sh with Pulumi/Ansible/Terraform initialization checks
+
+- 新增 inventory.py 动态生成 Ansible 主机列表
+- Add inventory.py to dynamically generate Ansible hosts
+
+- 整理 base.yaml、vpc.yaml 等配置文件
+- Organize base.yaml, vpc.yaml and related config files
+
+# ----------------------- COMMIT MESSAGE END -----------------------
+
+# 📝 注意：提交时只保留实际变更部分，其余注释会被 Git 忽略
+

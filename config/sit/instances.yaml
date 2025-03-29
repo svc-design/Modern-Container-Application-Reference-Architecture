@@ -1,0 +1,32 @@
+instances:
+  - name: master-1
+    ami: ami-0c2b8ca1dad447f8a
+    type: t3.micro
+    disk_size_gb: 20
+    subnet: public-subnet-1
+    lifecycle: spot             # 可选: ondemand（默认）或 spot
+    ttl: 1h                     # 可选: 自动标记 TTL，仅作为标识，不自动销毁
+
+  - name: slave-1
+    ami: ami-0c2b8ca1dad447f8a
+    type: t3.micro
+    disk_size_gb: 20
+    subnet: private-subnet-1
+    lifecycle: spot
+    ttl: 1h
+
+  - name: agent-1
+    ami: ami-0c2b8ca1dad447f8a
+    type: t3.micro
+    disk_size_gb: 20
+    subnet: private-subnet-1
+    lifecycle: spot
+    ttl: 1h
+
+  - name: agent-2
+    ami: ami-0c2b8ca1dad447f8a
+    type: t3.micro
+    disk_size_gb: 20
+    subnet: private-subnet-1
+    lifecycle: spot
+    ttl: 1h

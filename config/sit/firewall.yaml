@@ -1,0 +1,6 @@
+firewall_rules:
+  - name: allow-ssh-web
+    allow:
+      - protocol: tcp
+        ports: ["22", "80", "443"]
+    source_ranges: ["0.0.0.0/0"]
