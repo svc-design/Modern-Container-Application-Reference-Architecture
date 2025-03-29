@@ -3,3 +3,48 @@ venv/
 .DS_Store
 infrastructure/.DS_Store
 ./playbook/.DS_Storevenv/
+
+# Python virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Pulumi
+Pulumi.*
+*.bak
+.pulumi/
+.pulumi-history/
+
+# VSCode
+.vscode/
+
+# macOS metadata
+.DS_Store
+
+# Logs and local debug
+*.log
+
+# Coverage
+htmlcov/
+coverage.xml
+*.cover
+.cache/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Ansible
+*.retry
+
+# Installer artifacts
+offline-iac/
+offline-setup-*.tar.gz
+

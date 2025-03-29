@@ -1,13 +1,19 @@
 #!/bin/bash
 set -e
 
-# 项目根目录（从任意位置运行都有效）
-cd "$(dirname "$0")/.."
+PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$PROJECT_ROOT"
+
+# ========== 默认参数 ==========
+DEFAULT_ENV="sit"
+DEFAULT_CONFIG="${PROJECT_ROOT}/config"
+
+# ========== 模块路径 ==========
+PULUMI_DIR="${PROJECT_ROOT}/iac_modules/pulumi"
+TERRAFORM_DIR="${PROJECT_ROOT}/iac_modules/terraform"
+ANSIBLE_DIR="${PROJECT_ROOT}/ansible"
 
 # ========== 参数解析 ==========
-DEFAULT_ENV="dev"
-DEFAULT_CONFIG="config"
-
 if [[ -n "$1" && "$1" != up && "$1" != down && "$1" != delete && "$1" != export && "$1" != import && "$1" != init && "$1" != ansible && "$1" != help ]]; then
   STACK_ENV="$1"
   ACTION="${2:-up}"
@@ -17,12 +23,13 @@ else
 fi
 
 STACK_NAME="${STACK_NAME:-$STACK_ENV}"
-CONFIG_PATH="${CONFIG_PATH:-config/$STACK_ENV}"
+CONFIG_PATH="${CONFIG_PATH:-${DEFAULT_CONFIG}/${STACK_ENV}}"
 
-# ========== 模块目录 ==========
-PULUMI_DIR="iac_modules/pulumi"
-TERRAFORM_DIR="iac_modules/terraform"
-ANSIBLE_DIR="ansible"
+# ========== 配置目录检查 ==========
+if [ ! -d "$CONFIG_PATH" ] || [ -z "$(find "$CONFIG_PATH" -maxdepth 1 -name '*.yml' -o -name '*.yaml')" ]; then
+  echo "⚠️ 配置目录为空：$CONFIG_PATH，跳过部署"
+  exit 0
+fi
 
 # ========== 帮助信息 ==========
 print_help() {
@@ -118,9 +125,14 @@ init_env() {
   ensure_pulumi
 
   # 2️⃣ 安装 Python 依赖
-  if [ -f "$PULUMI_DIR/requirements.txt" ]; then
+  if [ -f "requirements.txt" ]; then
     echo "📦 安装 Python 依赖..."
-    pip3 install -r "$PULUMI_DIR/requirements.txt"
+    # 1. 创建虚拟环境
+    python3 -m venv .venv
+    # 2. 激活虚拟环境（zsh/bash）
+    source .venv/bin/activate
+    # 3. 安装依赖
+    python3 -m pip install -r requirements.txt
   fi
 
   # 3️⃣ 检查 Ansible
@@ -134,8 +146,8 @@ init_env() {
   # 5️⃣ 初始化 Pulumi Stack
   cd "$PULUMI_DIR"
   pulumi login --local > /dev/null
+
   if ! pulumi stack ls | grep -q "$STACK_NAME"; then
-    echo "📂 创建 Pulumi Stack: $STACK_NAME"
     pulumi stack init "$STACK_NAME"
   else
     echo "✅ Stack 已存在：$STACK_NAME"
@@ -147,12 +159,31 @@ init_env() {
 # ========== 执行 Pulumi ==========
 pulumi_run() {
   cd "$PULUMI_DIR"
+
+  # 设置 Python 虚拟环境路径
+  VENV_DIR="${PULUMI_DIR}/.venv"
+
+  # 如果没有虚拟环境就创建并安装依赖
+  if [ ! -d "$VENV_DIR" ]; then
+    echo "📦 创建 Python 虚拟环境: $VENV_DIR"
+    python3 -m venv "$VENV_DIR"
+    source "$VENV_DIR/bin/activate"
+    python3 -m pip install -r requirements.txt
+  else
+    echo "✅ 虚拟环境已存在，直接激活"
+    source "$VENV_DIR/bin/activate"
+  fi
+
+  # ✅ 明确选择 stack，若不存在则创建，避免交互式提示
+  pulumi stack select "$STACK_NAME" 2>/dev/null || pulumi stack init "$STACK_NAME"
+
+  if [ ! -d "$CONFIG_PATH" ] || [ -z "$(find "$CONFIG_PATH" -maxdepth 1 -name '*.yml' -o -name '*.yaml')" ]; then
+    echo "⚠️ 配置目录为空：$CONFIG_PATH，跳过部署"
+    exit 0
+  fi
+
   case "$ACTION" in
     up)
-      if [ ! -d "$CONFIG_PATH" ] || [ -z "$(ls -A $CONFIG_PATH/*.yaml 2>/dev/null)" ]; then
-        echo "⚠️ 配置目录为空：$CONFIG_PATH，跳过部署"
-        exit 0
-      fi
       echo "🚀 正在部署 stack: $STACK_NAME"
       pulumi up --yes
       ;;

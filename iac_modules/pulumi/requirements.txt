@@ -1,3 +1,0 @@
-pulumi
-pulumi-aws
-PyYAML
