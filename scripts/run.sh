@@ -125,6 +125,12 @@ init_env() {
   ensure_pulumi
 
   # 2️⃣ 安装 Python 依赖
+  mkdir -p ~/.pip
+cat > ~/.pip/pip.conf <<EOF
+[global]
+index-url = https://pypi.tuna.tsinghua.edu.cn/simple
+EOF
+
   if [ -f "requirements.txt" ]; then
     echo "📦 安装 Python 依赖..."
     # 1. 创建虚拟环境
