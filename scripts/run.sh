@@ -138,7 +138,7 @@ EOF
     # 2. 激活虚拟环境（zsh/bash）
     source .venv/bin/activate
     # 3. 安装依赖
-    python3 -m pip install -r requirements.txt
+    "$PYTHON_BIN" -m pip install -r "$PROJECT_ROOT/requirements.txt"
   fi
 
   # 3️⃣ 检查 Ansible
@@ -200,6 +200,16 @@ pulumi_run() {
 
   # ✅ 明确选择 stack，若不存在则创建，避免交互式提示
   pulumi stack select "$STACK_NAME" 2>/dev/null || pulumi stack init "$STACK_NAME"
+
+  # ✅ 自动从 config 读取 region 并设置 pulumi config（防止 provider 报错）
+  if [ -f "$CONFIG_PATH/base.yaml" ]; then
+    region=$(grep '^ *region:' "$CONFIG_PATH/base.yaml" | awk '{print $2}')
+    if [ -n "$region" ]; then
+      pulumi config set aws:region "$region" --stack "$STACK_NAME" --non-interactive
+      echo "✅ Pulumi config 中设置 aws:region=$region"
+    fi
+  fi
+
 
   if [ ! -d "$CONFIG_PATH" ] || [ -z "$(find "$CONFIG_PATH" -maxdepth 1 -name '*.yml' -o -name '*.yaml')" ]; then
     echo "⚠️ 配置目录为空：$CONFIG_PATH，跳过部署"

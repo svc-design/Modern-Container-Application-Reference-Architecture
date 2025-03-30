@@ -1,14 +1,14 @@
 vpc:
   name: dev-vpc
-  cidr_block: 10.0.0.0/16
+  cidr_block: 10.1.0.0/16
   subnets:
     - name: public-subnet-1
-      cidr_block: 10.0.1.0/24
-      availability_zone: us-east-1a
+      cidr_block: 10.1.1.0/24
+      availability_zone: ap-northeast-1a
       type: public
     - name: private-subnet-1
-      cidr_block: 10.0.101.0/24
-      availability_zone: us-east-1a
+      cidr_block: 10.1.101.0/24
+      availability_zone: ap-northeast-1c
       type: private
 
   routes:

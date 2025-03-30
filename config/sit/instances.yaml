@@ -1,32 +1,45 @@
 instances:
   - name: master-1
-    ami: ami-0c2b8ca1dad447f8a
+    ami: ubuntu-22.04                  # ✅ 可用 ami-xxx 或关键词（如 ubuntu-22.04）
     type: t3.micro
     disk_size_gb: 20
     subnet: public-subnet-1
-    lifecycle: spot             # 可选: ondemand（默认）或 spot
-    ttl: 1h                     # 可选: 自动标记 TTL，仅作为标识，不自动销毁
+    lifecycle: spot                   # 可选: ondemand（默认）或 spot
+    ttl: 1h                           # 可选: 标记生命周期（不会自动销毁）
+    env: sit                          # 可选: dev/sit/prod 等环境标签
+    owner: devops                     # 可选: 资源责任人标签
+    associate_public_ip: true         # ✅ 明确配置是否需要公网 IP
 
   - name: slave-1
-    ami: ami-0c2b8ca1dad447f8a
+    ami: ubuntu-22.04
     type: t3.micro
     disk_size_gb: 20
     subnet: private-subnet-1
     lifecycle: spot
     ttl: 1h
+    env: sit
+    owner: devops
+    associate_public_ip: false
 
   - name: agent-1
-    ami: ami-0c2b8ca1dad447f8a
+    ami: ubuntu-22.04
     type: t3.micro
     disk_size_gb: 20
     subnet: private-subnet-1
     lifecycle: spot
     ttl: 1h
+    env: sit
+    owner: devops
+    associate_public_ip: false
 
   - name: agent-2
-    ami: ami-0c2b8ca1dad447f8a
+    ami: ubuntu-22.04
     type: t3.micro
     disk_size_gb: 20
     subnet: private-subnet-1
     lifecycle: spot
     ttl: 1h
+    env: sit
+    owner: devops
+    associate_public_ip: false
+
