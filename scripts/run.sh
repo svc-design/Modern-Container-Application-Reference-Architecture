@@ -223,7 +223,9 @@ pulumi_run() {
       ;;
     down)
       echo "🔥 正在销毁 stack: $STACK_NAME"
-      pulumi destroy --yes
+      pulumi destroy --yes &
+      pulumi refresh --yes
+      echo "✅ 删除 + 状态刷新完成"
       ;;
     delete)
       echo "🗑️ 删除 Stack: $STACK_NAME"
