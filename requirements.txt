@@ -1,0 +1,7 @@
+pulumi
+boto3
+pulumi-aws
+pulumi-gcp
+pulumi-azure-native
+pulumi-alicloud
+PyYAML

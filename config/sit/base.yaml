@@ -1,0 +1,6 @@
+aws:
+  profile: default
+  region: ap-northeast-1
+  key_pairs:
+    - name: dev_key
+      key_file: ~/.ssh/id_rsa.pub
