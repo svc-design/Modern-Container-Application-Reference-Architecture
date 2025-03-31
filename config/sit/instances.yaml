@@ -19,7 +19,7 @@ instances:
     ttl: 1h
     env: sit
     owner: devops
-    associate_public_ip: false
+    associate_public_ip: true
 
   - name: agent-1
     ami: ubuntu-22.04
@@ -30,7 +30,7 @@ instances:
     ttl: 1h
     env: sit
     owner: devops
-    associate_public_ip: false
+    associate_public_ip: true
 
   - name: agent-2
     ami: ubuntu-22.04
@@ -41,5 +41,4 @@ instances:
     ttl: 1h
     env: sit
     owner: devops
-    associate_public_ip: false
-
+    associate_public_ip: true

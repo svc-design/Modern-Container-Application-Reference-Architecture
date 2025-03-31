@@ -13,6 +13,21 @@ PULUMI_DIR="${PROJECT_ROOT}/iac_modules/pulumi"
 TERRAFORM_DIR="${PROJECT_ROOT}/iac_modules/terraform"
 ANSIBLE_DIR="${PROJECT_ROOT}/ansible"
 
+
+# ================================
+# ✅ 自动加载 Pulumi passphrase
+# ================================
+#export PULUMI_CONFIG_PASSPHRASE_FILE="${PULUMI_CONFIG_PASSPHRASE_FILE:-$HOME/.pulumi-passphrase}"
+#
+#if [ ! -f "$PULUMI_CONFIG_PASSPHRASE_FILE" ]; then
+#  echo "⚠️  未检测到 Pulumi 密码文件: $PULUMI_CONFIG_PASSPHRASE_FILE"
+#  echo "请先创建该文件并写入 passphrase，例如："
+#  echo "  echo 'changeme123' > ~/.pulumi-passphrase && chmod 600 ~/.pulumi-passphrase"
+#  exit 1
+#else
+#  echo "🔐 Pulumi 密码文件已加载: $PULUMI_CONFIG_PASSPHRASE_FILE"
+#fi
+
 # ========== 参数解析 ==========
 if [[ -n "$1" && "$1" != up && "$1" != down && "$1" != delete && "$1" != export && "$1" != import && "$1" != init && "$1" != ansible && "$1" != help ]]; then
   STACK_ENV="$1"
@@ -46,12 +61,11 @@ print_help() {
   echo "📁 当前配置路径: $CONFIG_PATH"
   echo ""
   echo "支持命令:"
+  echo "  init      ⚙️ 初始化依赖"
   echo "  up        🚀 部署资源"
   echo "  down      🔥 销毁资源"
-  echo "  delete    🗑️ 删除 stack"
   echo "  export    📤 导出 stack 状态"
   echo "  import    📥 导入 stack 状态"
-  echo "  init      ⚙️ 初始化依赖"
   echo "  ansible   🧪 执行 ansible-playbook"
   echo "  help      📖 显示帮助"
   echo ""
@@ -222,13 +236,11 @@ pulumi_run() {
       pulumi up --yes
       ;;
     down)
-      echo "🔥 正在销毁 stack: $STACK_NAME"
-      pulumi destroy --yes &
+      echo "⚠️ 先执行 destroy 确保资源干净"
+      pulumi destroy --yes
+      echo "🔄 执行 refresh 同步状态..."
       pulumi refresh --yes
-      echo "✅ 删除 + 状态刷新完成"
-      ;;
-    delete)
-      echo "🗑️ 删除 Stack: $STACK_NAME"
+      echo "🗑️ 正式删除 Stack..."
       pulumi stack rm "$STACK_NAME" --yes
       ;;
     export)
