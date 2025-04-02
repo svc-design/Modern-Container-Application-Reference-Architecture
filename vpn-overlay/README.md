@@ -43,16 +43,15 @@
 ## 三、示意结构
 
 ### 基本层级
-
 ```
 [站点主机]
-  └─ gretap
-      └─ br0
-          └─ wg0 → XTLS/VLESS 客户端
-              → 网络
-                  → VLESS 服务端
-                      → WireGuard Hub
-```
+  └─ vxlan100 (L2 Overlay over UDP)
+      └─ br0 (虚拟大局域网)
+          └─ wg0 (VPN加密接口)
+              └─ VLESS 客户端 (XTLS/TCP/GRPC)
+                  └─ GFW
+                      └─ VLESS 服务端 (公网)
+                          └─ WireGuard Hub
 
 ### Overlay 网络
 
