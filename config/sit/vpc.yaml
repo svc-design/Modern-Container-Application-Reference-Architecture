@@ -1,24 +1,44 @@
-vpc:
-  name: dev-vpc
-  cidr_block: 10.1.0.0/16
-  subnets:
-    - name: public-subnet-1
-      cidr_block: 10.1.1.0/24
-      availability_zone: ap-northeast-1a
-      type: public
-    - name: private-subnet-1
-      cidr_block: 10.1.101.0/24
-      availability_zone: ap-northeast-1c
-      type: private
+vpcs:
+  - name: dev-vpc-1
+    cidr_block: 10.1.0.0/16
+    subnets:
+      - name: dev-vpc-1-public-subnet-1
+        cidr_block: 10.1.1.0/24
+        availability_zone: ap-northeast-1a
+        type: public
+      - name: dev-vpc-1-private-subnet-1
+        cidr_block: 10.1.101.0/24
+        availability_zone: ap-northeast-1c
+        type: private
+    routes:
+      - name: dev-vpc-1-public-route
+        destination_cidr_block: 0.0.0.0/0
+        subnet_type: public
+        gateway: internet_gateway
+    peering:
+      enabled: false
+      peer_vpc_id: null
+      peer_region: null
+      auto_accept: false
 
-  routes:
-    - name: public-route
-      destination_cidr_block: 0.0.0.0/0
-      subnet_type: public
-      gateway: internet_gateway
-
-  peering:
-    enabled: false
-    peer_vpc_id: null
-    peer_region: null
-    auto_accept: false
+  - name: dev-vpc-2
+    cidr_block: 10.2.0.0/16
+    subnets:
+      - name: dev-vpc-2-public-subnet-1
+        cidr_block: 10.2.1.0/24
+        availability_zone: ap-northeast-1a
+        type: public
+      - name: dev-vpc-2-private-subnet-1
+        cidr_block: 10.2.101.0/24
+        availability_zone: ap-northeast-1c
+        type: private
+    routes:
+      - name: dev-vpc-2-public-route
+        destination_cidr_block: 0.0.0.0/0
+        subnet_type: public
+        gateway: internet_gateway
+    peering:
+      enabled: false
+      peer_vpc_id: null
+      peer_region: null
+      auto_accept: false

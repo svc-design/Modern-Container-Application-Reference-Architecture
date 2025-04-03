@@ -18,6 +18,7 @@ The project aims to create a multi-cloud environment that leverages containers f
 
 ## 项目结构
 
+```
 ├── config/                  # 多环境配置
 │   ├── base.yaml
 │   ├── vpc.yaml
@@ -35,6 +36,7 @@ The project aims to create a multi-cloud environment that leverages containers f
 ├── ansible/
 │   └── playbooks/
 │       └── setup.yml             # 应用部署 playbook
+```
 
 ## Phase 1: Implementing OIDC Login
 
