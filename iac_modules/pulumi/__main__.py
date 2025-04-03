@@ -59,15 +59,40 @@ else:
     pulumi.log.warn("⏭️ 跳过 VPC 创建")
 
 # ========================
-# ✅ [模块] Security Group
+# ✅ [模块] 多个 Security Group
 # ========================
+
+# ✅ 存储 VPC 结果（名字 → 资源）
+vpc_map = {vpc_name: result["vpc"] for vpc_name, result in vpc_results.items()}
+
 firewall_rules = config.get("firewall_rules", [])
-if firewall_rules and vpc and config.get("security_group", {}).get("enabled", True):
-    sg = create_security_group(vpc.id, firewall_rules[0])
-    global_dependencies.append(sg)
-    pulumi.log.info("✅ Security Group 已创建")
+security_groups = {}
+
+if firewall_rules and config.get("security_group", {}).get("enabled", True):
+    for rule in firewall_rules:
+        if not rule.get("enabled", True):
+            pulumi.log.warn(f"⏭️ 跳过未启用的 SG: {rule.get('name')}")
+            continue
+
+        vpc_name = rule.get("vpc_name")
+        if not vpc_name or vpc_name not in vpc_map:
+            pulumi.log.warn(f"❌ 未找到指定 VPC: {vpc_name}，跳过 {rule.get('name')}")
+            continue
+
+        vpc_resource = vpc_map[vpc_name]
+
+        sg = create_security_group(vpc_resource.id, rule)
+        name = rule.get("name", "sg-unnamed")
+        security_groups[name] = sg
+        global_dependencies.append(sg)
+
+        # 确保 SG 创建等待 VPC 完成
+        pulumi.log.info(f"✅ Security Group '{name}' 已绑定 VPC: {vpc_name}")
+
+    pulumi.export("security_groups", {k: sg.id for k, sg in security_groups.items()})
 else:
     pulumi.log.warn("⏭️ 跳过 Security Group 创建")
+
 
 # ========================
 # ✅ [模块] SSH Key Pair
@@ -91,17 +116,34 @@ else:
 # ========================
 # ✅ [模块] EC2 实例部署
 # ========================
+
+# ========================
+# ✅ [模块] EC2 实例部署
+# ========================
 instances_conf = config.get("instances", [])
 ec2_outputs = {}
 
 if instances_conf and config.get("ec2", {}).get("enabled", True):
+    # ✅ 遍历每个实例，按 sg_names 匹配对应 Security Group ID 列表
+    def resolve_security_group_ids(instance_conf, sg_map):
+        sg_ids = []
+        for name in instance_conf.get("sg_names", []):
+            sg = sg_map.get(name)
+            if sg:
+                sg_ids.append(sg.id)
+            else:
+                pulumi.log.warn(f"⚠️ 实例 {instance_conf['name']} 引用了未知 SG: {name}")
+        return sg_ids
+
+    # ✅ 批量传入所有实例配置
     ec2_outputs = create_instances(
         instances_conf,
         subnets,
-        sg,  # ✅ 注意这里传的是资源对象
+        security_groups,  # ✅ 多 SG 映射 sg_name → resource
         key_pair.key_name if key_pair else None,
         depends_on=global_dependencies
     )
+
     pulumi.log.info("✅ EC2 实例已创建")
 else:
     pulumi.log.warn("⏭️ 跳过 EC2 实例部署")
