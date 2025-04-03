@@ -6,7 +6,7 @@ import boto3
 from botocore.exceptions import ProfileNotFound, NoCredentialsError
 
 from utils.config_loader import load_merged_config
-from modules.vpc.vpc import create_vpc
+from modules.vpc.vpc import create_vpcs
 from modules.security_group.sg import create_security_group
 from modules.ec2.ec2_instance import create_instances
 
@@ -45,15 +45,16 @@ key_pair = None
 
 # ========================
 # ✅ [模块] VPC + Subnets
-# ========================
-vpc_conf = config.get("vpc", {})
-if vpc_conf.get("enabled", True):
-    vpc_result = create_vpc(vpc_conf, region)
-    vpc = vpc_result["vpc"]
-    subnets = vpc_result["subnets"]
-    global_dependencies.append(vpc)
-    global_dependencies.extend(subnets.values())
-    pulumi.log.info("✅ VPC/Subnet 已创建")
+vpc_confs = config.get("vpcs", [])
+if vpc_confs:
+    vpc_results = create_vpcs(vpc_confs, region)
+    all_subnets = {}
+    for vpc_name, result in vpc_results.items():
+        pulumi.log.info(f"✅ VPC {vpc_name} 已创建")
+        global_dependencies.append(result["vpc"])
+        global_dependencies.extend(result["subnets"].values())
+        all_subnets.update(result["subnets"])
+    subnets = all_subnets
 else:
     pulumi.log.warn("⏭️ 跳过 VPC 创建")
 
