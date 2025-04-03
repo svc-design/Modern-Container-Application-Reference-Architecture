@@ -10,13 +10,11 @@ vpcs:
         cidr_block: 10.1.101.0/24
         availability_zone: ap-northeast-1c
         type: private
-
     routes:
-      - name: public-route
+      - name: dev-vpc-1-public-route
         destination_cidr_block: 0.0.0.0/0
         subnet_type: public
         gateway: internet_gateway
-
     peering:
       enabled: false
       peer_vpc_id: null
@@ -34,13 +32,11 @@ vpcs:
         cidr_block: 10.2.101.0/24
         availability_zone: ap-northeast-1c
         type: private
-
     routes:
-      - name: public-route
+      - name: dev-vpc-2-public-route
         destination_cidr_block: 0.0.0.0/0
         subnet_type: public
         gateway: internet_gateway
-
     peering:
       enabled: false
       peer_vpc_id: null
