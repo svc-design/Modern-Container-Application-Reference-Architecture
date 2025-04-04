@@ -1,9 +1,9 @@
 instances:
   - name: master-1
-    ami: ubuntu-22.04                  # ✅ 可用 ami-xxx 或关键词（如 ubuntu-22.04）
+    ami: ubuntu-24.04                  # ✅ 可用 ami-xxx 或关键词（如 ubuntu-22.04）
     type: t3a.xlarge
     disk_size_gb: 20
-    sg_names: ["allow-ssh-web"]
+    sg_names: ["dev-vpc-1-default-inbound"]
     subnet: dev-vpc-1-public-subnet-1
     lifecycle: spot                   # 可选: ondemand（默认）或 spot
     ttl: 1h                           # 可选: 标记生命周期（不会自动销毁）
@@ -12,9 +12,9 @@ instances:
     associate_public_ip: true         # ✅ 明确配置是否需要公网 IP
 
   - name: slave-1
-    ami: ubuntu-22.04
+    ami: ubuntu-24.04
     type: t3.nano
-    sg_names: ["allow-default-inbound"]
+    sg_names: ["dev-vpc-2-default-inbound"]
     disk_size_gb: 20
     subnet: dev-vpc-2-public-subnet-1
     lifecycle: spot
@@ -24,11 +24,11 @@ instances:
     associate_public_ip: true
 
   - name: agent-1
-    ami: ubuntu-22.04
+    ami: ubuntu-24.04
     type: t3.nano
     disk_size_gb: 20
     subnet: dev-vpc-1-private-subnet-1
-    sg_names: ["allow-ssh-web"]
+    sg_names: ["dev-vpc-1-default-inbound"]
     lifecycle: spot
     ttl: 1h
     env: sit
@@ -36,11 +36,11 @@ instances:
     associate_public_ip: true
 
   - name: agent-2
-    ami: ubuntu-22.04
+    ami: ubuntu-24.04
     type: t3.nano
     disk_size_gb: 20
     subnet: dev-vpc-2-private-subnet-1
-    sg_names: ["allow-default-inbound"]
+    sg_names: ["dev-vpc-2-default-inbound"]
     lifecycle: spot
     ttl: 1h
     env: sit
