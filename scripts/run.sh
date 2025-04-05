@@ -234,6 +234,7 @@ pulumi_run() {
     up)
       echo "🚀 正在部署 stack: $STACK_NAME"
       pulumi up --yes
+      ansible-playbook -i scripts/dynamic_inventory.py ansible/playbooks/common_setup.yml -D
       ;;
     down)
       echo "⚠️ 先执行 destroy 确保资源干净"

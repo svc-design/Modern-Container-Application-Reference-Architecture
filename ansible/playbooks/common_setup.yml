@@ -1,0 +1,6 @@
+- name: Run infrastructure setup
+  hosts: all
+  become: yes
+  gather_facts: yes
+  roles:
+    - vhosts/common

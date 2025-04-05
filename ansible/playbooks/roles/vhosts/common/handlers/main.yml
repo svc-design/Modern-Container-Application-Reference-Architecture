@@ -1,0 +1,10 @@
+---
+- name: Restart logrotate service
+  service:
+    name: logrotate
+    state: restarted
+
+- name: Restart systemd-journald service
+  service:
+    name: systemd-journald
+    state: restarted

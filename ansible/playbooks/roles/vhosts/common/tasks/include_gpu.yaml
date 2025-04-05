@@ -1,0 +1,17 @@
+- name: Add NVIDIA repository
+  shell: |
+    add-apt-repository -y ppa:graphics-drivers
+    curl -s -L https://nvidia.github.io/nvidia-container-runtime/gpgkey | apt-key add -
+    distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+    curl -s -L https://nvidia.github.io/nvidia-container-runtime/$distribution/nvidia-container-runtime.list | tee /etc/apt/sources.list.d/nvidia-container-runtime.list
+    apt-get update
+
+- name: Install NVIDIA driver and container runtime
+  apt:
+    name: 
+      - nvidia-modprobe
+      - nvidia-driver-535
+      - nvidia-headless-535
+      - nvidia-container-runtime
+    state: present
+    update_cache: yes

@@ -1,0 +1,23 @@
+/var/log/syslog
+/var/log/mail*       # 包括所有以 mail 开头的日志文件
+/var/log/daemon.log
+/var/log/kern.log
+/var/log/auth.log
+/var/log/user.log
+/var/log/lpr.log
+/var/log/cron.log
+/var/log/debug
+/var/log/messages
+{
+    rotate {{ rsyslog_log_rotation.rotate_count }}
+    {{ rsyslog_log_rotation.rotate_frequency }}
+    missingok
+    notifempty
+    compress
+    delaycompress
+    sharedscripts
+    postrotate
+        /usr/lib/rsyslog/rsyslog-rotate
+    endscript
+    maxsize {{ rsyslog_log_rotation.max_log_size }}
+}
