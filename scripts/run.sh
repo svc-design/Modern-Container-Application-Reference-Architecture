@@ -17,16 +17,16 @@ ANSIBLE_DIR="${PROJECT_ROOT}/ansible"
 # ================================
 # ✅ 自动加载 Pulumi passphrase
 # ================================
-#export PULUMI_CONFIG_PASSPHRASE_FILE="${PULUMI_CONFIG_PASSPHRASE_FILE:-$HOME/.pulumi-passphrase}"
-#
-#if [ ! -f "$PULUMI_CONFIG_PASSPHRASE_FILE" ]; then
-#  echo "⚠️  未检测到 Pulumi 密码文件: $PULUMI_CONFIG_PASSPHRASE_FILE"
-#  echo "请先创建该文件并写入 passphrase，例如："
-#  echo "  echo 'changeme123' > ~/.pulumi-passphrase && chmod 600 ~/.pulumi-passphrase"
-#  exit 1
-#else
-#  echo "🔐 Pulumi 密码文件已加载: $PULUMI_CONFIG_PASSPHRASE_FILE"
-#fi
+export PULUMI_CONFIG_PASSPHRASE_FILE="${PULUMI_CONFIG_PASSPHRASE_FILE:-$HOME/.pulumi-passphrase}"
+
+if [ ! -f "$PULUMI_CONFIG_PASSPHRASE_FILE" ]; then
+  echo "⚠️  未检测到 Pulumi 密码文件: $PULUMI_CONFIG_PASSPHRASE_FILE"
+  echo "请先创建该文件并写入 passphrase，例如："
+  echo "  echo 'changeme123' > ~/.pulumi-passphrase && chmod 600 ~/.pulumi-passphrase"
+  exit 1
+else
+  echo "🔐 Pulumi 密码文件已加载: $PULUMI_CONFIG_PASSPHRASE_FILE"
+fi
 
 # ========== 参数解析 ==========
 if [[ -n "$1" && "$1" != up && "$1" != down && "$1" != delete && "$1" != export && "$1" != import && "$1" != init && "$1" != ansible && "$1" != help ]]; then

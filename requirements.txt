@@ -5,3 +5,4 @@ pulumi-gcp
 pulumi-azure-native
 pulumi-alicloud
 PyYAML
+jinja2

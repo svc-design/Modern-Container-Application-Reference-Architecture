@@ -43,6 +43,7 @@ coverage.xml
 
 # Ansible
 *.retry
+hosts/inventory
 
 # Installer artifacts
 offline-iac/
