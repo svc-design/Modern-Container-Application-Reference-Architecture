@@ -13,7 +13,7 @@ instances:
 
   - name: slave-1
     ami: ubuntu-24.04
-    type: t3.nano
+    type: t3.small
     sg_names: ["dev-vpc-2-default-inbound"]
     disk_size_gb: 20
     subnet: dev-vpc-2-public-subnet-1
@@ -25,9 +25,9 @@ instances:
 
   - name: agent-1
     ami: ubuntu-24.04
-    type: t3.nano
+    type: t3.micro
     disk_size_gb: 20
-    subnet: dev-vpc-1-private-subnet-1
+    subnet: dev-vpc-1-public-subnet-1
     sg_names: ["dev-vpc-1-default-inbound"]
     lifecycle: spot
     ttl: 1h
@@ -37,9 +37,9 @@ instances:
 
   - name: agent-2
     ami: ubuntu-24.04
-    type: t3.nano
+    type: t3.micro
     disk_size_gb: 20
-    subnet: dev-vpc-2-private-subnet-1
+    subnet: dev-vpc-2-public-subnet-1
     sg_names: ["dev-vpc-2-default-inbound"]
     lifecycle: spot
     ttl: 1h

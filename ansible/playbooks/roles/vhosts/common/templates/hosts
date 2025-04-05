@@ -1,0 +1,26 @@
+# IPv4 localhost configuration
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+
+# IPv6 localhost configuration
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+# IPv6 Local addresses (desirable for IPv6 capable hosts)
+::1         ip6-localhost ip6-loopback
+fe00::0     ip6-localnet
+ff00::0     ip6-mcastprefix
+ff02::1     ip6-allnodes
+ff02::2     ip6-allrouters
+
+{{ ansible_default_ipv4.address }} {{ inventory_hostname }}
+
+{% if enable_all_hosts_update is defined and enable_all_hosts_update %}
+  {% for item in groups['all'] %}
+    {{ hostvars[item]['ansible_host'] }} {{ item }}
+  {% endfor %}
+{% endif %}
+
+{% if extra_domain is defined %}
+{% for ip, domain_name in extra_domain.items() %}
+{{ ip }}  {{ domain_name }}
+{% endfor %}
+{% endif %}

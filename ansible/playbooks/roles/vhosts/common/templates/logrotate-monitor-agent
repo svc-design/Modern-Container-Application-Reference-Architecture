@@ -1,0 +1,8 @@
+/var/log/prometheus-agent.log
+/var/log/prometheus-transfer.log {
+  rotate 12
+  monthly
+  compress
+  missingok
+  notifempty
+}

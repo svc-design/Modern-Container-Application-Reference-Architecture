@@ -1,0 +1,5 @@
+[Journal]
+SystemMaxUse={{ journald_log_rotation.system_max_use }}     # 设置最大日志使用空间
+SystemMaxFiles={{ journald_log_rotation.max_files }}        # 设置最大日志文件数
+MaxFileSec={{ journald_log_rotation.max_file_sec }}         # 设置日志文件的轮换频率（例如 weekly, daily, hourly）
+RuntimeMaxUse={{ journald_log_rotation.runtime_max_use }}   # 设置运行时日志最大使用空间
