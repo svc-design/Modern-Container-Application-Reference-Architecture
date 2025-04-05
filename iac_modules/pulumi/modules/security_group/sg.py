@@ -3,7 +3,7 @@ from pulumi_aws.ec2 import SecurityGroup, SecurityGroupIngressArgs, SecurityGrou
 
 def create_security_group(vpc_id: str, rule_config: dict) -> SecurityGroup:
     """
-    创建 Security Group，支持 ingress/egress 配置
+    创建 Security Group，支持 ingress/egress 配置，包括 TCP, UDP, ICMP
     :param vpc_id: 目标 VPC ID
     :param rule_config: 单个 firewall_rules 的字典配置
     :return: 创建的 SecurityGroup 资源对象
@@ -14,16 +14,28 @@ def create_security_group(vpc_id: str, rule_config: dict) -> SecurityGroup:
     egress_ranges = rule_config.get("egress_ranges", ["0.0.0.0/0"])
 
     for allow_rule in rule_config.get("allow", []):
-        protocol = allow_rule.get("protocol", "tcp")
+        protocol = allow_rule.get("protocol", "tcp").lower()
+        ports = allow_rule.get("ports", [])
 
-        for port in allow_rule.get("ports", []):
-            if isinstance(port, str) and port in ["*", "any", "all"]:
-                from_port = 0
-                to_port = 65535
+        # ICMP 无需端口处理
+        if protocol == "icmp":
+            ingress_rules.append(
+                SecurityGroupIngressArgs(
+                    protocol="icmp",
+                    from_port=-1,
+                    to_port=-1,
+                    cidr_blocks=source_ranges
+                )
+            )
+            continue
+
+        # 处理 TCP/UDP 等需要端口的协议
+        for port in ports:
+            if isinstance(port, str) and port.lower() in ["*", "any", "all"]:
+                from_port, to_port = 0, 65535
             else:
                 port = int(port)
-                from_port = port
-                to_port = port
+                from_port = to_port = port
 
             ingress_rules.append(
                 SecurityGroupIngressArgs(
@@ -34,6 +46,7 @@ def create_security_group(vpc_id: str, rule_config: dict) -> SecurityGroup:
                 )
             )
 
+    # 创建 Security Group
     sg = aws.ec2.SecurityGroup(
         rule_config.get("name", "default-sg"),
         vpc_id=vpc_id,
@@ -51,4 +64,3 @@ def create_security_group(vpc_id: str, rule_config: dict) -> SecurityGroup:
     )
 
     return sg
-

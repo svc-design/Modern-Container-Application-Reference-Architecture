@@ -3,7 +3,7 @@ import pulumi
 import pulumi_aws as aws
 from .utils import resolve_ami
 
-def create_instances(instances_config, subnets_dict, sg_resource, key_name, depends_on=None):
+def create_instances(instances_config, subnets_dict, sg_map: dict, key_name, depends_on=None):
     outputs = {}
 
     for instance_cfg in instances_config:
@@ -12,14 +12,11 @@ def create_instances(instances_config, subnets_dict, sg_resource, key_name, depe
         subnet = subnets_dict[subnet_name]
         subnet_id = subnet.id
 
-        # ✅ 自动解析 AMI（关键词或 AMI ID）
         region = aws.config.region
         ami = resolve_ami(instance_cfg["ami"], region)
-
         instance_type = instance_cfg["type"]
         disk_size = instance_cfg["disk_size_gb"]
 
-        # ✅ 可选字段解析
         lifecycle = instance_cfg.get("lifecycle", "ondemand")
         ttl = instance_cfg.get("ttl", "none")
         env = instance_cfg.get("env", "dev")
@@ -28,7 +25,7 @@ def create_instances(instances_config, subnets_dict, sg_resource, key_name, depe
         private_ip = instance_cfg.get("private_ip", None)
         associate_public_ip = instance_cfg.get("associate_public_ip", True)
 
-        # ✅ User data 读取（可选）
+        # ✅ User data
         user_data = None
         if user_data_path:
             expanded_path = os.path.expanduser(user_data_path)
@@ -38,7 +35,6 @@ def create_instances(instances_config, subnets_dict, sg_resource, key_name, depe
             else:
                 pulumi.log.warn(f"⚠️ user_data 文件不存在: {expanded_path}")
 
-        # ✅ 标签定义
         tags = {
             "Name": name,
             "Lifecycle": lifecycle,
@@ -58,14 +54,24 @@ def create_instances(instances_config, subnets_dict, sg_resource, key_name, depe
                 )
             )
 
-        # ✅ 构建依赖项（必须是 Resource 对象）
+        # ✅ 解析 security group ids（通过名字）
+        sg_names = instance_cfg.get("sg_names", [])
+        security_group_ids = []
+        for sg_name in sg_names:
+            sg = sg_map.get(sg_name)
+            if sg:
+                security_group_ids.append(sg.id)
+            else:
+                pulumi.log.warn(f"⚠️ 实例 '{name}' 引用的 SG '{sg_name}' 未找到，已跳过")
+
+        # ✅ 构建依赖项
         resource_dependencies = [subnet]
-        if isinstance(sg_resource, pulumi.Resource):
-            resource_dependencies.append(sg_resource)
+        for sg in security_group_ids:
+            resource_dependencies.append(sg_map.get(sg_name))
         if depends_on:
             resource_dependencies.extend(depends_on)
 
-        # ✅ 创建 EC2 实例
+        # ✅ 创建实例
         ec2 = aws.ec2.Instance(name,
             ami=ami,
             instance_type=instance_type,
@@ -73,7 +79,7 @@ def create_instances(instances_config, subnets_dict, sg_resource, key_name, depe
             subnet_id=subnet_id,
             private_ip=private_ip,
             associate_public_ip_address=associate_public_ip,
-            vpc_security_group_ids=[sg_resource.id] if sg_resource else [],
+            vpc_security_group_ids=security_group_ids,
             user_data=user_data,
             root_block_device={
                 "volume_size": disk_size,
@@ -84,7 +90,6 @@ def create_instances(instances_config, subnets_dict, sg_resource, key_name, depe
             opts=pulumi.ResourceOptions(depends_on=resource_dependencies)
         )
 
-        # ✅ 输出信息收集
         outputs[name + "_id"] = ec2.id
         outputs[name + "_public_ip"] = ec2.public_ip
         outputs[name + "_private_ip"] = ec2.private_ip

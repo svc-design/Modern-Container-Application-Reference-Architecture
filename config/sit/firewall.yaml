@@ -1,7 +1,33 @@
 firewall_rules:
-  - name: allow-ssh-web
+  - name: allow-web-inbound
+    enabled: true
+    vpc_name: dev-vpc-1
     source_ranges: ["0.0.0.0/0"]
     egress_ranges: ["10.0.0.0/16"]
     allow:
       - protocol: tcp
-        ports: ["22", "80", "443"]
+        ports: ["80", "443"]
+
+  - name: dev-vpc-1-default-inbound
+    enabled: true
+    vpc_name: dev-vpc-1
+    description: Allow ICMP, SSH, and VXLAN from all sources
+    source_ranges: ["0.0.0.0/0"]
+    allow:
+      - protocol: icmp
+      - protocol: tcp
+        ports: ["22"]
+      - protocol: udp
+        ports: ["4789"]
+
+  - name: dev-vpc-2-default-inbound
+    enabled: true
+    vpc_name: dev-vpc-2
+    description: Allow ICMP, SSH, and VXLAN from all sources
+    source_ranges: ["0.0.0.0/0"]
+    allow:
+      - protocol: icmp
+      - protocol: tcp
+        ports: ["22"]
+      - protocol: udp
+        ports: ["4789"]
