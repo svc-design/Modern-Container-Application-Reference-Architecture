@@ -1,0 +1,61 @@
+# 基础网络参数
+wg_network: 10.100.0.0/24
+bridge_network: 172.16.0.0/16
+vxlan_id: 100
+hub_port: 51820
+
+# 全局功能开关
+features:
+  enable_gretap: true            # 是否开启 gretap 桥接（站点接入 Hub）
+  enable_vxlan_between_hubs: true  # 是否开启 Hub 之间的 VXLAN Mesh
+  enable_vless: true             # 是否通过 VLESS 中转 WG 流量
+  enable_multi_hub: true         # 是否支持多 Hub 架构（false 则为单 Hub star 架构）
+  only_wireguard: false          # 若为 true，仅使用 WireGuard 点对点，忽略 gretap/vxlan
+
+# WireGuard Hub 节点配置
+hubs:
+  - name: hub1
+    wg_ip: 10.100.0.1
+    br_ip: 172.16.0.1
+    public_ip: hub1.example.com
+
+  - name: hub2
+    wg_ip: 10.100.1.1
+    br_ip: 172.16.1.1
+    public_ip: hub2.example.com
+
+# 各个站点定义
+sites:
+  - name: site_a
+    wg_ip: 10.100.0.2
+    br_ip: 172.16.0.2
+    hub: hub1
+    public_ip: a.example.com
+    vless:
+      enabled: true
+      endpoint: vless-a.example.com
+      uuid: "11111111-1111-1111-1111-111111111111"
+      transport: ws
+      tls: true
+      path: /wg
+
+  - name: site_b
+    wg_ip: 10.100.0.3
+    br_ip: 172.16.0.3
+    hub: hub1
+    public_ip: b.example.com
+    vless:
+      enabled: false  # 此节点不通过 VLESS，直接访问 Hub
+
+  - name: site_c
+    wg_ip: 10.100.1.2
+    br_ip: 172.16.1.2
+    hub: hub2
+    public_ip: c.example.com
+    vless:
+      enabled: true
+      endpoint: vless-c.example.com
+      uuid: "33333333-3333-3333-3333-333333333333"
+      transport: ws
+      tls: true
+      path: /xray
