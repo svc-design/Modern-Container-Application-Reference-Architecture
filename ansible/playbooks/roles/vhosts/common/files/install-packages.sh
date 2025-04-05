@@ -2,4 +2,4 @@
 
 export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update
-sudo apt-get install -y vim ping
+sudo apt-get install -y vim inetutils-ping
