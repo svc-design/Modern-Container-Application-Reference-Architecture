@@ -1,0 +1,58 @@
+---
+- name: 加载 overlay 配置（标准 YAML）
+  set_fact:
+    overlay_data: "{{ lookup('file', overlay_config_path) | from_yaml }}"
+
+- name: 加载密钥配置（支持 !vault）
+  include_vars:
+    file: "{{ overlay_keys_path }}"
+    name: overlay_keys
+
+- name: 提取当前节点信息（作为 current）
+  set_fact:
+    current_node: >-
+      {{ (overlay_data.sites + overlay_data.hubs)
+         | selectattr('name', 'equalto', inventory_hostname)
+         | list | first }}
+    current_key: >-
+      {{ overlay_keys['keys']
+         | selectattr('name', 'equalto', inventory_hostname)
+         | list | first }}
+
+- name: 提取对端 peer 节点列表
+  set_fact:
+    peer_node_list: "{{ (overlay_data.sites + overlay_data.hubs) | selectattr('name', 'equalto', current_node.wireguard_peer) | list }}"
+    peer_key_list: "{{ overlay_keys['keys'] | selectattr('name', 'equalto', current_node.wireguard_peer) | list }}"
+
+- name: 校验 wireguard_peer 是否匹配成功
+  fail:
+    msg: "未找到对端节点 '{{ current_node.wireguard_peer }}' 或其密钥"
+  when: peer_node_list | length == 0 or peer_key_list | length == 0
+
+- name: 设置对端节点与密钥
+  set_fact:
+    peer_nodes: "{{ peer_node_list }}"
+    peer_keys: "{{ peer_key_list }}"
+
+- name: 提取最终配置变量（私钥、公钥、端口等）
+  set_fact:
+    wg_port: "{{ wg_port }}"
+    current_wg_ip: "{{ current_node.wg_ip }}"
+    current_private_key: "{{ current_key.private_key }}"
+    current_allowed_ips: "{{ current_node.allowed_ips }}"
+    peer_public_key: "{{ peer_keys[0].public_key }}"
+    peer_endpoint: "{{ peer_nodes[0].public_ip }}:{{ overlay_data.hub_port | default(wg_port) }}"
+
+- name: 渲染 wg0.conf
+  template:
+    src: wg0.conf.j2
+    dest: /etc/wireguard/wg0.conf
+    mode: '0600'
+  become: true
+
+- name: 启用并启动 wg-quick@wg0
+  systemd:
+    name: wg-quick@wg0
+    enabled: true
+    state: started
+  become: true

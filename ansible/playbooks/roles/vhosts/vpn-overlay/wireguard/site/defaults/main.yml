@@ -1,0 +1,8 @@
+wg_interface: "wg0"
+
+# 默认配置文件路径，可在 playbook 中覆盖
+overlay_config_path: "{{ playbook_dir }}/../../config/sit/vpn-overlay.yaml"
+overlay_keys_path: "{{ playbook_dir }}/../../config/sit/vpn-keys.yaml"
+
+# WireGuard 默认端口（若 overlay_data.hub_port 未定义）
+wg_port: "51820"

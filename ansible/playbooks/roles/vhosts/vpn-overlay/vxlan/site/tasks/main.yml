@@ -1,0 +1,54 @@
+---
+- name: Load site overlay config
+  set_fact:
+    overlay_data: "{{ lookup('file', overlay_config_path) | from_yaml }}"
+
+- name: Select current site from config
+  set_fact:
+    current_site: "{{ overlay_data.sites | selectattr('name', 'equalto', inventory_hostname) | list | first }}"
+
+- name: Fail if no matching site found
+  fail:
+    msg: "当前主机 {{ inventory_hostname }} 未在 config 中定义"
+  when: current_site is not defined
+
+- name: Select first hub as default
+  set_fact:
+    selected_hub: "{{ overlay_data.hubs[0] }}"
+
+- name: Set VXLAN parameters
+  set_fact:
+    vxlan_dev_if: "{{ current_site.interface}}"
+    vxlan_local_ip: "{{ current_site.local_ip }}"
+    vxlan_remote_ip: "{{ current_site.remote_ip }}"
+    vxlan_br_ip: "{{ current_site.br_ip }}"
+    vxlan_cidr_suffix: "{{ overlay_data.vxlan_cidr_suffix | default(16) }}"
+    vxlan_vni: "{{ overlay_data.vxlan_id | default(100) }}"
+
+- name: 使用 rsync 分发 VXLAN 脚本
+  synchronize:
+    src: "files/setup_sit_vxlan.sh"
+    dest: /tmp/setup_sit_vxlan.sh
+    mode: push
+
+- name: 移动脚本并赋权到 /usr/local/bin
+  shell: |
+    mv /tmp/setup_sit_vxlan.sh /usr/local/bin/setup_sit_vxlan.sh
+    chmod +x /usr/local/bin/setup_sit_vxlan.sh
+  become: true
+
+- name: Render systemd unit for VXLAN
+  template:
+    src: vxlan-setup.service.j2
+    dest: /etc/systemd/system/vxlan-setup.service
+    mode: '0644'
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: true
+
+- name: Enable and start VXLAN overlay setup
+  systemd:
+    name: vxlan-setup
+    enabled: true
+    state: started

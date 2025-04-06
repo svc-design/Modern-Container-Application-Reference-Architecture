@@ -1,0 +1,7 @@
+---
+# Default VXLAN settings for site nodes
+vxlan_dev_if: wg0
+vxlan_vni: 100
+vxlan_cidr_suffix: 16
+overlay_config_path: config/sit/vpn-overlay.yaml
+

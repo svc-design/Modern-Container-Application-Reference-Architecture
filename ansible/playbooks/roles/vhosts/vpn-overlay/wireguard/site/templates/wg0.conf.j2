@@ -1,0 +1,12 @@
+[Interface]
+PrivateKey = {{ current_private_key }}
+Address = {{ current_wg_ip }}/32
+ListenPort = {{ wg_port }}
+DNS = 8.8.8.8
+MTU = 1400
+
+[Peer]
+PublicKey = {{ peer_public_key }}
+AllowedIPs = {{ current_allowed_ips }}
+Endpoint = {{ peer_endpoint }}
+PersistentKeepalive = 25
