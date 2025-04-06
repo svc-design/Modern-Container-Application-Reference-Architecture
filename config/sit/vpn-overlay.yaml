@@ -14,10 +14,10 @@ features:
 
 # WireGuard Hub 节点配置
 hubs:
-  - name: hub1
-    wg_ip: 10.100.0.1
+  - name: hub-1
+    wg_ip: 10.255.0.1
     br_ip: 172.16.0.1
-    public_ip: hub1.example.com
+    public_ip: global-proxy.onwalk.net
 
   - name: hub2
     wg_ip: 10.100.1.1
@@ -28,8 +28,10 @@ hubs:
 sites:
   - name: master-1
     interface: ens5
+    allowed_ips: "10.255.0.0/16,10.253.0.0/16"
     wireguard_peer: hub-1
-    br_ip: 10.253.253.2
+    wg_ip: 10.255.0.200
+    br_ip: 172.16.0.2
     local_ip: 10.255.0.200
     remote_ip: 10.255.0.100
     vless:
@@ -42,7 +44,9 @@ sites:
   - name: slave-1
     interface: ens5
     wireguard_peer: hub-1
-    br_ip: 10.253.253.3
+    allowed_ips: "10.255.0.0/16,10.253.0.0/16"
+    br_ip: 172.16.0.2
+    wg_ip: 10.255.0.100
     local_ip: 10.255.0.100
     remote_ip: 10.255.0.200
     vless:

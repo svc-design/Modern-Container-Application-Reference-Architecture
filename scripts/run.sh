@@ -262,12 +262,14 @@ pulumi_run() {
 
 # ========== 执行 Ansible ==========
 run_ansible() {
-  if [ ! -f scripts/inventory.py ]; then
-    echo "❌ 未找到 scripts/inventory.py"
+  if [ ! -f scripts/dynamic_inventory.py ]; then
+    echo "❌ 未找到 scripts/dynamic_inventory.py"
     exit 1
   fi
   echo "🧪 执行 Ansible Playbook"
-  ansible-playbook -i scripts/inventory.py "$ANSIBLE_DIR/playbooks/setup.yml"
+    ansible-playbook -i scripts/dynamic_inventory.py ansible/playbooks/common_setup.yml -D
+    ansible-playbook -i scripts/dynamic_inventory.py ansible/playbooks/vpn-wireguard-site.yaml -D -l slave-1,master-1
+    ansible-playbook -i scripts/dynamic_inventory.py ansible/playbooks/vpn-overlay.yaml -D -l slave-1,master-1
 }
 
 # ========== 分发 ==========
