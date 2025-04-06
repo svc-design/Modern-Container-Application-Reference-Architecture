@@ -1,0 +1,10 @@
+[Interface]
+PrivateKey = {{ current_key.private_key }}
+Address = {{ current_wg_ip }}/32
+ListenPort = {{ overlay_data.hub_port }}
+
+[Peer]
+PublicKey = {{ peer_key.public_key }}
+AllowedIPs = {{ peer_allowed_ips }}
+Endpoint = {{ peer_endpoint }}
+PersistentKeepalive = 25

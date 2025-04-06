@@ -28,6 +28,7 @@ hubs:
 sites:
   - name: master-1
     interface: ens5
+    wireguard_peer: hub-1
     br_ip: 10.253.253.2
     local_ip: 10.255.0.200
     remote_ip: 10.255.0.100
@@ -40,6 +41,7 @@ sites:
 
   - name: slave-1
     interface: ens5
+    wireguard_peer: hub-1
     br_ip: 10.253.253.3
     local_ip: 10.255.0.100
     remote_ip: 10.255.0.200

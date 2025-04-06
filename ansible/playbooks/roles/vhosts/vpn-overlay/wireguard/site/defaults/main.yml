@@ -1,0 +1,3 @@
+wg_config_path: "/etc/wireguard/wg0.conf"
+wg_interface: "wg0"
+wg_port: "{{ overlay_data.hub_port | default(51820) }}"
