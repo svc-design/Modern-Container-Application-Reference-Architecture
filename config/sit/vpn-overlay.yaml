@@ -45,7 +45,7 @@ sites:
     interface: ens5
     wireguard_peer: hub-1
     allowed_ips: "10.255.0.0/16,10.253.0.0/16"
-    br_ip: 172.16.0.2
+    br_ip: 172.16.0.3
     wg_ip: 10.255.0.100
     local_ip: 10.255.0.100
     remote_ip: 10.255.0.200
