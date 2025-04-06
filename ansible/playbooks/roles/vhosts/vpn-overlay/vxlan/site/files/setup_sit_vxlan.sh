@@ -1,6 +1,6 @@
 #!/bin/bash
-# 安全增强版 VXLAN Overlay 脚本（支持 wg0 作为通道设备）
-# 用法： ./setup_sit_vxlan.sh <dev_if> <local_ip> <remote_ip> <br0_ip> [cidr_suffix] [vxlan_id] [mtu]
+# 安全增强版 VXLAN Overlay 脚本（支持 wg0 作为通道设备 + 可选公网 DNAT 映射）
+# 用法： ./setup_sit_vxlan.sh <dev_if> <local_ip> <remote_ip> <br0_ip> [cidr_suffix] [vxlan_id] [mtu] [expose_port]
 
 set -e
 
@@ -11,9 +11,10 @@ BRIDGE_IP="$4"
 CIDR_SUFFIX="${5:-16}"
 VNI="${6:-100}"
 MTU="${7:-1400}"
+EXPOSE_PORT="${8:-443}"
 
 if [[ -z "$DEV_IF" || -z "$LOCAL_IP" || -z "$REMOTE_IP" || -z "$BRIDGE_IP" ]]; then
-  echo "Usage: $0 <dev_if> <local_ip> <remote_ip> <br0_ip> [cidr_suffix] [vxlan_id] [mtu]"
+  echo "Usage: $0 <dev_if> <local_ip> <remote_ip> <br0_ip> [cidr_suffix] [vxlan_id] [mtu] [expose_port]"
   exit 1
 fi
 
@@ -63,9 +64,13 @@ sysctl -w net.ipv4.ip_forward=1
 iptables -t nat -C POSTROUTING -s "$SUBNET" -o "$DEV_IF" -j MASQUERADE 2>/dev/null || \
 iptables -t nat -A POSTROUTING -s "$SUBNET" -o "$DEV_IF" -j MASQUERADE
 
-# 尝试激活邻居学习
-REMOTE_BR_IP="172.16.0.$(( $(echo "$BRIDGE_IP" | awk -F. '{print $4}') == 2 ? 3 : 2 ))"
-ping -c 1 "$REMOTE_BR_IP" || true
+# ⚠️ 可选：仅在 EXPOSE_PORT 被定义时启用 DNAT 公网端口映射
+if [[ -n "$EXPOSE_PORT" ]]; then
+  echo "🌐 添加 DNAT 映射规则：公网:$EXPOSE_PORT → ${BRIDGE_IP}:443"
+
+  iptables -t nat -C PREROUTING -p tcp -m tcp --dport "$EXPOSE_PORT" -j DNAT --to-destination "${BRIDGE_IP}:443" 2>/dev/null || \
+  iptables -t nat -A PREROUTING -p tcp -m tcp --dport "$EXPOSE_PORT" -j DNAT --to-destination "${BRIDGE_IP}:443"
+fi
 
 # 展示结果
 echo ""
@@ -73,4 +78,6 @@ echo "✅ VXLAN Overlay 已建立"
 echo "  - bridge: $BR_IF ($BRIDGE_CIDR)"
 echo "  - vxlan: $VXLAN_IF ($LOCAL_IP ⇄ $REMOTE_IP, id=$VNI, mtu=$MTU)"
 echo "  - SNAT: $SUBNET → $DEV_IF"
-
+if [[ -n "$EXPOSE_PORT" ]]; then
+echo "  - DNAT: 公网:$EXPOSE_PORT → ${BRIDGE_IP}:443"
+fi
