@@ -1,6 +1,44 @@
 ---
-- name: Run install_k3s.sh
-  script: install_k3s.sh
+- name: Ensure remote tmp directory exists
+  file:
+    path: /tmp/ansible-{{ ansible_user }}
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Sync setup_k3s.sh to remote
+  synchronize:
+    src: files/setup_k3s.sh
+    dest: /tmp/ansible-{{ ansible_user }}/setup_k3s.sh
+    mode: push
+  delegate_to: localhost
+  become: false
+
+- name: Sync set-registry.sh to remote
+  synchronize:
+    src: files/set-registry.sh
+    dest: /tmp/ansible-{{ ansible_user }}/set-registry.sh
+    mode: push
+  delegate_to: localhost
+  become: false
+
+- name: Ensure setup_k3s.sh is executable
+  file:
+    path: /tmp/ansible-{{ ansible_user }}/setup_k3s.sh
+    mode: '0755'
+
+- name: Ensure set-registry.sh is executable
+  file:
+    path: /tmp/ansible-{{ ansible_user }}/set-registry.sh
+    mode: '0755'
+
+- name: Run setup_k3s.sh
+  command: ./setup_k3s.sh
+  args:
+    chdir: /tmp/ansible-{{ ansible_user }}
 
 - name: Run set-registry.sh
-  script: set-registry.sh
+  command: ./set-registry.sh
+  args:
+    chdir: /tmp/ansible-{{ ansible_user }}
