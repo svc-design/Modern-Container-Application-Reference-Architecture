@@ -6,8 +6,10 @@ keys:
     private_key: <master_private_key>
     public_key: <master_public_key>
 2. 使用 ansible-vault encrypt_string 加密 private_key
-bash
-ansible-vault encrypt_string 'my-secret-private-key' --name 'private_key'
+
+- ansible-vault encrypt_string 'private-key-xxxx' --name 'private_key'
+- ansible-vault encrypt_string 'public_key-xxxx' --name 'public_key'
+
 示例输出（加密后是 YAML 结构）：
 
 yaml
