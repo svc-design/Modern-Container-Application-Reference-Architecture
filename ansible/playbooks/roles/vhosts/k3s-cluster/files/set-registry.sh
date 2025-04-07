@@ -87,6 +87,7 @@ if [ ! -f "ssl_certificates.tar.gz" ]; then
 else
   if [ -f "ssl_certificates.tar.gz" ]; then
     mkdir -p "$CERT_DIR"
+    tar -xvpf ssl_certificates.tar.gz
     tar -xvpf ssl_certificates.tar.gz -C "$CERT_DIR"
     echo "✅ 证书已解压至: $CERT_DIR"
  fi
