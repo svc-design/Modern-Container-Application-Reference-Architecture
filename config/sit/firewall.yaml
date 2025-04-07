@@ -19,6 +19,8 @@ firewall_rules:
         ports: ["22"]
       - protocol: udp
         ports: ["4789"]
+      - protocol: udp
+        ports: ["51820"]
 
   - name: dev-vpc-2-default-inbound
     enabled: true
@@ -31,3 +33,5 @@ firewall_rules:
         ports: ["22"]
       - protocol: udp
         ports: ["4789"]
+      - protocol: udp
+        ports: ["51820"]

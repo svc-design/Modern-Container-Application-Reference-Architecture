@@ -28,7 +28,7 @@ hubs:
 sites:
   - name: master-1
     interface: ens5
-    allowed_ips: "172.16.0.0/16,10.253.0.0/16"
+    allowed_ips: "172.16.0.0/16"
     wireguard_peer: hub-1
     br_ip: 10.253.253.2
     wg_ip: 172.16.0.10
@@ -44,7 +44,7 @@ sites:
   - name: slave-1
     interface: ens5
     wireguard_peer: hub-1
-    allowed_ips: "172.16.0.0/16,10.253.0.0/16"
+    allowed_ips: "172.16.0.0/16"
     br_ip: 10.253.253.3
     wg_ip: 172.16.0.11
     local_ip: 172.16.0.11
