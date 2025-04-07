@@ -10,9 +10,6 @@
 - name: Update /etc/hosts
   template: src=templates/hosts dest=/etc/hosts owner=root group=root mode=0644 force=yes unsafe_writes=yes
 
-- name: Run secure_ssh.sh script
-  script: files/secure_ssh.sh
-
 - name: Set systemd-resolved and set static DNS
   include_tasks: setup-systemd-resolved.yml
 
