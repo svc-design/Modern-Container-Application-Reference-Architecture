@@ -13,8 +13,8 @@
 - name: Run secure_ssh.sh script
   script: files/secure_ssh.sh
 
-- name: Disable systemd-resolved and set static DNS
-  include_tasks: disable-systemd-resolved.yml
+- name: Set systemd-resolved and set static DNS
+  include_tasks: setup-systemd-resolved.yml
 
 - name: Install packages
   script: files/install-packages.sh
