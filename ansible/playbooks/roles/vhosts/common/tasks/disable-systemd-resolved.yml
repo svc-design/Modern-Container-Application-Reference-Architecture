@@ -1,0 +1,27 @@
+- name: Stop systemd-resolved
+  systemd:
+    name: systemd-resolved
+    state: stopped
+    enabled: no
+
+- name: Remove /etc/resolv.conf if it's a symlink
+  file:
+    path: /etc/resolv.conf
+    state: absent
+    force: true
+
+- name: Create static /etc/resolv.conf
+  copy:
+    dest: /etc/resolv.conf
+    content: |
+      nameserver 8.8.8.8
+      nameserver 1.1.1.1
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Optionally make resolv.conf immutable to prevent changes
+  command: chattr +i /etc/resolv.conf
+  args:
+    warn: false
+  when: make_resolv_conf_immutable | default(false)
