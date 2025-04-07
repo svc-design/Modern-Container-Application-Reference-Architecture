@@ -1,0 +1,36 @@
+# playbooks/setup-systemd-resolved.yml
+- name: Ensure systemd-resolved is installed
+  package:
+    name: systemd-resolved
+    state: present
+
+- name: Enable and start systemd-resolved
+  systemd:
+    name: systemd-resolved
+    enabled: yes
+    state: started
+
+- name: Configure /etc/systemd/resolved.conf
+  ini_file:
+    path: /etc/systemd/resolved.conf
+    section: "Resolve"
+    option: "{{ item.option }}"
+    value: "{{ item.value }}"
+    mode: '0644'
+  loop:
+    - { option: "DNSStubListener", value: "no" }
+    - { option: "DNS", value: "" }
+    - { option: "FallbackDNS", value: "" }
+
+- name: Restart systemd-resolved
+  systemd:
+    name: systemd-resolved
+    state: restarted
+    daemon_reload: yes
+
+- name: Ensure /etc/resolv.conf points to /run/systemd/resolve/resolv.conf
+  file:
+    src: /run/systemd/resolve/resolv.conf
+    dest: /etc/resolv.conf
+    state: link
+    force: true
