@@ -1,0 +1,6 @@
+---
+- name: Run install_k3s.sh
+  script: install_k3s.sh
+
+- name: Run set-registry.sh
+  script: set-registry.sh
