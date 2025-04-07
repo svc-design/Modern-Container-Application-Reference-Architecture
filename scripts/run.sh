@@ -270,6 +270,7 @@ run_ansible() {
     ansible-playbook -i scripts/dynamic_inventory.py ansible/playbooks/common_setup.yml -D
     ansible-playbook -i scripts/dynamic_inventory.py ansible/playbooks/vpn-wireguard-site.yaml -D -l slave-1,master-1
     ansible-playbook -i scripts/dynamic_inventory.py ansible/playbooks/vpn-overlay.yaml -D -l slave-1,master-1
+    ansible-playbook -i scripts/dynamic_inventory.py ansible/playbooks/k3s-cluster.yaml -D -l slave-1,master-1
 }
 
 # ========== 分发 ==========
