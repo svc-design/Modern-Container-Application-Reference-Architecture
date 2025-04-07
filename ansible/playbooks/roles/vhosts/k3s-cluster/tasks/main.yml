@@ -1,6 +1,30 @@
 ---
+- name: Sync install_k3s.sh to remote
+  synchronize:
+    src: files/install_k3s.sh
+    dest: /tmp/install_k3s.sh
+    mode: push
+  delegate_to: localhost
+
+- name: Sync set-registry.sh to remote
+  synchronize:
+    src: files/set-registry.sh
+    dest: /tmp/set-registry.sh
+    mode: push
+  delegate_to: localhost
+
+- name: Ensure install_k3s.sh is executable
+  file:
+    path: /tmp/install_k3s.sh
+    mode: '0755'
+
+- name: Ensure set-registry.sh is executable
+  file:
+    path: /tmp/set-registry.sh
+    mode: '0755'
+
 - name: Run install_k3s.sh
-  script: install_k3s.sh
+  command: /tmp/install_k3s.sh
 
 - name: Run set-registry.sh
-  script: set-registry.sh
+  command: /tmp/set-registry.sh
