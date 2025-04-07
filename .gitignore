@@ -16,7 +16,6 @@ __pycache__/
 *.pyo
 
 # Pulumi
-Pulumi.*
 *.bak
 .pulumi/
 .pulumi-history/
