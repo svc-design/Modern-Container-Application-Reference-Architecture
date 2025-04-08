@@ -248,14 +248,31 @@ fi
 # --- K3s CA ---
 if [[ -S "/run/k3s/containerd/containerd.sock" ]]; then
   echo "🔧 检测到 K3s 环境，准备导入 CA..."
+  # === 配置参数 ===
+  REGISTRY_DOMAIN="kube.registry.local"
+  CA_CERT_PATH="/opt/registry/certs/ca.cert"
+  CONTAINERD_REGISTRY_DIR="/etc/rancher/k3s/registries.d/${REGISTRY_DOMAIN}"
 
-  K3S_CA_DIR="/etc/containerd/certs.d/${REGISTRY_DOMAIN}"
-  sudo mkdir -p "$K3S_CA_DIR"
-  sudo cp "$CA_CERT" "${K3S_CA_DIR}/ca.crt"
+  # === 配置 containerd registry CA ===
+  echo "[INFO] Configuring K3s containerd registry CA..."
+  sudo mkdir -p "${CONTAINERD_REGISTRY_DIR}"
 
-  echo "✅ 已导入 CA 到 K3s containerd: $K3S_CA_DIR"
+cat <<EOF | sudo tee "${CONTAINERD_REGISTRY_DIR}/hosts.toml"
+server = "https://${REGISTRY_DOMAIN}"
 
-  echo "🔁 重启 k3s..."
-  sudo systemctl restart k3s || echo "⚠️ K3s 重启失败，请手动确认"
+[host."https://${REGISTRY_DOMAIN}"]
+  ca = "${CONTAINERD_REGISTRY_DIR}/ca.crt"
+EOF
+
+  sudo cp "${CA_CERT_PATH}" "${CONTAINERD_REGISTRY_DIR}/ca.crt"
+
+  # === 重启 K3s 生效 ===
+  echo "[INFO] Restarting K3s..."
+  if systemctl list-units --type=service | grep -q 'k3s-agent'; then
+      sudo systemctl restart k3s-agent
+  else
+      sudo systemctl restart k3s
+  fi
+
+  echo "[✅ SUCCESS] K3s 已配置自定义 registry CA：${REGISTRY_DOMAIN}"
 fi
-
