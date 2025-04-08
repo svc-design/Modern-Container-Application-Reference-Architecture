@@ -247,32 +247,42 @@ fi
 
 # --- K3s CA ---
 if [[ -S "/run/k3s/containerd/containerd.sock" ]]; then
-  echo "🔧 检测到 K3s 环境，准备导入 CA..."
+  echo "🔧 检测到 K3s 环境，准备配置自定义 registry CA..."
+
   # === 配置参数 ===
   REGISTRY_DOMAIN="kube.registry.local"
+  REGISTRY_PORT="5000"
   CA_CERT_PATH="/opt/registry/certs/ca.cert"
-  CONTAINERD_REGISTRY_DIR="/etc/rancher/k3s/registries.d/${REGISTRY_DOMAIN}"
+  REGISTRIES_YAML="/etc/rancher/k3s/registries.yaml"
+  CA_DST_DIR="/etc/rancher/k3s/registries.d/${REGISTRY_DOMAIN}"
+  CA_DST_FILE="${CA_DST_DIR}/ca.crt"
 
-  # === 配置 containerd registry CA ===
-  echo "[INFO] Configuring K3s containerd registry CA..."
-  sudo mkdir -p "${CONTAINERD_REGISTRY_DIR}"
+  # === 准备目录并拷贝证书 ===
+  sudo mkdir -p "${CA_DST_DIR}"
+  sudo cp "${CA_CERT_PATH}" "${CA_DST_FILE}"
 
-cat <<EOF | sudo tee "${CONTAINERD_REGISTRY_DIR}/hosts.toml"
-server = "https://${REGISTRY_DOMAIN}"
+  # === 写入 registries.yaml ===
+  echo "[INFO] 写入 registries.yaml 配置..."
+  sudo tee "${REGISTRIES_YAML}" > /dev/null <<EOF
+mirrors:
+  "${REGISTRY_DOMAIN}:${REGISTRY_PORT}":
+    endpoint:
+      - "https://${REGISTRY_DOMAIN}:${REGISTRY_PORT}"
 
-[host."https://${REGISTRY_DOMAIN}"]
-  ca = "${CONTAINERD_REGISTRY_DIR}/ca.crt"
+configs:
+  "${REGISTRY_DOMAIN}:${REGISTRY_PORT}":
+    tls:
+      ca_file: "${CA_DST_FILE}"
 EOF
 
-  sudo cp "${CA_CERT_PATH}" "${CONTAINERD_REGISTRY_DIR}/ca.crt"
-
   # === 重启 K3s 生效 ===
-  echo "[INFO] Restarting K3s..."
+  echo "[INFO] 重启 K3s 服务..."
   if systemctl list-units --type=service | grep -q 'k3s-agent'; then
       sudo systemctl restart k3s-agent
   else
       sudo systemctl restart k3s
   fi
 
-  echo "[✅ SUCCESS] K3s 已配置自定义 registry CA：${REGISTRY_DOMAIN}"
+  echo "[✅ SUCCESS] 已配置自定义 registry 并导入 CA：https://${REGISTRY_DOMAIN}:${REGISTRY_PORT}"
 fi
+
