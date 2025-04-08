@@ -275,6 +275,18 @@ configs:
       ca_file: "${CA_DST_FILE}"
 EOF
 
+cat /etc/rancher/k3s/registries.yaml << EOF
+mirrors:
+  "kube.registry.local:5000":
+    endpoint:
+      - "http://kube.registry.local:5000"
+
+configs:
+  "kube.registry.local:5000":
+    tls:
+      insecure_skip_verify: true
+EOF
+      
   # === 重启 K3s 生效 ===
   echo "[INFO] 重启 K3s 服务..."
   if systemctl list-units --type=service | grep -q 'k3s-agent'; then
