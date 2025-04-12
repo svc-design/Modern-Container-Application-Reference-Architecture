@@ -1,0 +1,59 @@
+{
+  "log": {
+    "loglevel": "info"
+  },
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": []
+  },
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": {{ xray_tproxy_port }},
+      "protocol": "dokodemo-door",
+      "settings": {
+        "address": "{{ xray_remote_domain }}",
+        "port": {{ xray_main_port }},
+        "network": "udp"
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "{{ xray_remote_domain }}",
+            "port": {{ xray_main_port }},
+            "users": [
+              {
+                "id": "{{ xray_uuid }}",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "{{ xray_remote_domain }}",
+          "allowInsecure": false,
+          "fingerprint": "chrome"
+        }
+      },
+      "tag": "proxy"
+    },
+    {
+      "protocol": "freedom",
+      "tag": "direct"
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "block"
+    }
+  ]
+}

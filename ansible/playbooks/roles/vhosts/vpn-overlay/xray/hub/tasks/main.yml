@@ -1,0 +1,60 @@
+---
+- name: Load overlay config from file
+  set_fact:
+    overlay_config: "{{ lookup('file', overlay_config_path) | from_yaml }}"
+
+- name: Extract Xray variables for this node
+  set_fact:
+    xray_uuid: "{{ overlay_config.nodes[inventory_hostname].xray.uuid }}"
+    xray_remote_domain: "{{ overlay_config.nodes[inventory_hostname].xray.remote_domain }}"
+    xray_cert_path: "{{ overlay_config.nodes[inventory_hostname].xray.cert_path }}"
+    xray_key_path: "{{ overlay_config.nodes[inventory_hostname].xray.key_path }}"
+
+- name: Install Xray using official script
+  shell: |
+    bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)"
+  args:
+    creates: /usr/local/bin/xray
+  notify:
+    - Restart xray service
+    - Restart xray-tproxy service
+
+- name: Ensure required directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ xray_bin_path | dirname }}"
+    - "{{ xray_config_dir }}"
+
+- name: Deploy Xray config templates
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0644'
+  loop:
+    - { src: "config.json.j2", dest: "{{ xray_config_dir }}/config.json" }
+    - { src: "tproxy-config.json.j2", dest: "{{ xray_config_dir }}/tproxy-config.json" }
+
+- name: Deploy systemd service templates
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: '0644'
+  loop:
+    - { src: "xray.service.j2", dest: "/etc/systemd/system/xray.service" }
+    - { src: "xray-tproxy.service.j2", dest: "/etc/systemd/system/xray-tproxy.service" }
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: Enable and start xray services
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+    state: started
+  loop:
+    - xray.service
+    - xray-tproxy.service

@@ -20,7 +20,10 @@ hubs:
     br_ip: 10.253.253.1
     local_ip: 172.30.0.1
     remote_ip: 172.31.0.1
-    public_ip: global-proxy.onwalk.net
+    uuid: ""
+    remote_domain: "global-proxy.onwalk.net"
+    cert_path: "/etc/ssl/onwalk.net.pem"
+    key_path: "/etc/ssl/onwalk.net.key"
     wireguard_peer:
       - master-1
       - slave-1 
@@ -39,6 +42,10 @@ hubs:
       - slave-1 
       - agent-1 
       - agent-1 
+    uuid: ""
+    remote_domain: "global-proxy.onwalk.net"
+    cert_path: "/etc/ssl/onwalk.net.pem"
+    key_path: "/etc/ssl/onwalk.net.key"
 
 # 各个站点定义
 sites:
