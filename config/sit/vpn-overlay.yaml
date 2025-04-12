@@ -14,15 +14,23 @@ features:
 
 # WireGuard Hub 节点配置
 hubs:
-  - name: hub-1
+  - name: cn-hub
     wg_ip: 172.16.0.1
     br_ip: 10.253.253.1
-    public_ip: global-proxy.onwalk.net
+    public_ip: cn-proxy.onwalk.net
+    uuid: ""
+    remote_domain: "global-proxy.onwalk.net"
+    cert_path: "/etc/ssl/onwalk.net.pem"
+    key_path: "/etc/ssl/onwalk.net.key"
 
-  - name: hub2
+  - name: global-hub
     wg_ip: 10.100.1.1
     br_ip: 172.16.1.1
     public_ip: hub2.example.com
+    uuid: ""
+    remote_domain: "global-proxy.onwalk.net"
+    cert_path: "/etc/ssl/onwalk.net.pem"
+    key_path: "/etc/ssl/onwalk.net.key"
 
 # 各个站点定义
 sites:

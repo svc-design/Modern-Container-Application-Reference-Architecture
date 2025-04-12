@@ -1,0 +1,8 @@
+- name: Setup Xray for hub
+  hosts: all
+  become: true
+  vars:
+    overlay_config_path: "{{ playbook_dir }}/../../config/sit/vpn-overlay.yaml"
+    overlay_keys_path: "{{ playbook_dir }}/../../config/sit/vpn-keys.yaml"
+  roles:
+    - role: vhosts/vpn-overlay/xray/hub
