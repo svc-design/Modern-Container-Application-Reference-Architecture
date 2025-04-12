@@ -1,0 +1,45 @@
+---
+- name: 加载 overlay 配置（标准 YAML）
+  set_fact:
+    overlay_data: "{{ lookup('file', overlay_config_path) | from_yaml }}"
+
+- name: 加载密钥配置（支持 !vault）
+  include_vars:
+    file: "{{ overlay_keys_path }}"
+    name: overlay_keys
+
+- name: 提取当前 Hub 节点信息
+  set_fact:
+    current_node: >-
+      {{ overlay_data.hubs | selectattr('name', 'equalto', inventory_hostname) | list | first }}
+    current_key: >-
+      {{ overlay_keys['keys'] | selectattr('name', 'equalto', inventory_hostname) | list | first }}
+
+- name: 提取所有对端 Peer 信息
+  set_fact:
+    peer_nodes: >-
+      {{ (overlay_data.sites + overlay_data.hubs)
+         | selectattr('name', 'in', current_node.wireguard_peer) | list }}
+    peer_keys: >-
+      {{ overlay_keys['keys']
+         | selectattr('name', 'in', current_node.wireguard_peer) | list }}
+
+- name: 校验 Peer 节点数量
+  fail:
+    msg: "没有找到任何对端节点或对应密钥，请检查 wireguard_peer 设置"
+  when: peer_nodes | length == 0 or peer_keys | length == 0
+
+- name: 渲染 wg0.conf
+  template:
+    src: wg0.conf.j2
+    dest: /etc/wireguard/wg0.conf
+    mode: '0600'
+  become: true
+
+- name: 启用并启动 wg-quick@wg0
+  systemd:
+    name: wg-quick@wg0
+    enabled: true
+    state: started
+  become: true
+
