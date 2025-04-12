@@ -1,0 +1,16 @@
+[Interface]
+PrivateKey = {{ current_key.private_key }}
+Address = {{ current_node.wg_ip }}/32
+ListenPort = {{ wg_port }}
+DNS = 8.8.8.8
+MTU = 1400
+
+{% for peer, key in peer_nodes | zip(peer_keys) %}
+{% if peer.name != inventory_hostname %}
+[Peer]
+PublicKey = {{ key.public_key }}
+AllowedIPs = {{ peer.wg_ip }}/32
+Endpoint = {{ peer.public_ip }}:{{ overlay_data.hub_port | default(wg_port) }}
+PersistentKeepalive = 25
+{% endif %}
+{% endfor %}

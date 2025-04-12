@@ -14,15 +14,31 @@ features:
 
 # WireGuard Hub 节点配置
 hubs:
-  - name: hub-1
-    wg_ip: 172.16.0.1
+  - name: cn-hub
+    interface: eth0
+    wg_ip: 172.30.0.1
     br_ip: 10.253.253.1
+    local_ip: 172.30.0.1
+    remote_ip: 172.31.0.1
     public_ip: global-proxy.onwalk.net
+    wireguard_peer:
+      - master-1
+      - slave-1 
+      - agent-1 
+      - agent-1 
 
-  - name: hub2
-    wg_ip: 10.100.1.1
-    br_ip: 172.16.1.1
+  - name: global-hub
+    interface: ens5
+    wg_ip: 172.31.0.1
+    br_ip: 10.253.253.2
+    local_ip: 172.31.0.1
+    remote_ip: 172.30.0.1
     public_ip: hub2.example.com
+    wireguard_peer:
+      - master-1
+      - slave-1 
+      - agent-1 
+      - agent-1 
 
 # 各个站点定义
 sites:

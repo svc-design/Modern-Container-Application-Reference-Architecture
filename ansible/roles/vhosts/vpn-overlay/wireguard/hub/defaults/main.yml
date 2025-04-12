@@ -1,0 +1,4 @@
+wg_interface: "wg0"
+overlay_config_path: "{{ playbook_dir }}/../../config/sit/vpn-overlay.yaml"
+overlay_keys_path: "{{ playbook_dir }}/../../config/sit/vpn-keys.yaml"
+wg_port: "51820"
