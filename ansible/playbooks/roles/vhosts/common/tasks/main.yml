@@ -17,6 +17,9 @@
   script: files/install-packages.sh
   when: (ansible_facts['distribution'] == "Ubuntu") or (ansible_facts['distribution'] == "Debian")
 
+- name: Include Privoxy sub task for SOCKS5 to HTTP proxy (optional)
+  include_tasks: setup-privoxy.yml
+  when: privoxy.enable | default(false)
 
 #- name: Include GPU Configuration
 #  include_tasks: include_gpu.yaml

@@ -1,0 +1,24 @@
+---
+- name: Install privoxy (Debian)
+  apt:
+    name: privoxy
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Install privoxy (RedHat)
+  yum:
+    name: privoxy
+    state: present
+  when: ansible_os_family == 'RedHat'
+
+- name: Ensure SOCKS5 forwarding is configured in privoxy
+  lineinfile:
+    path: /etc/privoxy/config
+    line: "forward-socks5t / {{ proxy.socks5_host }}:{{ proxcy.socks5_port }} ."
+    state: present
+
+- name: Restart and enable privoxy
+  systemd:
+    name: privoxy
+    state: restarted
+    enabled: yes

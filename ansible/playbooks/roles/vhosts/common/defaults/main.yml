@@ -17,6 +17,11 @@ journald_log_rotation:          # 启用 journald 日志管理
   system_max_use: 1G            # 默认系统日志最大使用空间
   runtime_max_use: 500M         # 默认运行时日志最大使用空间
 
+privoxy:                        # 系统代理配置
+  enable: false                 #
+  socks5_host: 127.0.0.1
+  socks5_port: 1080
+
     #config_temp:
     #  k8s-node:
     #    dns_servers:
