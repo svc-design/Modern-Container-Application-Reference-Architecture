@@ -3,17 +3,16 @@
     "loglevel": "info"
   },
   "routing": {
-    "domainStrategy": "IPIfNonMatch",
     "rules": []
   },
   "inbounds": [
     {
       "listen": "127.0.0.1",
-      "port": {{ xray_tproxy_port }},
+      "port": 51830,
       "protocol": "dokodemo-door",
       "settings": {
-        "address": "{{ xray_remote_domain }}",
-        "port": {{ xray_main_port }},
+        "address": "{{ hubs_map[inventory_hostname].xray.relay_address }}",
+        "port": {{ hubs_map[inventory_hostname].xray.relay_port }},
         "network": "udp"
       }
     }
@@ -24,11 +23,11 @@
       "settings": {
         "vnext": [
           {
-            "address": "{{ xray_remote_domain }}",
-            "port": {{ xray_main_port }},
+            "address": "{{ hubs_map[inventory_hostname].xray.relay_address }}",
+            "port": 1443,
             "users": [
               {
-                "id": "{{ xray_uuid }}",
+                "id": "{{ hubs_map[inventory_hostname].xray.uuid }}",
                 "encryption": "none",
                 "flow": "xtls-rprx-vision"
               }
@@ -40,7 +39,7 @@
         "network": "tcp",
         "security": "tls",
         "tlsSettings": {
-          "serverName": "{{ xray_remote_domain }}",
+          "serverName": "{{ hubs_map[inventory_hostname].xray.remote_domain }}",
           "allowInsecure": false,
           "fingerprint": "chrome"
         }

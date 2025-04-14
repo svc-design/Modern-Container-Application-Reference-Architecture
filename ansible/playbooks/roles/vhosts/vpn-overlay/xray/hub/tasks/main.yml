@@ -3,12 +3,26 @@
   set_fact:
     overlay_config: "{{ lookup('file', overlay_config_path) | from_yaml }}"
 
-- name: Extract Xray variables for this node
+- name: Convert overlay_config.hubs list to dict (hubs_map)
   set_fact:
-    xray_uuid: "{{ overlay_config.nodes[inventory_hostname].xray.uuid }}"
-    xray_remote_domain: "{{ overlay_config.nodes[inventory_hostname].xray.remote_domain }}"
-    xray_cert_path: "{{ overlay_config.nodes[inventory_hostname].xray.cert_path }}"
-    xray_key_path: "{{ overlay_config.nodes[inventory_hostname].xray.key_path }}"
+    hubs_map: "{{ dict(overlay_config.hubs | map(attribute='name') | zip(overlay_config.hubs)) }}"
+  when: overlay_config.hubs is defined
+
+- name: Convert overlay_config.sites list to dict (sites_map)
+  set_fact:
+    sites_map: "{{ dict(overlay_config.sites | map(attribute='name') | zip(overlay_config.sites)) }}"
+  when: overlay_config.sites is defined
+
+- name: 显示主机名
+  debug:
+    var: overlay_config
+  when: debug | default(false)
+
+- set_fact:
+    xray_uuid: "{{ hubs_map[inventory_hostname].xray.uuid }}"
+    xray_remote_domain: "{{ hubs_map[inventory_hostname].xray.remote_domain }}"
+    xray_cert_path: "{{ hubs_map[inventory_hostname].xray.cert_path }}"
+    xray_key_path: "{{ hubs_map[inventory_hostname].xray.key_path }}"
 
 - name: Install Xray using official script
   shell: |

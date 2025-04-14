@@ -3,16 +3,7 @@
     "loglevel": "error"
   },
   "routing": {
-    "domainStrategy": "IPIfNonMatch",
-    "rules": [
-      {
-        "type": "field",
-        "ip": [
-          "geoip:cn"
-        ],
-        "outboundTag": "block"
-      }
-    ]
+    "rules": []
   },
   "inbounds": [
     {
@@ -43,8 +34,8 @@
         "network": "tcp",
         "security": "tls",
         "tlsSettings": {
-          "rejectUnknownSni": true,
           "minVersion": "1.2",
+          "rejectUnknownSni": true,
           "certificates": [
             {
               "ocspStapling": 3600,
@@ -56,7 +47,10 @@
       },
       "sniffing": {
         "enabled": true,
-        "destOverride": ["http", "tls"]
+        "destOverride": [
+          "http",
+          "tls"
+        ]
       }
     }
   ],
