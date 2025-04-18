@@ -29,6 +29,18 @@
     msg: "没有找到任何对端节点或对应密钥，请检查 wireguard_peer 设置"
   when: peer_nodes | length == 0 or peer_keys | length == 0
 
+- name: Ensure wireguard-tools is installed (Debian/Ubuntu)
+  apt:
+    name: wireguard-tools
+    state: present
+  when: ansible_os_family == 'Debian'
+
+- name: Ensure wireguard-tools is installed (RHEL/CentOS)
+  yum:
+    name: wireguard-tools
+    state: present
+  when: ansible_os_family == 'RedHat'
+
 - name: 渲染 wg0.conf
   template:
     src: wg0.conf.j2
@@ -42,4 +54,3 @@
     enabled: true
     state: started
   become: true
-

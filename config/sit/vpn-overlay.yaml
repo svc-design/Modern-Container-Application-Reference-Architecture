@@ -16,6 +16,7 @@ features:
 hubs:
   - name: cn-hub
     interface: eth0
+    public_ip: 1.15.155.245
     wg_ip: 172.30.0.1
     br_ip: 10.253.253.1
     local_ip: 172.30.0.1
@@ -29,12 +30,13 @@ hubs:
       key_path: "/etc/ssl/onwalk.net.key"
     wireguard_peer:
       - master-1
-      - slave-1 
-      - agent-1 
-      - agent-1 
+      - slave-1
+      - agent-1
+      - agent-1
 
   - name: global-hub
     interface: ens5
+    public_ip: 1.15.155.245
     wg_ip: 172.31.0.1
     br_ip: 10.253.253.2
     local_ip: 172.31.0.1
@@ -96,6 +98,7 @@ hubs:
 sites:
   - name: master-1
     interface: ens5
+    public_ip: 1.15.155.245
     allowed_ips: "172.16.0.0/16"
     wireguard_peer: hub-1
     br_ip: 10.253.253.2
@@ -111,6 +114,7 @@ sites:
 
   - name: slave-1
     interface: ens5
+    public_ip: 1.15.155.245
     wireguard_peer: hub-1
     allowed_ips: "172.16.0.0/16"
     br_ip: 10.253.253.3
@@ -121,6 +125,7 @@ sites:
       enabled: false  # 此节点不通过 VLESS，直接访问 Hub
 
   - name: site_c
+    public_ip: 1.15.155.245
     wg_ip: 10.100.1.2
     br_ip: 172.16.1.2
     hub: hub2
