@@ -1,0 +1,6 @@
+---
+- name: Restart xray-tproxy service
+  systemd:
+    name: xray-tproxy.service
+    state: restarted
+    enabled: yes

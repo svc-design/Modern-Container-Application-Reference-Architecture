@@ -1,0 +1,58 @@
+{
+  "log": {
+    "loglevel": "info"
+  },
+  "routing": {
+    "rules": []
+  },
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": 51830,
+      "protocol": "dokodemo-door",
+      "settings": {
+        "address": "{{ hubs_map[inventory_hostname].xray.relay_address }}",
+        "port": {{ hubs_map[inventory_hostname].xray.relay_port }},
+        "network": "udp"
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "{{ hubs_map[inventory_hostname].xray.relay_address }}",
+            "port": 1443,
+            "users": [
+              {
+                "id": "{{ hubs_map[inventory_hostname].xray.uuid }}",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "tls",
+        "tlsSettings": {
+          "serverName": "{{ hubs_map[inventory_hostname].xray.remote_domain }}",
+          "allowInsecure": false,
+          "fingerprint": "chrome"
+        }
+      },
+      "tag": "proxy"
+    },
+    {
+      "protocol": "freedom",
+      "tag": "direct"
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "block"
+    }
+  ]
+}

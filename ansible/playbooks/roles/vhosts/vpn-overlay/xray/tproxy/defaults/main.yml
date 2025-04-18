@@ -1,0 +1,6 @@
+xray_main_port: 1443
+xray_tproxy_port: 51830
+xray_cert_path: "/etc/ssl/onwalk.net.pem"
+xray_key_path: "/etc/ssl/onwalk.net.key"
+xray_bin_path: /usr/local/bin/xray
+xray_config_dir: /usr/local/etc/xray
