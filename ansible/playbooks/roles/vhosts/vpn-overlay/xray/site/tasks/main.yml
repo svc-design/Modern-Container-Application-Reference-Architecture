@@ -31,7 +31,6 @@
     creates: /usr/local/bin/xray
   notify:
     - Restart xray service
-    - Restart xray-tproxy service
 
 - name: Ensure required directories exist
   file:
@@ -48,8 +47,7 @@
     dest: "{{ item.dest }}"
     mode: '0644'
   loop:
-    - { src: "config.json.j2", dest: "{{ xray_config_dir }}/config.json" }
-    - { src: "tproxy-config.json.j2", dest: "{{ xray_config_dir }}/tproxy-config.json" }
+    - { src: "client-config.json.j2", dest: "{{ xray_config_dir }}/client-config.json" }
 
 - name: Deploy systemd service templates
   template:
@@ -57,8 +55,7 @@
     dest: "{{ item.dest }}"
     mode: '0644'
   loop:
-    - { src: "xray.service.j2", dest: "/etc/systemd/system/xray.service" }
-    - { src: "xray-tproxy.service.j2", dest: "/etc/systemd/system/xray-tproxy.service" }
+    - { src: "xray-client.service.j2", dest: "/etc/systemd/system/xray-client.service" }
 
 - name: Reload systemd
   systemd:
@@ -70,5 +67,4 @@
     enabled: yes
     state: started
   loop:
-    - xray.service
-    - xray-tproxy.service
+    - xray-client.service

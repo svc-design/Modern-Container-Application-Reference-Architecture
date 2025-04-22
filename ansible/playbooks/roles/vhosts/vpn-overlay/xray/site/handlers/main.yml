@@ -1,12 +1,6 @@
 ---
-- name: Restart xray service
+- name: Restart Xray-client service
   systemd:
-    name: xray.service
-    state: restarted
-    enabled: yes
-
-- name: Restart xray-tproxy service
-  systemd:
-    name: xray-tproxy.service
+    name: xray-client.service
     state: restarted
     enabled: yes
