@@ -132,3 +132,19 @@ sites:
       transport: ws
       tls: true
       path: /xray
+
+  - name: deepflow-demo
+    interface: eth0
+    wg_ip: 172.30.0.10
+    br_ip: 10.253.253.2
+    local_ip: 172.30.0.10
+    remote_ip: 172.30.0.1
+    hub: hub2
+    public_ip: c.example.com
+    vless:
+      enabled: true
+      endpoint: vless-c.example.com
+      uuid: "33333333-3333-3333-3333-333333333333"
+      transport: ws
+      tls: true
+      path: /xray
