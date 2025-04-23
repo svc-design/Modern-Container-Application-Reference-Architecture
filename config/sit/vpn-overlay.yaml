@@ -19,7 +19,7 @@ hubs:
     wg_ip: 172.30.0.1
     br_ip: 10.253.253.1
     local_ip: 172.30.0.1
-    remote_ip: 172.31.0.1
+    remote_ip: 172.31.0.10
     xray:
       uuid: "18d270a9-533d-4b13-b3f1-e7f55540a9b2"
       relay_address: "global-proxy.onwalk.net"

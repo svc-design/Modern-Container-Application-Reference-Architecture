@@ -1,0 +1,12 @@
+[Unit]
+Description=VXLAN Overlay Setup for {{ inventory_hostname }}
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/setup_sit_vxlan.sh {{ vxlan_dev_if }} {{ vxlan_local_ip }} {{ vxlan_remote_ip }} {{ vxlan_br_ip }} {{ vxlan_cidr_suffix }} {{ vxlan_vni }}
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
