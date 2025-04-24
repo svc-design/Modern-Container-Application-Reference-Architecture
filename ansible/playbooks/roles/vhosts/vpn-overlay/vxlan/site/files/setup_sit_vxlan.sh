@@ -4,24 +4,46 @@
 
 set -e
 
-DEV_IF="$1"
-LOCAL_IP="$2"
-REMOTE_IP="$3"
-BRIDGE_IP="$4"
-CIDR_SUFFIX="${5:-16}"
-VNI="${6:-100}"
-MTU="${7:-1400}"
-EXPOSE_PORT="${8:-443}"
-
-if [[ -z "$DEV_IF" || -z "$LOCAL_IP" || -z "$REMOTE_IP" || -z "$BRIDGE_IP" ]]; then
-  echo "Usage: $0 <dev_if> <local_ip> <remote_ip> <br0_ip> [cidr_suffix] [vxlan_id] [mtu] [expose_port]"
-  exit 1
-fi
+MODE="$1"
+DEV_IF="$2"
+LOCAL_IP="$3"
+REMOTE_IP="$4"
+BRIDGE_IP="$5"
+CIDR_SUFFIX="${6:-16}"
+VNI="${7:-100}"
+MTU="${8:-1400}"
+EXPOSE_PORT="${9:-443}"
 
 VXLAN_IF="vxlan${VNI}"
 BR_IF="br0"
 BRIDGE_CIDR="${BRIDGE_IP}/${CIDR_SUFFIX}"
 SUBNET="$(echo "$BRIDGE_IP" | cut -d. -f1-2).0.0/${CIDR_SUFFIX}"
+
+if [[ "$MODE" == "reset" ]]; then
+  echo "🔄 正在清理 VXLAN Overlay 配置..."
+
+  for iface in "$VXLAN_IF" "$BR_IF"; do
+    ip link show "$iface" &>/dev/null && {
+      ip link set "$iface" down
+      ip link del "$iface"
+      echo "🧹 已删除接口 $iface"
+    }
+  done
+
+  iptables -t nat -D POSTROUTING -s "$SUBNET" -o "$DEV_IF" -j MASQUERADE 2>/dev/null && \
+    echo "🧹 移除 MASQUERADE 规则: $SUBNET → $DEV_IF"
+
+  iptables -t nat -D PREROUTING -p tcp --dport "$EXPOSE_PORT" -j DNAT --to-destination "${BRIDGE_IP}:443" 2>/dev/null && \
+    echo "🧹 移除 DNAT 规则: 公网:$EXPOSE_PORT → ${BRIDGE_IP}:443"
+
+  echo "✅ 清理完成"
+  exit 0
+fi
+
+if [[ -z "$DEV_IF" || -z "$LOCAL_IP" || -z "$REMOTE_IP" || -z "$BRIDGE_IP" ]]; then
+  echo "Usage: $0 <dev_if> <local_ip> <remote_ip> <br0_ip> [cidr_suffix] [vxlan_id] [mtu] [expose_port]"
+  exit 1
+fi
 
 # 自动判断 dev 是否能用于 VXLAN（需支持广播）
 function is_vxlan_dev_usable() {
