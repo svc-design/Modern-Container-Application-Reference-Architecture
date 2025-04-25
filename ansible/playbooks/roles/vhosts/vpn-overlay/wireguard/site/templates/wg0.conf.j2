@@ -5,6 +5,14 @@ ListenPort = {{ wg_port }}
 DNS = 8.8.8.8
 MTU = 1400
 
+PostUp = iptables -I FORWARD -o %i -j ACCEPT
+PostUp = iptables -A FORWARD -i wg1 -j ACCEPT
+PostUp = iptables -t nat -A POSTROUTING -o {{ current_interface }} -j MASQUERADE
+
+PostDown = iptables -D FORWARD -o %i -j ACCEPT
+PostDown = iptables -D FORWARD -i wg1 -j ACCEPT
+PostDown = iptables -t nat -D POSTROUTING -o {{ current_interface }} -j MASQUERADE
+
 [Peer]
 PublicKey = {{ peer_public_key }}
 AllowedIPs = {{ current_allowed_ips }}
