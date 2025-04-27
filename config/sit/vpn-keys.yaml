@@ -42,7 +42,7 @@ keys:
     private_key: <site_c_private_key>
     public_key: <site_c_public_key>
 
-  - name: hub-1
+  - name: cn-hub
     private_key: !vault |
           $ANSIBLE_VAULT;1.1;AES256
           33643635306332303761356562383035353333373234393132313162613834323963313635326562
@@ -60,6 +60,6 @@ keys:
           34376231306239636536313830333962323934343035333263643234363363396164626366353061
           3833613132373666303563623863373735396566666239316536
 
-  - name: hub2
+  - name: global-hub
     private_key: <hub2_private_key>
     public_key: <hub2_public_key>
