@@ -1,0 +1,12 @@
+dev_if: eth0
+bridge_ip: 10.253.253.1
+cidr_suffix: 16
+peers:
+  - local_ip: 172.30.0.1
+    remote_ip: 172.30.0.10
+    vxlan_id: 100
+    mtu: 1400
+  - local_ip: 172.30.0.1
+    remote_ip: 172.31.0.1
+    vxlan_id: 100
+    mtu: 1400

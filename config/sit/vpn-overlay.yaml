@@ -1,15 +1,15 @@
 # 基础网络参数
-wg_network: 172.16.0.0/24
+wg_network: 172.16.0.0/16
 bridge_network: 10.253.0.0/16
 vxlan_id: 100
 hub_port: 51820
 
 # 全局功能开关
 features:
-  enable_vxlan_between_sits: true  # 是否开启 vxlan 桥接（站点接入 Hub）
-  enable_vxlan_between_hubs: true  # 是否开启 Hub 之间的 VXLAN Mesh
   enable_vless: true               # 是否通过 VLESS 中转 WG 流量
   enable_multi_hub: true           # 是否支持多 Hub 架构（false 则为单 Hub star 架构）
+  enable_vxlan_between_sits: true  # 是否开启 vxlan 桥接（站点接入 Hub）
+  enable_vxlan_between_hubs: true  # 是否开启 Hub 之间的 VXLAN Mesh
   only_wireguard: false            # 若为 true，仅使用 WireGuard 点对点，忽略 gretap/vxlan
 
 # WireGuard Hub 节点配置
@@ -20,7 +20,7 @@ hubs:
     wg_ip: 172.30.0.1
     br_ip: 10.253.253.1
     local_ip: 172.30.0.1
-    remote_ip: 172.31.0.1
+    remote_ip: 172.31.0.10
     xray:
       uuid: "18d270a9-533d-4b13-b3f1-e7f55540a9b2"
       relay_address: "global-proxy.onwalk.net"
@@ -130,6 +130,23 @@ sites:
     br_ip: 172.16.1.2
     hub: hub2
     public_ip: c.example.com
+    vless:
+      enabled: true
+      endpoint: vless-c.example.com
+      uuid: "33333333-3333-3333-3333-333333333333"
+      transport: ws
+      tls: true
+      path: /xray
+
+  - name: deepflow-demo
+    interface: wlp0s20f3
+    public_ip: 172.30.0.10
+    wg_ip: 172.30.0.10
+    br_ip: 10.253.253.2
+    local_ip: 172.30.0.10
+    remote_ip: 172.30.0.1
+    wireguard_peer: cn-hub
+    allowed_ips: "172.30.0.0/16"
     vless:
       enabled: true
       endpoint: vless-c.example.com

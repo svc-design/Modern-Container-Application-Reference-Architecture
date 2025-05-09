@@ -18,6 +18,7 @@
       {{ overlay_keys['keys']
          | selectattr('name', 'equalto', inventory_hostname)
          | list | first }}
+    features: "{{ overlay_data.features }}"
 
 - name: 提取对端 peer 节点列表
   set_fact:
@@ -38,6 +39,7 @@
   set_fact:
     wg_port: "{{ wg_port }}"
     current_wg_ip: "{{ current_node.wg_ip }}"
+    current_interface: "{{ current_node.interface }}"
     current_private_key: "{{ current_key.private_key }}"
     current_allowed_ips: "{{ current_node.allowed_ips }}"
     peer_public_key: "{{ peer_keys[0].public_key }}"
