@@ -19,10 +19,10 @@
   when: debug | default(false)
 
 - set_fact:
-    xray_uuid: "{{ hubs_map[inventory_hostname].xray.uuid }}"
-    xray_remote_domain: "{{ hubs_map[inventory_hostname].xray.remote_domain }}"
-    xray_cert_path: "{{ hubs_map[inventory_hostname].xray.cert_path }}"
-    xray_key_path: "{{ hubs_map[inventory_hostname].xray.key_path }}"
+    xray_uuid: "{{ sites_map[inventory_hostname].xray.uuid }}"
+    xray_remote_domain: "{{ sites_map[inventory_hostname].xray.remote_domain }}"
+    xray_cert_path: "{{ sites_map[inventory_hostname].xray.cert_path }}"
+    xray_key_path: "{{ sites_map[inventory_hostname].xray.key_path }}"
 
 - name: Install Xray using official script
   shell: |
