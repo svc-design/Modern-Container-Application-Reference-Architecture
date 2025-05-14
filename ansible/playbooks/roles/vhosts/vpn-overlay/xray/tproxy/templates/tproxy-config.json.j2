@@ -11,8 +11,8 @@
       "port": 51830,
       "protocol": "dokodemo-door",
       "settings": {
-        "address": "{{ hubs_map[inventory_hostname].xray.relay_address }}",
-        "port": {{ hubs_map[inventory_hostname].xray.relay_port }},
+        "address": "{{ xray_remote_domain }}",
+        "port": 51820,
         "network": "udp"
       }
     }
@@ -23,11 +23,11 @@
       "settings": {
         "vnext": [
           {
-            "address": "{{ hubs_map[inventory_hostname].xray.relay_address }}",
+            "address": "{{ xray_remote_domain }}",
             "port": 1443,
             "users": [
               {
-                "id": "{{ hubs_map[inventory_hostname].xray.uuid }}",
+                "id": "{{ xray_uuid }}",
                 "encryption": "none",
                 "flow": "xtls-rprx-vision"
               }
@@ -39,7 +39,7 @@
         "network": "tcp",
         "security": "tls",
         "tlsSettings": {
-          "serverName": "{{ hubs_map[inventory_hostname].xray.remote_domain }}",
+          "serverName": "{{ xray_remote_domain }}",
           "allowInsecure": false,
           "fingerprint": "chrome"
         }

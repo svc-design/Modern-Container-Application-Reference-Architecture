@@ -13,16 +13,28 @@
     sites_map: "{{ dict(overlay_config.sites | map(attribute='name') | zip(overlay_config.sites)) }}"
   when: overlay_config.sites is defined
 
+- name: Convert all nodes (hubs + sites) to one dict as node_map
+  set_fact:
+    node_map: >-
+      {{ dict((overlay_config.hubs + overlay_config.sites)
+               | map(attribute='name')
+               | zip(overlay_config.hubs + overlay_config.sites)) }}
+
 - name: 显示主机名
   debug:
-    var: overlay_config
-  when: debug | default(false)
+    var: node_map
+  when: debug | default(true)
+
+- name: Show value for this node
+  debug:
+    msg: "{{ node_map[inventory_hostname] }}"
+  when: debug | default(true)
 
 - set_fact:
-    xray_uuid: "{{ hubs_map[inventory_hostname].xray.uuid }}"
-    xray_remote_domain: "{{ hubs_map[inventory_hostname].xray.remote_domain }}"
-    xray_cert_path: "{{ hubs_map[inventory_hostname].xray.cert_path }}"
-    xray_key_path: "{{ hubs_map[inventory_hostname].xray.key_path }}"
+    xray_uuid: "{{ node_map[inventory_hostname].xray.uuid }}"
+    xray_remote_domain: "{{ node_map[inventory_hostname].xray.remote_domain }}"
+    xray_cert_path: "{{ node_map[inventory_hostname].xray.cert_path }}"
+    xray_key_path: "{{ node_map[inventory_hostname].xray.key_path }}"
 
 - name: Install Xray using official script
   shell: |
