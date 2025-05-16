@@ -6,6 +6,7 @@ import (
 	"os/exec"
 
 	"github.com/spf13/cobra"
+	"cloudwalker"
 )
 
 var upCmd = &cobra.Command{

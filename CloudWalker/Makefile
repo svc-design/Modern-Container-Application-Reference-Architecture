@@ -9,6 +9,7 @@ all: build
 
 init:
 	GOPROXY=https://goproxy.cn,direct go get github.com/spf13/cobra@latest
+	GOPROXY=https://goproxy.cn,direct go get -u github.com/pulumi/pulumi/sdk/v3
 	go mod tidy
 
 build:
