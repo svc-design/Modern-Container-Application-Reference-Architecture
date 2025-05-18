@@ -1,0 +1,6 @@
+---
+# 从 vpn-overlay.yaml 加载 overlay 结构
+overlay_config_path: "{{ playbook_dir }}/../../config/sit/vpn-overlay.yaml"
+
+# 脚本默认路径
+dnat_script_path: /usr/local/bin/setup-dnat.sh

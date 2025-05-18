@@ -1,0 +1,34 @@
+---
+- name: 加载 overlay 配置
+  include_vars:
+    file: "{{ overlay_config_path }}"
+    name: overlay
+
+- name: 设置本节点 DNAT 所需变量
+  set_fact:
+    dnat_public_ip: "{{ overlay.nodes[inventory_hostname].public_ip }}"
+    dnat_internal_ip: "{{ overlay.nodes[inventory_hostname].internal_ip }}"
+    pod_cidr: "{{ overlay.nodes[inventory_hostname].pod_cidr }}"
+    wireguard_cidr: "{{ overlay.nodes[inventory_hostname].wireguard_cidr }}"
+
+- name: 模板渲染 DNAT 脚本
+  template:
+    src: setup-dnat.sh.j2
+    dest: "{{ dnat_script_path }}"
+    mode: "0755"
+
+- name: 安装 systemd 服务
+  template:
+    src: dnat-rules.service.j2
+    dest: /etc/systemd/system/dnat-rules.service
+    mode: "0644"
+
+- name: Reload systemd daemon
+  command: systemctl daemon-reexec
+  changed_when: false
+
+- name: 启动并启用 DNAT 服务
+  systemd:
+    name: dnat-rules.service
+    enabled: true
+    state: started
