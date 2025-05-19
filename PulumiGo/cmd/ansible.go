@@ -12,11 +12,10 @@ var ansibleCmd = &cobra.Command{
 	Use:   "ansible",
 	Short: "🧪 执行 ansible-playbook",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("🧪 执行 ansible-playbook...")
-		c := exec.Command("ansible-playbook", "-i", fmt.Sprintf("%s/inventory.ini", configPath), fmt.Sprintf("%s/site.yml", configPath))
+		fmt.Println("🧪 调用 ansible-playbook ...")
+		c := exec.Command("ansible-playbook", "-i", configPath+"/inventory.ini", configPath+"/site.yml")
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr
 		c.Run()
 	},
 }
-

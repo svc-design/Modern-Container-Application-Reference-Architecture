@@ -1,0 +1,108 @@
+name: Build and Release PulumiGo CLI
+
+on:
+  pull_request:
+    paths:
+      - 'PulumiGo/main.go'
+      - 'PulumiGo/go.mod'
+      - 'PulumiGo/go.sum'
+      - 'PulumiGo/cmd/**'
+      - 'PulumiGo/internal/**'
+      - '.github/workflows/build-pulumigo.yml'
+  push:
+    paths:
+      - 'PulumiGo/main.go'
+      - 'PulumiGo/go.mod'
+      - 'PulumiGo/go.sum'
+      - 'PulumiGo/cmd/**'
+      - 'PulumiGo/internal/**'
+      - '.github/workflows/build-pulumigo.yml'
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build binaries
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
+        arch: [amd64, arm64]
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Build PulumiGo binary
+        working-directory: PulumiGo
+        run: |
+          mkdir -p dist
+          GOOS=linux GOARCH=${{ matrix.arch }} go build -o dist/PulumiGo-${{ matrix.os }}-${{ matrix.arch }} main.go
+
+      - name: Compress binary
+        working-directory: PulumiGo
+        run: |
+          cd dist
+          tar -czvf PulumiGo-${{ matrix.os }}-${{ matrix.arch }}.tar.gz PulumiGo-${{ matrix.os }}-${{ matrix.arch }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pulumigo-${{ matrix.os }}-${{ matrix.arch }}
+          path: PulumiGo/dist/PulumiGo-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+
+  test:
+    name: Test CLI execution
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-20.04]
+        arch: [amd64]
+
+    steps:
+      - name: Download binary
+        uses: actions/download-artifact@v4
+        with:
+          name: pulumigo-${{ matrix.os }}-${{ matrix.arch }}
+          path: test-dir
+
+      - name: Extract and test CLI
+        run: |
+          cd test-dir
+          tar -xzf PulumiGo-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+          chmod +x PulumiGo-${{ matrix.os }}-${{ matrix.arch }}
+          ./PulumiGo-${{ matrix.os }}-${{ matrix.arch }} --help
+
+  publish-release:
+    name: Publish Daily Release
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      tag_name: daily-${{ github.run_id }}
+      release_name: Daily Build PulumiGo - ${{ github.run_number }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.tag_name }}
+          name: ${{ env.release_name }}
+          prerelease: true
+          files: |
+            release-artifacts/**/*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

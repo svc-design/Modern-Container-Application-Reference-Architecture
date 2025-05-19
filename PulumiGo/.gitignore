@@ -1,0 +1,22 @@
+# Pulumi
+Pulumi.*.yaml
+__pulumi__
+*.pulumi
+
+# Go build
+bin/
+*.out
+*.exe
+
+# Go tooling
+*.log
+*.test
+coverage.*
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
