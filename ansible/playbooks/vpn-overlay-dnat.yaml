@@ -1,8 +1,8 @@
 - name: Setup DNAT rules
-  hosts: ingress-nodes
+  hosts: all
   become: yes
   gather_facts: no
   vars:
     overlay_config_path: "{{ playbook_dir }}/../../config/sit/vpn-overlay.yaml"
   roles:
-    - role: setup-dnat
+    - vhosts/vpn-overlay/setup-dnat
