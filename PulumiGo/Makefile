@@ -1,4 +1,4 @@
-APP_NAME := cloudwalker
+APP_NAME := PulumiGo
 MAIN_FILE := main.go
 ENV ?= sit
 CONFIG ?= ./config/$(ENV)
@@ -40,10 +40,10 @@ clean:
 	rm -f $(APP_NAME)
 
 help:
-	@echo "🔧 CloudWalker CLI Usage"
+	@echo "🔧 PulumiGo CLI Usage"
 	@echo ""
 	@echo "make build           编译可执行文件"
-	@echo "make run             启动（默认执行 up）"
+	@echo "make run             启动并部署（默认 ENV=sit）"
 	@echo "make up              部署资源"
 	@echo "make down            销毁资源"
 	@echo "make export          导出 stack 状态"

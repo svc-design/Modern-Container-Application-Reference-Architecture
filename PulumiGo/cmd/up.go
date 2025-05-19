@@ -6,7 +6,7 @@ import (
 	"os/exec"
 
 	"github.com/spf13/cobra"
-	"cloudwalker"
+	"PulumiGo/internal/pulumi"
 )
 
 var upCmd = &cobra.Command{
@@ -19,5 +19,12 @@ var upCmd = &cobra.Command{
 		c.Stdout = os.Stdout
 		c.Stderr = os.Stderr
 		c.Run()
+
+		err := pulumi.DeployInfrastructure()
+		if err != nil {
+			fmt.Println("❌ 部署失败:", err)
+			os.Exit(1)
+		}
+		fmt.Println("✅ 部署完成")
 	},
 }

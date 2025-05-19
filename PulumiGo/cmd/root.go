@@ -11,15 +11,12 @@ var env string
 var configPath string
 
 var rootCmd = &cobra.Command{
-	Use:   "cloudwalker",
-	Short: "🧰 iac_cli - 多环境自动化管理器 (IaC + Ansible + GitOps)",
-	Long: `🔐 Pulumi 密码文件已加载: ` + os.Getenv("HOME") + `/.pulumi-passphrase
+	Use:   "PulumiGo",
+	Short: "🧰 PulumiGo - 多环境自动化管理器 (Go + Pulumi Native)",
+	Long: `📖 用法:
 
-🧰 iac_cli - 多环境自动化管理器 (IaC + Ansible + GitOps)
-
-用法:
-  cloudwalker --env [环境] [命令]
-  STACK_ENV=prod CONFIG_PATH=config/prod cloudwalker up
+  PulumiGo --env [环境] [命令]
+  STACK_ENV=prod CONFIG_PATH=config/prod PulumiGo up
 
 支持命令:
   init      ⚙️ 初始化依赖
@@ -30,16 +27,15 @@ var rootCmd = &cobra.Command{
   ansible   🧪 执行 ansible-playbook
   help      📖 显示帮助`,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		fmt.Println("🔐 Pulumi 密码文件已加载:", os.Getenv("HOME")+"/.pulumi-passphrase")
 		fmt.Println("🌍 当前环境:", env)
 		fmt.Println("📁 当前配置路径:", configPath)
+		fmt.Println("🔐 Pulumi 密码文件已加载:", os.Getenv("HOME")+"/.pulumi-passphrase")
 	},
 }
 
 func Execute() {
 	rootCmd.PersistentFlags().StringVar(&env, "env", "sit", "指定环境")
 	rootCmd.PersistentFlags().StringVar(&configPath, "config", "./config/sit", "指定配置路径")
-
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(upCmd)
 	rootCmd.AddCommand(downCmd)
