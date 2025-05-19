@@ -1,0 +1,26 @@
+#!/bin/bash
+
+ACTION=$1
+
+if [[ "$ACTION" == "clean" ]]; then
+  echo "[DNAT] 清理规则..."
+
+  iptables -t nat -D PREROUTING -p tcp -d {{ dnat_public_ip }} --dport 80  -j DNAT --to-destination {{ dnat_internal_ip }}:80
+  iptables -t nat -D PREROUTING -p tcp -d {{ dnat_public_ip }} --dport 443 -j DNAT --to-destination {{ dnat_internal_ip }}:443
+
+  iptables -D FORWARD -p tcp -d {{ pod_cidr }} --dport 80 -j ACCEPT
+  iptables -D FORWARD -p tcp -d {{ pod_cidr }} --dport 443 -j ACCEPT
+  iptables -D FORWARD -p tcp -d {{ wireguard_cidr }} --dport 80 -j ACCEPT
+  iptables -D FORWARD -p tcp -d {{ wireguard_cidr }} --dport 443 -j ACCEPT
+
+else
+  echo "[DNAT] 添加规则..."
+
+  iptables -t nat -A PREROUTING -p tcp -d {{ dnat_public_ip }} --dport 80  -j DNAT --to-destination {{ dnat_internal_ip }}:80
+  iptables -t nat -A PREROUTING -p tcp -d {{ dnat_public_ip }} --dport 443 -j DNAT --to-destination {{ dnat_internal_ip }}:443
+
+  iptables -A FORWARD -p tcp -d {{ pod_cidr }} --dport 80 -j ACCEPT
+  iptables -A FORWARD -p tcp -d {{ pod_cidr }} --dport 443 -j ACCEPT
+  iptables -A FORWARD -p tcp -d {{ wireguard_cidr }} --dport 80 -j ACCEPT
+  iptables -A FORWARD -p tcp -d {{ wireguard_cidr }} --dport 443 -j ACCEPT
+fi

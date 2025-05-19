@@ -17,6 +17,8 @@ hubs:
   - name: cn-hub
     interface: eth0
     public_ip: 1.15.155.245
+    pod_cidr: 10.42.0.0/16
+    wireguard_cidr: 172.30.0.0/16
     wg_ip: 172.30.0.1
     br_ip: 10.253.253.1
     local_ip: 172.30.0.1
@@ -118,6 +120,8 @@ sites:
     interface: eth0
     public_ip: 47.120.61.35
     wg_ip: 172.30.0.11
+    pod_cidr: 10.42.0.0/16
+    wireguard_cidr: 172.30.0.0/16
     br_ip: 10.253.253.11
     local_ip: 172.30.0.11
     remote_ip: 172.30.0.1
@@ -134,6 +138,8 @@ sites:
   - name: icp-huawei
     interface: eth0
     public_ip: 139.9.139.22
+    pod_cidr: 10.42.0.0/16
+    wireguard_cidr: 172.30.0.0/16
     wg_ip: 172.30.0.12
     br_ip: 10.253.253.12
     local_ip: 172.30.0.12

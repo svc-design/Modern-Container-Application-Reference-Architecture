@@ -1,0 +1,12 @@
+[Unit]
+Description=Setup DNAT rules for exposing services via WireGuard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart={{ dnat_script_path }}
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

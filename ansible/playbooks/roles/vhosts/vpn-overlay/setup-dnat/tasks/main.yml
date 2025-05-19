@@ -1,0 +1,40 @@
+---
+- name: 加载 overlay 配置（标准 YAML）
+  set_fact:
+    overlay_data: "{{ lookup('file', overlay_config_path) | from_yaml }}"
+
+- name: 提取当前节点信息（作为 current_node）
+  set_fact:
+    current_node: >-
+      {{ (overlay_data.sites + overlay_data.hubs)
+         | selectattr('name', 'equalto', inventory_hostname)
+         | list | first }}
+
+- name: 设置本节点 DNAT 所需变量
+  set_fact:
+    dnat_public_ip: "{{ current_node.public_ip }}"
+    dnat_internal_ip: "{{ current_node.wg_ip }}"
+    pod_cidr: "{{ current_node.pod_cidr }}"
+    wireguard_cidr: "{{ current_node.wireguard_cidr }}"
+
+- name: 模板渲染 DNAT 脚本
+  template:
+    src: setup-dnat.sh.j2
+    dest: "{{ dnat_script_path }}"
+    mode: "0755"
+
+- name: 安装 systemd 服务
+  template:
+    src: dnat-rules.service.j2
+    dest: /etc/systemd/system/dnat-rules.service
+    mode: "0644"
+
+- name: Reload systemd daemon
+  command: systemctl daemon-reexec
+  changed_when: false
+
+- name: 启动并启用 DNAT 服务
+  systemd:
+    name: dnat-rules.service
+    enabled: true
+    state: started

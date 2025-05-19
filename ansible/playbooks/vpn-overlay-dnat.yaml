@@ -1,0 +1,8 @@
+- name: Setup DNAT rules
+  hosts: all
+  become: yes
+  gather_facts: no
+  vars:
+    overlay_config_path: "{{ playbook_dir }}/../../config/sit/vpn-overlay.yaml"
+  roles:
+    - vhosts/vpn-overlay/setup-dnat
