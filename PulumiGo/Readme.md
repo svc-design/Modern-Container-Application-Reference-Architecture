@@ -1,3 +1,4 @@
+```
 PulumiGo/
 ├── cmd/                       # Cobra 命令模块
 │   ├── root.go               # 注册所有命令和全局参数
@@ -22,6 +23,7 @@ PulumiGo/
 ├── go.sum                    # Go 依赖锁定文件
 ├── Makefile                  # 构建 & 调试命令
 └── README.md                 # 项目说明
+```
 
 # 设计理念
 
