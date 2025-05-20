@@ -62,21 +62,22 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        goos: [linux]
         os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
-        arch: [amd64]
+        goarch: [amd64, arm64]
     steps:
       - name: Download binary
         uses: actions/download-artifact@v4
         with:
-          name: pulumigo-${{ matrix.os }}-${{ matrix.arch }}
+          name: pulumigo-${{ matrix.goos }}-${{ matrix.goarch }}
           path: test-dir
 
       - name: Extract and test CLI
         run: |
           cd test-dir
-          tar -xzf PulumiGo-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
-          chmod +x PulumiGo-${{ matrix.os }}-${{ matrix.arch }}
-          ./PulumiGo-${{ matrix.os }}-${{ matrix.arch }} --help
+          tar -xzf PulumiGo-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+          chmod +x PulumiGo-${{ matrix.goos }}-${{ matrix.goarch }}
+          ./PulumiGo-${{ matrix.goos }}-${{ matrix.goarch }} --help
 
   publish-release:
     name: Publish Daily Release
