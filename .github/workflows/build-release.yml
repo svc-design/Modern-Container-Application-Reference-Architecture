@@ -42,19 +42,19 @@ jobs:
         working-directory: PulumiGo
         run: |
           mkdir -p dist
-          GOOS=linux GOARCH=${{ matrix.arch }} go build -o dist/PulumiGo-${{ matrix.os }}-${{ matrix.arch }} main.go
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o dist/PulumiGo-${{ matrix.goos }}-${{ matrix.goarch }} main.go
 
       - name: Compress binary
         working-directory: PulumiGo
         run: |
           cd dist
-          tar -czvf PulumiGo-${{ matrix.os }}-${{ matrix.arch }}.tar.gz PulumiGo-${{ matrix.os }}-${{ matrix.arch }}
+          tar -czvf PulumiGo-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz PulumiGo-${{ matrix.goos }}-${{ matrix.goarch }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pulumigo-${{ matrix.os }}-${{ matrix.arch }}
-          path: PulumiGo/dist/PulumiGo-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+          name: pulumigo-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: PulumiGo/dist/PulumiGo-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
 
   test:
     name: Test CLI execution
