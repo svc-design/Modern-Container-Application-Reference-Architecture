@@ -64,7 +64,7 @@ jobs:
       matrix:
         goos: [linux]
         os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
-        goarch: [amd64, arm64]
+        goarch: [amd64]
     steps:
       - name: Download binary
         uses: actions/download-artifact@v4
