@@ -8,7 +8,7 @@ on:
       - 'PulumiGo/go.sum'
       - 'PulumiGo/cmd/**'
       - 'PulumiGo/internal/**'
-      - '.github/workflows/build-pulumigo.yml'
+      - '.github/workflows/build-release.yml'
   push:
     paths:
       - 'PulumiGo/main.go'
@@ -16,7 +16,7 @@ on:
       - 'PulumiGo/go.sum'
       - 'PulumiGo/cmd/**'
       - 'PulumiGo/internal/**'
-      - '.github/workflows/build-pulumigo.yml'
+      - '.github/workflows/build-release.yml'
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:
@@ -27,9 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
-        arch: [amd64, arm64]
-
+        goos: [linux, darwin]
+        goarch: [amd64, arm64]
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -43,19 +42,19 @@ jobs:
         working-directory: PulumiGo
         run: |
           mkdir -p dist
-          GOOS=linux GOARCH=${{ matrix.arch }} go build -o dist/PulumiGo-${{ matrix.os }}-${{ matrix.arch }} main.go
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -o dist/PulumiGo-${{ matrix.goos }}-${{ matrix.goarch }} main.go
 
       - name: Compress binary
         working-directory: PulumiGo
         run: |
           cd dist
-          tar -czvf PulumiGo-${{ matrix.os }}-${{ matrix.arch }}.tar.gz PulumiGo-${{ matrix.os }}-${{ matrix.arch }}
+          tar -czvf PulumiGo-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz PulumiGo-${{ matrix.goos }}-${{ matrix.goarch }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pulumigo-${{ matrix.os }}-${{ matrix.arch }}
-          path: PulumiGo/dist/PulumiGo-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
+          name: pulumigo-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: PulumiGo/dist/PulumiGo-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
 
   test:
     name: Test CLI execution
@@ -63,22 +62,22 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-20.04]
-        arch: [amd64]
-
+        goos: [linux]
+        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
+        goarch: [amd64, arm64]
     steps:
       - name: Download binary
         uses: actions/download-artifact@v4
         with:
-          name: pulumigo-${{ matrix.os }}-${{ matrix.arch }}
+          name: pulumigo-${{ matrix.goos }}-${{ matrix.goarch }}
           path: test-dir
 
       - name: Extract and test CLI
         run: |
           cd test-dir
-          tar -xzf PulumiGo-${{ matrix.os }}-${{ matrix.arch }}.tar.gz
-          chmod +x PulumiGo-${{ matrix.os }}-${{ matrix.arch }}
-          ./PulumiGo-${{ matrix.os }}-${{ matrix.arch }} --help
+          tar -xzf PulumiGo-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+          chmod +x PulumiGo-${{ matrix.goos }}-${{ matrix.goarch }}
+          ./PulumiGo-${{ matrix.goos }}-${{ matrix.goarch }} --help
 
   publish-release:
     name: Publish Daily Release
