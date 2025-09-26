@@ -1,0 +1,27 @@
+config_service:
+  recorder:
+    name: lz-config-recorder
+    resource_types:
+      - ACS::ECS::Instance
+      - ACS::OSS::Bucket
+      - ACS::VPC::VSwitch
+  delivery_channel:
+    name: lz-config-delivery
+    display_name: LandingZoneBaseline
+    type: OSS
+    target_arn: acs:oss:cn-hangzhou:${AliUid}:lz-mvp-actiontrail-logs
+    assume_role_arn: acs:ram::${AliUid}:role/aliyunconfigdefaultrole
+    description: Deliver baseline compliance evaluations to OSS
+    status: 1
+  rules:
+    - name: lz-required-env-tag
+      description: Ensure env tag exists on core resources
+      source_identifier: ecs-instance-required-tag
+      source_owner: ALIYUN
+      risk_level: 2
+      trigger_types: ConfigurationItemChangeNotification
+      resource_types_scopes:
+        - ACS::ECS::Instance
+      input_parameters:
+        tagKey: env
+      maximum_execution_frequency: TwentyFour_Hours

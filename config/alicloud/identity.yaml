@@ -1,0 +1,28 @@
+identity:
+  users:
+    - name: ops-automation
+      display_name: Landing Zone Automation
+      comments: Dedicated RAM user for IaC pipelines
+      policies:
+        - name: AliyunOSSFullAccess
+          type: System
+        - name: AliyunVPCFullAccess
+          type: System
+        - name: AliyunConfigFullAccess
+          type: System
+    - name: audit-viewer
+      display_name: Landing Zone Auditor
+      comments: Read-only access for monitoring
+      policies:
+        - name: ReadOnlyAccess
+          type: System
+  groups:
+    - name: ops-admins
+      comments: Baseline operations team
+      policies:
+        - name: AliyunConfigFullAccess
+          type: System
+        - name: AliyunVPCFullAccess
+          type: System
+      users:
+        - ops-automation
