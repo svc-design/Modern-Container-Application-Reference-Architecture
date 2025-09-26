@@ -1,0 +1,8 @@
+audit:
+  actiontrail:
+    enabled: true
+    name: lz-mvp-actiontrail
+    oss_bucket_ref: lz-mvp-actiontrail-logs
+    oss_key_prefix: actiontrail
+    trail_region: cn-hangzhou
+    event_rw: All

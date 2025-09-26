@@ -1,0 +1,17 @@
+storage:
+  oss_buckets:
+    - name: lz-mvp-actiontrail-logs
+      bucket: lz-mvp-actiontrail-logs
+      storage_class: Standard
+      versioning:
+        status: Enabled
+      lifecycle_rules:
+        - id: archive-audit-logs
+          enabled: true
+          transitions:
+            - storage_class: IA
+              days: 180
+            - storage_class: Archive
+              days: 365
+      tags:
+        env: prod

@@ -1,0 +1,18 @@
+security:
+  groups:
+    - name: lz-base-sg
+      vpc: lz-main-vpc
+      description: Baseline security group allowing outbound traffic only
+      tags:
+        env: shared
+      ingress:
+        - protocol: tcp
+          port_range: "22/22"
+          cidr_ip: 0.0.0.0/0
+          description: Temporary SSH access for break-glass
+          policy: accept
+      egress:
+        - protocol: all
+          port_range: "-1/-1"
+          cidr_ip: 0.0.0.0/0
+          policy: accept
