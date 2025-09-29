@@ -13,10 +13,41 @@ on:
         description: 'Whether to perform a dry-run'
         required: false
         default: 'true'
+  workflow_run:
+    workflows:
+      - Provision Monitor Server Infrastructure
+    types:
+      - completed
 
 jobs:
+  verify-dependencies:
+    name: Verify dependency workflows
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      should-run: ${{ steps.evaluate.outputs.should-run }}
+    steps:
+      - name: Checkout helpers
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/scripts/evaluate-workflow-status.js
+          sparse-checkout-cone-mode: false
+      - name: Evaluate upstream workflow status
+        id: evaluate
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { evaluateWorkflowStatus } = require('./.github/scripts/evaluate-workflow-status');
+            await evaluateWorkflowStatus({ github, context, core }, {
+              dependencyWorkflowFile: 'iac-pipeline-infrastructure-monitor-server.yml',
+            });
+
   deploy:
-    if: github.ref == 'refs/heads/main'
+    needs: verify-dependencies
+    if: needs.verify-dependencies.outputs.should-run == 'true'
     runs-on: ubuntu-latest
     env:
       DEPLOY_ACTION: ${{ github.event.inputs.deploy_action || 'upgrade' }}
