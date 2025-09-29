@@ -14,6 +14,7 @@ on:
         description: "Deployment action to execute"
         type: choice
         options:
+          - init
           - create
           - upgrade
           - backup
@@ -59,8 +60,27 @@ env:
   DEPLOY_DRY_RUN: ${{ inputs.deploy_dry_run || github.event.inputs.deploy_dry_run || 'true' }}
 
 jobs:
+  init:
+    name: Initialize Vultr Pulumi stacks
+    runs-on: ubuntu-latest
+    if: env.DEPLOY_ACTION == 'init'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pulumi/setup-pulumi@v3
+        with:
+          pulumi-version: '^3'
+      - name: Ensure Pulumi stacks exist
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+        run: |
+          pulumi login
+          for stack in vultr/baseline-dev vultr/baseline-prod; do
+            pulumi stack select "$stack" --non-interactive || pulumi stack init "$stack" --non-interactive
+          done
+
   preview:
     name: Preview baseline changes
+    if: env.DEPLOY_ACTION != 'init'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -84,6 +104,7 @@ jobs:
   apply:
     name: Apply to production stack
     needs: preview
+    if: env.DEPLOY_ACTION != 'init'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
