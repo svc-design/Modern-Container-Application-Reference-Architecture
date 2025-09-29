@@ -1,0 +1,339 @@
+name: MultiCluster Infrastructure Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_action:
+        description: "Deployment action to execute"
+        type: choice
+        options:
+          - init
+          - magrate
+          - upgrade
+          - backup
+          - restore
+          - destroy
+        default: upgrade
+      deploy_dry_run:
+        description: "Run deployment steps in dry-run mode"
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+        default: 'true'
+      cloud_provider:
+        description: "Target cloud provider for provisioning"
+        type: choice
+        options:
+          - gcp
+          - Alicloud
+        default: gcp
+
+env:
+  CLOUD: ${{ inputs.cloud_provider }}
+  DNS_AK: ${{ secrets.DNS_AK }}
+  DNS_SK: ${{ secrets.DNS_SK }}
+  SSH_USER: ${{ secrets.HOST_USER }}
+  SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+  DEPLOY_ACTION: ${{ inputs.deploy_action }}
+  DEPLOY_DRY_RUN: ${{ inputs.deploy_dry_run }}
+
+jobs:
+  verify-baseline-status:
+    if: inputs.deploy_action != 'destroy'
+    name: Verify Alicloud baseline readiness
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      should-run: ${{ steps.evaluate.outputs.should-run || 'true' }}
+    steps:
+      - name: Checkout helpers
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/scripts/evaluate-workflow-status.js
+          sparse-checkout-cone-mode: false
+      - name: Evaluate upstream workflow status
+        id: evaluate
+        uses: actions/github-script@v7
+        if: inputs.cloud_provider == 'Alicloud'
+        with:
+          script: |
+            const { evaluateWorkflowStatus } = require('./.github/scripts/evaluate-workflow-status');
+            await evaluateWorkflowStatus({ github, context, core }, {
+              dependencyWorkflowFile: 'iac-pipeline-alicloud-landingzone-baseline.yaml',
+            });
+
+  apply-cluster-resources:
+    name: Apply cluster Terraform (${{ matrix.name }})
+    needs:
+      - verify-baseline-status
+    if: |
+      inputs.deploy_action != 'destroy' &&
+      env.CLOUD == 'gcp' &&
+      needs.verify-baseline-status.outputs.should-run == 'true'
+    strategy:
+      matrix:
+        include:
+          - name: multi-cluster baseline
+            config: multi-cluster-config.yaml
+          - name: signal cluster baseline
+            config: signal-cluster-config.yaml
+    uses: svc-design/actions/.github/workflows/setup-gcp-cloud.yml@main
+    with:
+      config: ${{ matrix.config }}
+    secrets:
+      SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+    env:
+      STATE: "create"
+
+  setup-monitor-cluster:
+    name: Configure monitor exporters
+    needs:
+      - apply-cluster-resources
+    if: |
+      inputs.deploy_action != 'destroy' &&
+      env.CLOUD == 'gcp' &&
+      needs.apply-cluster-resources.result == 'success'
+    uses: ./.github/workflows/iac-pipeline-infrastructure-monitor-exporter.yml
+    with:
+      deploy_action: ${{ inputs.deploy_action }}
+      deploy_dry_run: ${{ inputs.deploy_dry_run }}
+    secrets:
+      VPS_USER: ${{ secrets.VPS_USER }}
+      ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+  setup-gitops-agent:
+    name: Bootstrap GitOps agent (${{ matrix.cluster_or_vhosts }})
+    needs:
+      - setup-monitor-cluster
+    if: |
+      env.CLOUD == 'gcp' &&
+      needs.setup-monitor-cluster.result == 'success' &&
+      (inputs.deploy_action == 'init' || inputs.deploy_action == 'magrate' || inputs.deploy_action == 'upgrade')
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - env: nat
+            cluster_or_vhosts: k3s-nat
+            gitops_branch: main
+            gitops_path: clusters/k3s-nat
+          - env: prod
+            cluster_or_vhosts: k3s-prod
+            gitops_branch: main
+            gitops_path: clusters/k3s-prod
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare kubeconfig
+        env:
+          RAW_KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: scripts/workflows/prepare-kubeconfig.sh
+        shell: bash
+
+      - name: Install Flux CLI
+        uses: fluxcd/flux2-action@v2
+        with:
+          version: '2.2.3'
+
+      - name: Install FluxCD components
+        run: scripts/workflows/install-flux-components.sh
+        shell: bash
+
+      - name: Configure GitOps reconciliation
+        env:
+          GITOPS_BRANCH: ${{ matrix.gitops_branch }}
+          GITOPS_PATH: ${{ matrix.gitops_path }}
+        run: scripts/workflows/configure-flux-gitops.sh
+        shell: bash
+
+  vhost:
+    if: inputs.deploy_action == 'destroy' && env.CLOUD == 'gcp'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - name: Pre Setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip jq
+          python -m pip install --upgrade pip jinja2
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.6.4
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+      - name: Fetch SSH Keys
+        run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > ssh_keys.pub
+        working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+      - name: Terraform Init And Apply
+        run: |
+          python3 scripts/init.py -c 'multi-cluster-config.yaml'
+          bash scripts/run_terraform.sh
+        working-directory: iac_modules/terraform/${{ env.CLOUD }}/vhost/
+      - name: Delete Google Cloud Network static addresses Resources
+        run: |
+          gcloud compute addresses delete sit --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
+          gcloud compute addresses delete uat --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
+          gcloud compute addresses delete prod --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
+          gcloud compute addresses delete monitor --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
+          gcloud compute addresses delete nat-manual-ip-0 --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
+    env:
+      STATE: "destroy"
+
+  key_pair:
+    if: inputs.deploy_action == 'destroy' && env.CLOUD == 'gcp'
+    runs-on: ubuntu-latest
+    needs:
+      - vhost
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - name: Pre Setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip jq
+          python -m pip install --upgrade pip jinja2
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.6.4
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+      - name: Set up Google Cloud SDK
+        uses: 'google-github-actions/setup-gcloud@v1'
+        with:
+          version: '>= 363.0.0'
+      - name: Check if SSH Metadata exists
+        id: check_ssh_metadata
+        run: bash scripts/check_ssh_metadata.sh multi-cluster-config.yaml
+        working-directory: iac_modules/terraform/${{ env.CLOUD }}/key_pair/
+      - name: Fetch SSH Keys
+        if: steps.check_ssh_metadata.outputs.ssh_metadata_exists == 'false'
+        run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > ssh_keys.pub
+        working-directory: iac_modules/terraform/${{ env.CLOUD }}/key_pair/
+      - name: Terraform Init And Apply
+        if: steps.check_ssh_metadata.outputs.ssh_metadata_exists == 'false'
+        run: |
+          python3 scripts/init.py -c 'multi-cluster-config.yaml'
+          bash scripts/run_terraform.sh
+        working-directory: iac_modules/terraform/${{ env.CLOUD }}/key_pair/
+    env:
+      STATE: "destroy"
+
+  firewall:
+    if: inputs.deploy_action == 'destroy' && env.CLOUD == 'gcp'
+    runs-on: ubuntu-latest
+    needs:
+      - vhost
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - name: Pre Setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip jq
+          python -m pip install --upgrade pip jinja2
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.6.4
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+      - name: Terraform Init And Apply
+        run: |
+          python3 scripts/init.py -c 'multi-cluster-config.yaml'
+          bash scripts/run_terraform.sh
+        working-directory: iac_modules/terraform/${{ env.CLOUD }}/firewall/
+    env:
+      STATE: "destroy"
+
+  network:
+    if: inputs.deploy_action == 'destroy' && env.CLOUD == 'gcp'
+    runs-on: ubuntu-latest
+    needs:
+      - vhost
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - name: Pre Setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip jq
+          python -m pip install --upgrade pip jinja2
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.6.4
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+      - name: Terraform Init And Apply
+        run: |
+          python3 scripts/init.py -c 'multi-cluster-config.yaml'
+          bash scripts/run_terraform.sh
+        working-directory: iac_modules/terraform/${{ env.CLOUD }}/network/
+      - name: Delete Google Cloud Network Resources
+        run: |
+          gcloud compute routers delete nat-router --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
+          gcloud compute routers delete public-router --region=asia-northeast1 --project=cloudsvcworkspace --quiet || true
+    env:
+      STATE: "destroy"
+
+  gcs:
+    if: inputs.deploy_action == 'destroy' && env.CLOUD == 'gcp'
+    runs-on: ubuntu-latest
+    needs:
+      - vhost
+      - network
+      - key_pair
+      - firewall
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+      - name: Pre Setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip jq
+          python -m pip install --upgrade pip jinja2
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.6.4
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS_JSON }}
+      - name: Set up Google Cloud SDK
+        uses: 'google-github-actions/setup-gcloud@v1'
+        with:
+          version: '>= 363.0.0'
+      - name: Delete Google Cloud Storage Bucket
+        run: |
+          gsutil -m rm -r gs://iac_status_terraform_gcp || true
+          gcloud storage buckets delete gs://iac_status_terraform_gcp --quiet || true
+    env:
+      STATE: "destroy"

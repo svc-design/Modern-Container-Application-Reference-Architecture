@@ -23,6 +23,23 @@ on:
           - 'true'
           - 'false'
         default: 'true'
+  workflow_call:
+    inputs:
+      deploy_action:
+        description: "Deployment action to execute"
+        required: false
+        type: string
+      deploy_dry_run:
+        description: "Run deployment steps in dry-run mode"
+        required: false
+        type: string
+    secrets:
+      VPS_USER:
+        required: true
+      ANSIBLE_VAULT_PASSWORD:
+        required: true
+      SSH_PRIVATE_KEY:
+        required: true
   workflow_run:
     workflows:
       - Provision Monitor Server Infrastructure
@@ -60,8 +77,8 @@ jobs:
     if: needs.verify-dependencies.outputs.should-run == 'true'
     runs-on: ubuntu-latest
     env:
-      DEPLOY_ACTION: ${{ github.event.inputs.deploy_action || 'upgrade' }}
-      DEPLOY_DRY_RUN: ${{ github.event.inputs.deploy_dry_run || 'true' }}
+      DEPLOY_ACTION: ${{ inputs.deploy_action || github.event.inputs.deploy_action || 'upgrade' }}
+      DEPLOY_DRY_RUN: ${{ inputs.deploy_dry_run || github.event.inputs.deploy_dry_run || 'true' }}
       ANSIBLE_USER: ${{ secrets.VPS_USER }}
       ANSIBLE_STDOUT_CALLBACK: yaml
       ANSIBLE_LOAD_CALLBACK_PLUGINS: 'true'
