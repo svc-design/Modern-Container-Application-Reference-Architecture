@@ -40,4 +40,5 @@ jobs:
     with:
       deploy_action: ${{ inputs.deploy_action }}
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
+      config_path: ${{ matrix.config }}
     secrets: inherit
