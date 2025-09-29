@@ -1,0 +1,16 @@
+compute:
+  instances:
+    - name: baseline-bastion
+      plan: vc2-1c-1gb
+      region: ewr
+      os_id: 1743
+      hostname: baseline-bastion
+      label: baseline-bastion
+      enable_ipv6: false
+      backups: disabled
+      firewall_group: baseline-fw
+      vpcs:
+        - baseline-vpc
+      tags:
+        - bastion
+        - baseline
