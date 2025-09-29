@@ -1,0 +1,123 @@
+name: GitOps Application Deployment Template
+
+env:
+  GITOPS_REPO: "https://github.com/svc-design/gitops"
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/app-pipeline-template.yaml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Optional environment override for manual runs'
+        required: false
+        default: ''
+      application:
+        description: 'Optional application override for manual runs'
+        required: false
+        default: ''
+
+jobs:
+  setup-container-gitops:
+    name: Setup FluxCD Agent (${matrix.env} · ${matrix.cluster_or_vhosts})
+    strategy:
+      matrix: &deployment_matrix
+        include:
+          - env: sit
+            cluster_or_vhosts: vhosts-sit
+            app_name: harbor
+            gitops_type: vhosts
+            gitops_branch: main
+            gitops_path: ''
+            gitops_playbook: sync/config.yaml
+            ssh_host: hw-node.svc.plus
+            ssh_host_ip: '139.9.139.22'
+          - env: nat
+            cluster_or_vhosts: k3s-nat
+            app_name: chaos-mesh
+            gitops_type: container
+            gitops_branch: main
+            gitops_path: clusters/k3s-nat
+            gitops_playbook: ''
+          - env: prod
+            cluster_or_vhosts: k3s-prod
+            app_name: cloud-native-app
+            gitops_type: container
+            gitops_branch: main
+            gitops_path: clusters/k3s-prod
+            gitops_playbook: ''
+    if: |
+      matrix.gitops_type == 'container' &&
+      (github.event_name != 'workflow_dispatch' ||
+       github.event.inputs.application == '' ||
+       github.event.inputs.application == matrix.app_name) &&
+      (github.event_name != 'workflow_dispatch' ||
+       github.event.inputs.environment == '' ||
+       github.event.inputs.environment == matrix.env)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare kubeconfig
+        env:
+          RAW_KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        run: scripts/workflows/prepare-kubeconfig.sh
+        shell: bash
+
+      - name: Install Flux CLI
+        uses: fluxcd/flux2-action@v2
+        with:
+          version: '2.2.3'
+
+      - name: Install FluxCD components
+        run: scripts/workflows/install-flux-components.sh
+        shell: bash
+
+      - name: Configure GitOps reconciliation
+        env:
+          GITOPS_BRANCH: ${{ matrix.gitops_branch }}
+          GITOPS_PATH: ${{ matrix.gitops_path }}
+        run: scripts/workflows/configure-flux-gitops.sh
+        shell: bash
+
+  setup-vhosts-gitops:
+    name: Setup XConfig Agent (${matrix.env} · ${matrix.cluster_or_vhosts})
+    needs: []
+    strategy:
+      matrix: *deployment_matrix
+    if: |
+      matrix.gitops_type == 'vhosts' &&
+      (github.event_name != 'workflow_dispatch' ||
+       github.event.inputs.application == '' ||
+       github.event.inputs.application == matrix.app_name) &&
+      (github.event_name != 'workflow_dispatch' ||
+       github.event.inputs.environment == '' ||
+       github.event.inputs.environment == matrix.env)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Ansible
+        run: scripts/workflows/install-ansible.sh
+        shell: bash
+
+      - name: Configure SSH access and inventory
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          TARGET_HOST: ${{ matrix.ssh_host }}
+          TARGET_IP: ${{ matrix.ssh_host_ip }}
+        run: scripts/workflows/configure-ssh-inventory.sh
+        shell: bash
+
+      - name: Generate XConfig agent playbook
+        env:
+          GITOPS_BRANCH: ${{ matrix.gitops_branch }}
+          GITOPS_PLAYBOOK: ${{ matrix.gitops_playbook }}
+        run: scripts/workflows/generate-xconfig-playbook.sh
+        shell: bash
+
+      - name: Deploy XConfig agent
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: 'False'
+          GITOPS_BRANCH: ${{ matrix.gitops_branch }}
+          GITOPS_PLAYBOOK: ${{ matrix.gitops_playbook }}
+        run: scripts/workflows/deploy-xconfig-agent.sh
+        shell: bash
