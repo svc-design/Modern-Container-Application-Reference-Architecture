@@ -1,0 +1,3 @@
+name: vultr-landingzone-baseline
+runtime: python
+description: Pulumi baseline project for provisioning Vultr landing zone resources

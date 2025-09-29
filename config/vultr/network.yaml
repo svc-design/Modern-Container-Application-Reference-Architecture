@@ -1,0 +1,7 @@
+network:
+  vpcs:
+    - name: baseline-vpc
+      description: Baseline landing zone VPC
+      region: ewr
+      v4_subnet: 10.50.0.0
+      v4_subnet_mask: 16

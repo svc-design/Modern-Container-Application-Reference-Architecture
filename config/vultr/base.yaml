@@ -1,0 +1,5 @@
+vultr:
+  region: ewr
+  default_tags:
+    environment: baseline
+    project: modern-container-app

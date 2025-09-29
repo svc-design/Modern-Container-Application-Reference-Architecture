@@ -4,5 +4,6 @@ pulumi-aws
 pulumi-gcp
 pulumi-azure-native
 pulumi-alicloud
+ediri_vultr
 PyYAML
 jinja2
