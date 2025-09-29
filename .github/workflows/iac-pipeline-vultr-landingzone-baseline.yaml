@@ -3,8 +3,8 @@ name: Vultr Landing Zone Baseline
 on:
   push:
     paths:
-      - 'iac_modules/pulumi/vultr/**'
       - 'config/vultr/**'
+      - 'iac_modules/pulumi/vultr/**'
       - '.github/workflows/iac-pipeline-vultr-landingzone-baseline.yaml'
   pull_request:
     branches: [main]
