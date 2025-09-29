@@ -2,4 +2,6 @@
 
 from .tags import merge_tags
 
-__all__ = ["merge_tags"]
+__all__ = [
+    "merge_tags",
+]
