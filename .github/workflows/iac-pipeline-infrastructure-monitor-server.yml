@@ -4,13 +4,25 @@ on:
   workflow_dispatch:
     inputs:
       deploy_action:
-        description: "Action to perform (upgrade, destroy, etc.)"
-        required: false
+        description: "Deployment action to execute"
+        type: choice
+        options:
+          - init
+          - magrate
+          - upgrade
+          - backup
+          - restore
+          - destroy
         default: upgrade
       deploy_dry_run:
-        description: "Run Ansible in check mode"
-        required: false
+        description: "Run deployment steps in dry-run mode"
+        type: choice
+        options:
+          - 'true'
+          - 'false'
         default: 'true'
+  pull_request:
+    branches: [main]
   push:
     branches:
       - main
