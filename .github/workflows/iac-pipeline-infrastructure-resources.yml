@@ -57,6 +57,12 @@ jobs:
             config: config/vultr/
             workflow: iac-pipeline-vultr-landingzone-baseline.yaml
             action: output
+    uses: ./.github/workflows/${{ matrix.workflow }}
+    with:
+      deploy_action: ${{ matrix.action || inputs.deploy_action }}
+      deploy_dry_run: ${{ inputs.deploy_dry_run }}
+      config_path: ${{ matrix.config }}
+    secrets: inherit
   verify-baseline-status:
     if: inputs.deploy_action != 'destroy'
     name: Verify Alicloud baseline readiness
@@ -105,8 +111,6 @@ jobs:
     secrets:
       SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
-    env:
-      STATE: "create"
 
   setup-monitor-cluster:
     name: Configure monitor exporters

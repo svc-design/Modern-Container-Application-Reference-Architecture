@@ -30,15 +30,18 @@ jobs:
           - provider: Alicloud
             config: config/alicloud/
             workflow: iac-pipeline-alicloud-landingzone-baseline.yaml
+            action: output
           - provider: AWS
             config: config/aws-global/
             workflow: iac-pipeline-aws-landingzone-baseline.yaml
+            action: output
           - provider: Vultr
             config: config/vultr/
             workflow: iac-pipeline-vultr-landingzone-baseline.yaml
+            action: output
     uses: ./.github/workflows/${{ matrix.workflow }}
     with:
-      deploy_action: ${{ inputs.deploy_action }}
+      deploy_action: ${{ matrix.action || inputs.deploy_action }}
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
       config_path: ${{ matrix.config }}
     secrets: inherit
