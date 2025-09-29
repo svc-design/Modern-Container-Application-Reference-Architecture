@@ -63,7 +63,7 @@ jobs:
   init:
     name: Initialize Vultr Pulumi stacks
     runs-on: ubuntu-latest
-    if: env.DEPLOY_ACTION == 'init'
+    if: ${{ env.DEPLOY_ACTION == 'init' }}
     steps:
       - uses: actions/checkout@v4
       - uses: pulumi/setup-pulumi@v3
@@ -80,7 +80,7 @@ jobs:
 
   preview:
     name: Preview baseline changes
-    if: env.DEPLOY_ACTION != 'init'
+    if: ${{ env.DEPLOY_ACTION != 'init' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -104,7 +104,7 @@ jobs:
   apply:
     name: Apply to production stack
     needs: preview
-    if: env.DEPLOY_ACTION != 'init'
+    if: ${{ env.DEPLOY_ACTION != 'init' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
