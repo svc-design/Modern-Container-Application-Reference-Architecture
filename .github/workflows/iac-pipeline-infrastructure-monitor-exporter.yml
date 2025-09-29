@@ -1,17 +1,27 @@
 name: Deploy Infrastructure Monitor Exporters
 
 on:
+  pull_request:
+    branches: [main]
   workflow_dispatch:
-    branches:
-      - main
     inputs:
       deploy_action:
-        description: 'Deployment action to perform'
-        required: false
+        description: "Deployment action to execute"
+        type: choice
+        options:
+          - init
+          - magrate
+          - upgrade
+          - backup
+          - restore
+          - destroy
         default: upgrade
       deploy_dry_run:
-        description: 'Whether to perform a dry-run'
-        required: false
+        description: "Run deployment steps in dry-run mode"
+        type: choice
+        options:
+          - 'true'
+          - 'false'
         default: 'true'
   workflow_run:
     workflows:
