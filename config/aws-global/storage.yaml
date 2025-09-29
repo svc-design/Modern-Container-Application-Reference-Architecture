@@ -1,0 +1,18 @@
+storage:
+  buckets:
+    - name: lz-global-logs
+      acl: private
+      versioning: true
+      force_destroy: false
+      block_public_access: true
+      lifecycle_rules:
+        - id: expire-old-logs
+          enabled: true
+          transitions:
+            - storage_class: GLACIER
+              days: 90
+          expiration_days: 365
+      server_side_encryption:
+        sse_algorithm: AES256
+      tags:
+        purpose: audit-logs
