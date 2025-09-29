@@ -20,14 +20,6 @@ on:
           - 'true'
           - 'false'
         default: 'true'
-      target_cloud_provider:
-        description: "Target cloud provider for provisioning"
-        type: choice
-        options:
-          - Alicloud
-          - AWS
-          - Vultr
-        default: Alicloud
 
 jobs:
   run-baseline:
