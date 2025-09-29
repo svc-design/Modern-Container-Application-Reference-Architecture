@@ -1,11 +1,11 @@
-name: Vultr Landing Zone Baseline
+name: AWS Landing Zone Baseline
 
 on:
   push:
     paths:
-      - 'iac_modules/pulumi/vultr/**'
-      - 'config/vultr/**'
-      - '.github/workflows/iac-pipeline-vultr-landingzone-baseline.yaml'
+      - 'iac_modules/pulumi/**'
+      - 'config/aws-global/**'
+      - '.github/workflows/iac-pipeline-aws-landingzone-baseline.yaml'
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -38,20 +38,26 @@ on:
         type: string
         default: 'true'
     secrets:
-      VULTR_API_KEY:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_SESSION_TOKEN:
+        required: false
+      AWS_REGION:
         required: true
       PULUMI_ACCESS_TOKEN:
         required: true
 
 env:
   PULUMI_CI: 'true'
-  CONFIG_PATH: config/vultr
+  CONFIG_PATH: config/aws-global
   DEPLOY_ACTION: ${{ inputs.deploy_action || github.event.inputs.deploy_action || 'upgrade' }}
   DEPLOY_DRY_RUN: ${{ inputs.deploy_dry_run || github.event.inputs.deploy_dry_run || 'true' }}
 
 jobs:
   preview:
-    name: Preview baseline changes
+    name: Preview AWS baseline changes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -66,14 +72,18 @@ jobs:
         uses: pulumi/actions@v4
         with:
           command: preview
-          stack-name: vultr/baseline-dev
-          work-dir: iac_modules/pulumi/vultr
+          stack-name: aws/landingzone-baseline-dev
+          work-dir: iac_modules/pulumi
         env:
-          VULTR_API_KEY: ${{ secrets.VULTR_API_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
   apply:
-    name: Apply to production stack
+    name: Apply to AWS production stack
     needs: preview
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -90,8 +100,12 @@ jobs:
         uses: pulumi/actions@v4
         with:
           command: up
-          stack-name: vultr/baseline-prod
-          work-dir: iac_modules/pulumi/vultr
+          stack-name: aws/landingzone-baseline-prod
+          work-dir: iac_modules/pulumi
         env:
-          VULTR_API_KEY: ${{ secrets.VULTR_API_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}

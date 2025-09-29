@@ -1,0 +1,49 @@
+name: Multi-Cloud Landing Zone Baseline
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_action:
+        description: "Deployment action to execute"
+        type: choice
+        options:
+          - init
+          - upgrade
+          - backup
+          - restore
+          - destroy
+        default: upgrade
+      deploy_dry_run:
+        description: "Run deployment steps in dry-run mode"
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+        default: 'true'
+      target_cloud_provider:
+        description: "Target cloud provider for provisioning"
+        type: choice
+        options:
+          - Alicloud
+          - AWS
+          - Vultr
+        default: Alicloud
+
+jobs:
+  run-baseline:
+    name: Trigger baseline workflow (${{ matrix.provider }})
+    strategy:
+      matrix:
+        include:
+          - provider: Alicloud
+            workflow: iac-pipeline-alicloud-landingzone-baseline.yaml
+          - provider: AWS
+            workflow: iac-pipeline-aws-landingzone-baseline.yaml
+          - provider: Vultr
+            workflow: iac-pipeline-vultr-landingzone-baseline.yaml
+    if: inputs.target_cloud_provider == matrix.provider
+    uses: ./.github/workflows/${{ matrix.workflow }}
+    with:
+      deploy_action: ${{ inputs.deploy_action }}
+      deploy_dry_run: ${{ inputs.deploy_dry_run }}
+    secrets: inherit

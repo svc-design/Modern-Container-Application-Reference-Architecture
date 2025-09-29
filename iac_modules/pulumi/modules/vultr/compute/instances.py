@@ -1,3 +1,5 @@
+"""Compute provisioning helpers for Vultr."""
+
 from __future__ import annotations
 
 from typing import Any, Dict, Mapping
@@ -5,16 +7,7 @@ from typing import Any, Dict, Mapping
 import pulumi
 import ediri_vultr as vultr
 
-
-def _merge_tags(default_tags: Mapping[str, str] | None, instance_tags: Any) -> list[str] | None:
-    tags = []
-    if default_tags:
-        tags.extend(f"{key}:{value}" for key, value in default_tags.items())
-    if isinstance(instance_tags, list):
-        tags.extend(str(tag) for tag in instance_tags)
-    elif isinstance(instance_tags, Mapping):
-        tags.extend(f"{key}:{value}" for key, value in instance_tags.items())
-    return tags or None
+from ..common import merge_tags
 
 
 def create_instances(
@@ -73,7 +66,7 @@ def create_instances(
         if ssh_keys := inst_conf.get("ssh_key_ids"):
             instance_args["ssh_key_ids"] = ssh_keys
 
-        tags = _merge_tags(default_tags, inst_conf.get("tags"))
+        tags = merge_tags(default_tags, inst_conf.get("tags"))
         if tags:
             instance_args["tags"] = tags
 

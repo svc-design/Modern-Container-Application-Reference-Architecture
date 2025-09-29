@@ -15,7 +15,7 @@ REPO_ROOT = PULUMI_ROOT.parent.parent
 sys.path.append(str(PULUMI_ROOT))
 
 from utils.config_loader import load_merged_config  # noqa: E402
-from vultr.modules import create_firewall_groups, create_instances, create_vpcs  # noqa: E402
+from modules.vultr import create_firewall_groups, create_instances, create_vpcs  # noqa: E402
 
 
 def main() -> None:
