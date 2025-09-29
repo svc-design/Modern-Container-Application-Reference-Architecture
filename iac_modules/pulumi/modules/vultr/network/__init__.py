@@ -2,4 +2,6 @@
 
 from .vpc import create_vpcs
 
-__all__ = ["create_vpcs"]
+__all__ = [
+    "create_vpcs",
+]
