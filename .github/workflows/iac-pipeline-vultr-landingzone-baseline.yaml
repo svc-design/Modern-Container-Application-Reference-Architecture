@@ -94,6 +94,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+      - uses: pulumi/setup-pulumi@v3
+        with:
+          pulumi-version: '^3'
+      - name: Ensure Pulumi stack exists
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+        run: |
+          pulumi login
+          pulumi stack select vultr/baseline-dev --non-interactive || pulumi stack init vultr/baseline-dev --non-interactive
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -125,6 +134,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+      - uses: pulumi/setup-pulumi@v3
+        with:
+          pulumi-version: '^3'
+      - name: Ensure Pulumi stack exists
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+        run: |
+          pulumi login
+          pulumi stack select vultr/baseline-prod --non-interactive || pulumi stack init vultr/baseline-prod --non-interactive
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
