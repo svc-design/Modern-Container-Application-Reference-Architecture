@@ -6,7 +6,28 @@ on:
       - 'iac_modules/pulumi/**'
       - 'config/alicloud/**'
       - '.github/workflows/iac-pipeline-alicloud-landingzone-baseline.yaml'
+  pull_request:
+    branches: [main]
   workflow_dispatch:
+    inputs:
+      deploy_action:
+        description: "Deployment action to execute"
+        type: choice
+        options:
+          - init
+          - magrate
+          - upgrade
+          - backup
+          - restore
+          - destroy
+        default: upgrade
+      deploy_dry_run:
+        description: "Run deployment steps in dry-run mode"
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+        default: 'true'
 
 env:
   PULUMI_CI: 'true'
