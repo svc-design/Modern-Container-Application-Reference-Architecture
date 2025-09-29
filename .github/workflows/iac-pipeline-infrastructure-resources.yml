@@ -59,7 +59,7 @@ jobs:
       - name: Evaluate upstream workflow status
         id: evaluate
         uses: actions/github-script@v7
-        if: inputs.cloud_provider == 'Alicloud'
+        if: inputs.cloud_provider == 'alicloud'
         with:
           script: |
             const { evaluateWorkflowStatus } = require('./.github/scripts/evaluate-workflow-status');
@@ -71,9 +71,9 @@ jobs:
     name: Apply cluster Terraform (${{ matrix.name }})
     needs:
       - verify-baseline-status
-    if: |
+    if: >
       inputs.deploy_action != 'destroy' &&
-      env.CLOUD == 'gcp' &&
+      inputs.cloud_provider == 'gcp' &&
       needs.verify-baseline-status.outputs.should-run == 'true'
     strategy:
       matrix:
@@ -95,9 +95,9 @@ jobs:
     name: Configure monitor exporters
     needs:
       - apply-cluster-resources
-    if: |
+    if: >
       inputs.deploy_action != 'destroy' &&
-      env.CLOUD == 'gcp' &&
+      inputs.cloud_provider == 'gcp' &&
       needs.apply-cluster-resources.result == 'success'
     uses: ./.github/workflows/iac-pipeline-infrastructure-monitor-exporter.yml
     with:
@@ -112,10 +112,10 @@ jobs:
     name: Bootstrap GitOps agent (${{ matrix.cluster_or_vhosts }})
     needs:
       - setup-monitor-cluster
-    if: |
-      env.CLOUD == 'gcp' &&
+    if: >
+      inputs.cloud_provider == 'gcp' &&
       needs.setup-monitor-cluster.result == 'success' &&
-      (inputs.deploy_action == 'init' || inputs.deploy_action == 'magrate' || inputs.deploy_action == 'upgrade')
+      (inputs.deploy_action == 'init' || inputs.deploy_action == 'migrate' || inputs.deploy_action == 'upgrade')
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -154,7 +154,7 @@ jobs:
         shell: bash
 
   vhost:
-    if: inputs.deploy_action == 'destroy' && env.CLOUD == 'gcp'
+    if: inputs.deploy_action == 'destroy' && inputs.cloud_provider == 'gcp'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -193,7 +193,7 @@ jobs:
       STATE: "destroy"
 
   key_pair:
-    if: inputs.deploy_action == 'destroy' && env.CLOUD == 'gcp'
+    if: inputs.deploy_action == 'destroy' && inputs.cloud_provider == 'gcp'
     runs-on: ubuntu-latest
     needs:
       - vhost
@@ -237,7 +237,7 @@ jobs:
       STATE: "destroy"
 
   firewall:
-    if: inputs.deploy_action == 'destroy' && env.CLOUD == 'gcp'
+    if: inputs.deploy_action == 'destroy' && inputs.cloud_provider == 'gcp'
     runs-on: ubuntu-latest
     needs:
       - vhost
@@ -268,7 +268,7 @@ jobs:
       STATE: "destroy"
 
   network:
-    if: inputs.deploy_action == 'destroy' && env.CLOUD == 'gcp'
+    if: inputs.deploy_action == 'destroy' && inputs.cloud_provider == 'gcp'
     runs-on: ubuntu-latest
     needs:
       - vhost
@@ -303,7 +303,7 @@ jobs:
       STATE: "destroy"
 
   gcs:
-    if: inputs.deploy_action == 'destroy' && env.CLOUD == 'gcp'
+    if: inputs.deploy_action == 'destroy' && inputs.cloud_provider == 'gcp'
     runs-on: ubuntu-latest
     needs:
       - vhost
