@@ -1,0 +1,16 @@
+security:
+  firewall_groups:
+    - name: baseline-fw
+      description: Baseline perimeter firewall rules
+      rules:
+        - name: allow-ssh
+          protocol: tcp
+          ip_type: v4
+          cidr: 0.0.0.0/0
+          port: "22"
+          notes: Allow SSH for operations
+        - name: allow-icmp
+          protocol: icmp
+          ip_type: v4
+          cidr: 0.0.0.0/0
+          notes: Allow ICMP diagnostics

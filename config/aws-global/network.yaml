@@ -1,0 +1,29 @@
+network:
+  vpcs:
+    - name: lz-global-vpc
+      cidr_block: 10.20.0.0/16
+      tags:
+        env: shared
+      subnets:
+        - name: lz-public-a
+          cidr_block: 10.20.1.0/24
+          availability_zone: us-east-1a
+          type: public
+          tags:
+            tier: ingress
+        - name: lz-private-a
+          cidr_block: 10.20.11.0/24
+          availability_zone: us-east-1a
+          type: private
+          tags:
+            tier: application
+        - name: lz-private-b
+          cidr_block: 10.20.21.0/24
+          availability_zone: us-east-1b
+          type: private
+          tags:
+            tier: application
+      routes:
+        - subnet_type: public
+          destination_cidr_block: 0.0.0.0/0
+          gateway: internet_gateway

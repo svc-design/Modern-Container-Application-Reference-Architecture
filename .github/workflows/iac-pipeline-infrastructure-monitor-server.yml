@@ -1,8 +1,6 @@
-name: Deploy Infrastructure Monitor Exporters
+name: Provision Monitor Server Infrastructure
 
 on:
-  pull_request:
-    branches: [main]
   workflow_dispatch:
     inputs:
       deploy_action:
@@ -23,11 +21,27 @@ on:
           - 'true'
           - 'false'
         default: 'true'
+
   workflow_run:
     workflows:
-      - Provision Monitor Server Infrastructure
+      - MultiCluster Pipeline Create with IAC tools
     types:
       - completed
+
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/iac-pipeline-infrastructure-monitor-server.yml'
+
+env:
+  DEPLOY_ACTION: ${{ github.event.inputs.deploy_action || '' }}
+  DEPLOY_DRY_RUN: ${{ github.event.inputs.deploy_dry_run || '' }}
+  ANSIBLE_USER: ${{ secrets.VPS_USER }}
+  ANSIBLE_STDOUT_CALLBACK: yaml
+  ANSIBLE_LOAD_CALLBACK_PLUGINS: 'true'
 
 jobs:
   verify-dependencies:
@@ -52,19 +66,26 @@ jobs:
           script: |
             const { evaluateWorkflowStatus } = require('./.github/scripts/evaluate-workflow-status');
             await evaluateWorkflowStatus({ github, context, core }, {
-              dependencyWorkflowFile: 'iac-pipeline-infrastructure-monitor-server.yml',
+              dependencyWorkflowFile: 'iac-pipeline-create.yml',
             });
 
-  deploy:
+  pre-setup:
     needs: verify-dependencies
     if: needs.verify-dependencies.outputs.should-run == 'true'
     runs-on: ubuntu-latest
-    env:
-      DEPLOY_ACTION: ${{ github.event.inputs.deploy_action || 'upgrade' }}
-      DEPLOY_DRY_RUN: ${{ github.event.inputs.deploy_dry_run || 'true' }}
-      ANSIBLE_USER: ${{ secrets.VPS_USER }}
-      ANSIBLE_STDOUT_CALLBACK: yaml
-      ANSIBLE_LOAD_CALLBACK_PLUGINS: 'true'
+    steps:
+      - name: Pre-setup confirmation
+        run: echo "Pre-setup stage completed"
+
+  deploy:
+    needs:
+      - pre-setup
+      - verify-dependencies
+    if: needs.verify-dependencies.outputs.should-run == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        site: [otel.svc.plus]
     steps:
       - uses: actions/checkout@v4
 
@@ -120,9 +141,7 @@ jobs:
           install -m 700 -d ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          for host in cn-homepage.svc.plus global-homepage.svc.plus otel.svc.plus; do
-            ssh-keyscan -H "$host" >> ~/.ssh/known_hosts
-          done
+          ssh-keyscan -H "${{ matrix.site }}" >> ~/.ssh/known_hosts
 
       - name: Prepare provisioning inputs
         id: prepare_provisioning
@@ -139,54 +158,32 @@ jobs:
           fi
           printf 'extra_flags=%s\n' "${extra_flags[*]}" >> "$GITHUB_OUTPUT"
 
-          exporters_playbook="playbooks/deploy_exporters_vhosts.yml"
-          if [[ ! -f "$exporters_playbook" ]]; then
-            echo "Required playbook ${exporters_playbook} was not found" >&2
+          monitor_playbook="playbooks/deploy_monitor_server.yml"
+          if [[ ! -f "$monitor_playbook" ]]; then
+            echo "Required playbook ${monitor_playbook} was not found" >&2
             exit 1
           fi
-          echo "exporters_playbook=${exporters_playbook}" >> "$GITHUB_OUTPUT"
-
-          blackbox_playbook="playbooks/deploy_blackbox_exporters_vhosts.yml"
-          if [[ ! -f "$blackbox_playbook" ]]; then
-            echo "Required playbook ${blackbox_playbook} was not found" >&2
-            exit 1
-          fi
-          echo "blackbox_playbook=${blackbox_playbook}" >> "$GITHUB_OUTPUT"
+          echo "monitor_playbook=${monitor_playbook}" >> "$GITHUB_OUTPUT"
 
           case "${EFFECTIVE_DEPLOY_ACTION}" in
             destroy|backup|backup-rollout|restore)
               echo "skip=true" >> "$GITHUB_OUTPUT"
-              echo "Action ${EFFECTIVE_DEPLOY_ACTION} is not supported for exporter provisioning playbooks" >&2
+              echo "Action ${EFFECTIVE_DEPLOY_ACTION} is not supported for monitor server provisioning" >&2
               exit 0
               ;;
           esac
 
-      - name: Deploy infrastructure exporters
+      - name: Provision Monitor Server
         if: steps.prepare_provisioning.outputs.skip != 'true'
         working-directory: gitops
         env:
           INVENTORY: ${{ steps.prepare_provisioning.outputs.inventory }}
           EXTRA_FLAGS: ${{ steps.prepare_provisioning.outputs.extra_flags }}
-          EXPORTERS_PLAYBOOK: ${{ steps.prepare_provisioning.outputs.exporters_playbook }}
+          MONITOR_PLAYBOOK: ${{ steps.prepare_provisioning.outputs.monitor_playbook }}
         run: |
           set -euo pipefail
           flags=()
           if [[ -n "${EXTRA_FLAGS}" ]]; then
-            read -r -a flags <<< "${EXTRA_FLAGS}"
+            flags+=(${EXTRA_FLAGS})
           fi
-          ansible-playbook -i "${INVENTORY}" "${EXPORTERS_PLAYBOOK}" "${flags[@]}"
-
-      - name: Deploy blackbox exporters
-        if: steps.prepare_provisioning.outputs.skip != 'true'
-        working-directory: gitops
-        env:
-          INVENTORY: ${{ steps.prepare_provisioning.outputs.inventory }}
-          EXTRA_FLAGS: ${{ steps.prepare_provisioning.outputs.extra_flags }}
-          BLACKBOX_PLAYBOOK: ${{ steps.prepare_provisioning.outputs.blackbox_playbook }}
-        run: |
-          set -euo pipefail
-          flags=()
-          if [[ -n "${EXTRA_FLAGS}" ]]; then
-            read -r -a flags <<< "${EXTRA_FLAGS}"
-          fi
-          ansible-playbook -i "${INVENTORY}" "${BLACKBOX_PLAYBOOK}" "${flags[@]}"
+          ansible-playbook -i "${INVENTORY}" "${MONITOR_PLAYBOOK}" "${flags[@]}" --limit "${{ matrix.site }}"

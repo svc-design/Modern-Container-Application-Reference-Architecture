@@ -1,0 +1,27 @@
+identity:
+  users:
+    - name: lz-automation
+      path: /landingzone/
+      tags:
+        role: automation
+      policies:
+        - arn: arn:aws:iam::aws:policy/AdministratorAccess
+    - name: lz-auditor
+      path: /landingzone/
+      tags:
+        role: audit
+      policies:
+        - arn: arn:aws:iam::aws:policy/SecurityAudit
+  groups:
+    - name: lz-operations
+      path: /landingzone/
+      policies:
+        - arn: arn:aws:iam::aws:policy/PowerUserAccess
+      users:
+        - lz-automation
+    - name: lz-audit
+      path: /landingzone/
+      policies:
+        - arn: arn:aws:iam::aws:policy/SecurityAudit
+      users:
+        - lz-auditor
