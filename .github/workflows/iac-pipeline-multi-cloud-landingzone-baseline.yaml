@@ -33,7 +33,6 @@ jobs:
             workflow: iac-pipeline-aws-landingzone-baseline.yaml
           - provider: Vultr
             workflow: iac-pipeline-vultr-landingzone-baseline.yaml
-    if: inputs.target_cloud_provider == matrix.provider
     uses: ./.github/workflows/${{ matrix.workflow }}
     with:
       deploy_action: ${{ inputs.deploy_action }}
