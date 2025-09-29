@@ -40,6 +40,23 @@ env:
   DEPLOY_DRY_RUN: ${{ inputs.deploy_dry_run }}
 
 jobs:
+  run-baseline:
+    name: Trigger baseline workflow (${{ matrix.provider }})
+    strategy:
+      matrix:
+        include:
+          - provider: Alicloud
+            config: config/alicloud/
+            workflow: iac-pipeline-alicloud-landingzone-baseline.yaml
+            action: output
+          - provider: AWS
+            config: config/aws-global/
+            workflow: iac-pipeline-aws-landingzone-baseline.yaml
+            action: output
+          - provider: Vultr
+            config: config/vultr/
+            workflow: iac-pipeline-vultr-landingzone-baseline.yaml
+            action: output
   verify-baseline-status:
     if: inputs.deploy_action != 'destroy'
     name: Verify Alicloud baseline readiness

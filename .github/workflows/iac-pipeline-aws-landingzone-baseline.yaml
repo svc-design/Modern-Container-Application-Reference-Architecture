@@ -1,4 +1,4 @@
-name: AWS Landing Zone Baseline
+name: AWS Global Landing Zone Baseline
 
 on:
   push:
