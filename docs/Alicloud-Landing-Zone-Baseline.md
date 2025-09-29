@@ -105,3 +105,56 @@
 - 治理扩展：Terraform/ROS、命名规范、标签策略、监控告警、备份快照。
 
 通过上述基线，单用户场景也能在阿里云上建立符合 Landing Zone 要求的环境，并为未来扩展至团队或多账号场景奠定基础。
+
+## 7. Pulumi IaC 实现指南
+
+为便于快速落地上述基线，仓库提供了基于 Pulumi Python 的实现（目录：`iac_modules/pulumi`），与《docs/landingzone/alicloud-landingzone-mvp-single-account.md》设计保持一致，可直接复用或按需裁剪。
+
+### 7.1 模块拆分
+
+| 模块 | 说明 |
+| --- | --- |
+| `modules/identity/ram.py` | 创建 RAM 用户、用户组及策略绑定，覆盖 `ops-automation`、`audit-viewer` 等角色需求。 |
+| `modules/storage/oss.py` | 管理 OSS 日志桶（版本控制 + 生命周期），用于 ActionTrail 与 Pulumi 状态存储。 |
+| `modules/audit/actiontrail.py` | 启用 ActionTrail，将操作日志集中投递至指定 OSS Bucket。 |
+| `modules/config_service/baseline.py` | 初始化 Cloud Config Recorder、Delivery Channel 与基础合规规则。 |
+| `modules/network/vpc.py` | 构建单 VPC + 双可用区交换机的网络基线拓扑。 |
+| `modules/security/security_groups.py` | 创建默认安全组及入/出站规则，默认仅放行必要出站流量。 |
+
+### 7.2 配置结构
+
+`config/alicloud/` 目录提供示例配置，按照 Landing Zone 设计拆分：
+
+- `base.yaml`：区域与全局标签定义。
+- `identity.yaml`：RAM 用户 / 用户组与策略映射。
+- `storage.yaml`：ActionTrail 日志桶（版本控制 + 生命周期）。
+- `network.yaml`：VPC / 交换机拓扑结构。
+- `security.yaml`：安全组与默认规则。
+- `audit.yaml`：ActionTrail 开关与 OSS 投递目标。
+- `config-service.yaml`：Cloud Config 基线配置。
+
+> ⚠️ 注意：`target_arn`、`assume_role_arn` 等字段需替换为真实账号 ID（`${AliUid}`）。
+
+### 7.3 使用示例
+
+```bash
+# 安装依赖
+pip install -r requirements.txt
+
+# 指定配置目录（默认读取 config/，此处指向示例配置）
+export CONFIG_PATH=config/alicloud
+
+# Pulumi 登录（可选：使用 OSS backend 或 Pulumi Service）
+pulumi login
+
+# 预览或部署
+pulumi preview --cwd iac_modules/pulumi
+pulumi up --cwd iac_modules/pulumi
+```
+
+### 7.4 自动化与扩展建议
+
+- 可通过 `.github/workflows/iac-pipeline-alicloud-landingzone-baseline.yaml`，结合 `pulumi/actions@v4` 构建 Preview + 主干自动部署流程，使用仓库 Secrets 管理 `ALICLOUD_ACCESS_KEY_ID/SECRET` 与 `PULUMI_ACCESS_TOKEN`。
+- 根据生产需求扩展 Cloud Config 规则或引入企业版聚合器。
+- 在安全组模块中追加环境专属规则（Prod/Test）。
+- 利用 `pulumi stack` 拆分 dev / prod 状态，配合 GitHub Environments 审批。
