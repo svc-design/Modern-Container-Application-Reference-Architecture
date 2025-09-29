@@ -1,4 +1,4 @@
-name: MultiCluster Infrastructure Pipeline
+name: MultiCloud Infrastructure Pipeline
 
 on:
   workflow_dispatch:
@@ -7,8 +7,8 @@ on:
         description: "Deployment action to execute"
         type: choice
         options:
-          - init
-          - magrate
+          - migrate
+          - create
           - upgrade
           - backup
           - restore
@@ -18,16 +18,17 @@ on:
         description: "Run deployment steps in dry-run mode"
         type: choice
         options:
-          - 'true'
-          - 'false'
-        default: 'true'
+          - "true"
+          - "false"
+        default: "true"
       cloud_provider:
         description: "Target cloud provider for provisioning"
         type: choice
         options:
-          - gcp
-          - Alicloud
-        default: gcp
+          - aws
+          - vultr
+          - alicloud
+        default: alicloud
 
 env:
   CLOUD: ${{ inputs.cloud_provider }}

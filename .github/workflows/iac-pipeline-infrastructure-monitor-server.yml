@@ -1,4 +1,4 @@
-name: Provision Monitor Server Infrastructure
+name: Deploy Monitor Server Infrastructure
 
 on:
   workflow_dispatch:
