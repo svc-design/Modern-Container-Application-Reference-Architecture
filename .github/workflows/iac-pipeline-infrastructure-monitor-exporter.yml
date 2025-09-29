@@ -1,0 +1,151 @@
+name: Deploy Infrastructure Monitor Exporters
+
+on:
+  workflow_dispatch:
+    branches:
+      - main
+    inputs:
+      deploy_action:
+        description: 'Deployment action to perform'
+        required: false
+        default: upgrade
+      deploy_dry_run:
+        description: 'Whether to perform a dry-run'
+        required: false
+        default: 'true'
+
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_ACTION: ${{ github.event.inputs.deploy_action || 'upgrade' }}
+      DEPLOY_DRY_RUN: ${{ github.event.inputs.deploy_dry_run || 'true' }}
+      ANSIBLE_USER: ${{ secrets.VPS_USER }}
+      ANSIBLE_STDOUT_CALLBACK: yaml
+      ANSIBLE_LOAD_CALLBACK_PLUGINS: 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine deployment context
+        run: |
+          set -euo pipefail
+          dry_run="${DEPLOY_DRY_RUN}"
+          if [[ "${GITHUB_EVENT_NAME}" != "workflow_dispatch" ]]; then
+            dry_run="true"
+          fi
+          echo "EFFECTIVE_DRY_RUN=${dry_run}" >> "$GITHUB_ENV"
+          action="${DEPLOY_ACTION:-upgrade}"
+          if [[ -z "${action}" ]]; then
+            action="upgrade"
+          fi
+          echo "EFFECTIVE_DEPLOY_ACTION=${action}" >> "$GITHUB_ENV"
+
+      - name: Checkout infrastructure playbooks
+        uses: actions/checkout@v4
+        with:
+          repository: svc-design/gitops
+          path: gitops
+
+      - name: Install Ansible
+        run: |
+          set -euo pipefail
+          python3 -m pip install --upgrade pip
+          python3 -m pip install ansible
+          cat <<'CFG' > ~/.ansible.cfg
+          [defaults]
+          stdout_callback = yaml
+          callbacks_enabled = profile_tasks,timer
+          bin_ansible_callbacks = True
+          CFG
+
+      - name: Configure Ansible Vault password
+        env:
+          ANSIBLE_VAULT_PASSWORD: ${{ secrets.ANSIBLE_VAULT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${ANSIBLE_VAULT_PASSWORD:-}" ]]; then
+            echo "ANSIBLE_VAULT_PASSWORD secret is not configured" >&2
+            exit 1
+          fi
+          printf '%s' "${ANSIBLE_VAULT_PASSWORD}" > ~/.vault_password
+          chmod 600 ~/.vault_password
+
+      - name: Configure SSH access
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          for host in cn-homepage.svc.plus global-homepage.svc.plus otel.svc.plus; do
+            ssh-keyscan -H "$host" >> ~/.ssh/known_hosts
+          done
+
+      - name: Prepare provisioning inputs
+        id: prepare_provisioning
+        working-directory: gitops
+        run: |
+          set -euo pipefail
+
+          echo "inventory=playbooks/inventory.ini" >> "$GITHUB_OUTPUT"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+          extra_flags=()
+          if [[ "${EFFECTIVE_DRY_RUN}" == "true" ]]; then
+            extra_flags+=("--check")
+          fi
+          printf 'extra_flags=%s\n' "${extra_flags[*]}" >> "$GITHUB_OUTPUT"
+
+          exporters_playbook="playbooks/deploy_exporters_vhosts.yml"
+          if [[ ! -f "$exporters_playbook" ]]; then
+            echo "Required playbook ${exporters_playbook} was not found" >&2
+            exit 1
+          fi
+          echo "exporters_playbook=${exporters_playbook}" >> "$GITHUB_OUTPUT"
+
+          blackbox_playbook="playbooks/deploy_blackbox_exporters_vhosts.yml"
+          if [[ ! -f "$blackbox_playbook" ]]; then
+            echo "Required playbook ${blackbox_playbook} was not found" >&2
+            exit 1
+          fi
+          echo "blackbox_playbook=${blackbox_playbook}" >> "$GITHUB_OUTPUT"
+
+          case "${EFFECTIVE_DEPLOY_ACTION}" in
+            destroy|backup|backup-rollout|restore)
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "Action ${EFFECTIVE_DEPLOY_ACTION} is not supported for exporter provisioning playbooks" >&2
+              exit 0
+              ;;
+          esac
+
+      - name: Deploy infrastructure exporters
+        if: steps.prepare_provisioning.outputs.skip != 'true'
+        working-directory: gitops
+        env:
+          INVENTORY: ${{ steps.prepare_provisioning.outputs.inventory }}
+          EXTRA_FLAGS: ${{ steps.prepare_provisioning.outputs.extra_flags }}
+          EXPORTERS_PLAYBOOK: ${{ steps.prepare_provisioning.outputs.exporters_playbook }}
+        run: |
+          set -euo pipefail
+          flags=()
+          if [[ -n "${EXTRA_FLAGS}" ]]; then
+            read -r -a flags <<< "${EXTRA_FLAGS}"
+          fi
+          ansible-playbook -i "${INVENTORY}" "${EXPORTERS_PLAYBOOK}" "${flags[@]}"
+
+      - name: Deploy blackbox exporters
+        if: steps.prepare_provisioning.outputs.skip != 'true'
+        working-directory: gitops
+        env:
+          INVENTORY: ${{ steps.prepare_provisioning.outputs.inventory }}
+          EXTRA_FLAGS: ${{ steps.prepare_provisioning.outputs.extra_flags }}
+          BLACKBOX_PLAYBOOK: ${{ steps.prepare_provisioning.outputs.blackbox_playbook }}
+        run: |
+          set -euo pipefail
+          flags=()
+          if [[ -n "${EXTRA_FLAGS}" ]]; then
+            read -r -a flags <<< "${EXTRA_FLAGS}"
+          fi
+          ansible-playbook -i "${INVENTORY}" "${BLACKBOX_PLAYBOOK}" "${flags[@]}"
