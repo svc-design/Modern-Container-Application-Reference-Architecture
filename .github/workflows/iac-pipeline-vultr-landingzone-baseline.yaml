@@ -61,6 +61,7 @@ env:
 jobs:
   preview:
     name: Preview baseline changes
+    if: ${{ secrets.PULUMI_ACCESS_TOKEN != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -84,7 +85,7 @@ jobs:
   apply:
     name: Apply to production stack
     needs: preview
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && secrets.PULUMI_ACCESS_TOKEN != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
