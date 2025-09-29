@@ -1,0 +1,24 @@
+security:
+  groups:
+    - name: lz-base-sg
+      vpc: lz-global-vpc
+      description: Baseline security group allowing outbound traffic and limited inbound access
+      tags:
+        tier: baseline
+      ingress:
+        - protocol: tcp
+          from_port: 22
+          to_port: 22
+          cidr_blocks:
+            - 0.0.0.0/0
+          description: Temporary SSH access for break-glass
+        - protocol: tcp
+          port_range: "443/443"
+          cidr_blocks:
+            - 0.0.0.0/0
+          description: HTTPS access for shared services
+      egress:
+        - protocol: all
+          port_range: "-1/-1"
+          cidr_blocks:
+            - 0.0.0.0/0

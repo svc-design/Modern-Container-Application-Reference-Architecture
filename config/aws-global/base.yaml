@@ -1,0 +1,6 @@
+aws:
+  region: us-east-1
+  default_tags:
+    project: landingzone-global
+    owner: your-github-handle
+    environment: shared
