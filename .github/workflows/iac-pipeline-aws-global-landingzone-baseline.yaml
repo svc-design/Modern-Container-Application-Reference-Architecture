@@ -15,6 +15,7 @@ on:
         type: choice
         options:
           - init
+          - create
           - migrate
           - upgrade
           - backup
@@ -42,7 +43,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-      - uses: pulumi/setup-pulumi@v4
+      - uses: pulumi/setup-pulumi@v6
         with:
           pulumi-version: '^3'
       - name: Configure AWS credentials
