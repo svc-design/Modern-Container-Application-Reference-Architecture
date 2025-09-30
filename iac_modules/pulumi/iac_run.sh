@@ -8,6 +8,135 @@ PULUMI_BIN=${PULUMI_BIN:-pulumi}
 STACK_NAME=${PULUMI_STACK:-${STACK_NAME:-${STACK:-}}}
 BACKEND_URL=${IAC_STATE_BACKEND:-${IAC_State_backend:-}}
 BACKUPS_DIR=${PULUMI_BACKUP_DIR:-backups}
+CREDENTIALS_FILE=${IAC_CREDENTIALS_FILE:-${HOME}/.iac/credentials}
+
+load_credentials_file() {
+    if [[ ! -f "${CREDENTIALS_FILE}" ]]; then
+        return
+    fi
+
+    if command -v stat >/dev/null 2>&1; then
+        local perms
+        if stat --version >/dev/null 2>&1; then
+            perms=$(stat -c "%a" "${CREDENTIALS_FILE}")
+        else
+            perms=$(stat -f "%OLp" "${CREDENTIALS_FILE}")
+        fi
+        if [[ "${perms}" != "400" ]]; then
+            echo "[警告] ${CREDENTIALS_FILE} 权限建议设置为 0400（当前: ${perms}）。" >&2
+        fi
+    fi
+
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo "[警告] 未找到 python3，无法解析 ${CREDENTIALS_FILE}。" >&2
+        return
+    fi
+
+    local exports
+    if ! exports=$(python3 - "${CREDENTIALS_FILE}" <<'PY'
+import os
+import shlex
+import sys
+
+
+def to_dict(value):
+    return value if isinstance(value, dict) else {}
+
+
+def find_section(data, name):
+    lname = name.lower()
+    for key, value in to_dict(data).items():
+        if str(key).lower() == lname:
+            return value
+    return {}
+
+
+def find_value(section, *names):
+    section_dict = to_dict(section)
+    lower_names = {n.lower() for n in names}
+    for key, value in section_dict.items():
+        if str(key).lower() in lower_names:
+            return value
+    return None
+
+
+def ensure_string(value):
+    if isinstance(value, str):
+        return value.strip()
+    return None
+
+
+def maybe_export(env_key, raw_value, exports):
+    value = ensure_string(raw_value)
+    if value and not os.environ.get(env_key):
+        exports.append((env_key, value))
+
+
+def select_backend(backends):
+    if isinstance(backends, str):
+        return ensure_string(backends)
+    if isinstance(backends, (list, tuple)):
+        candidates = [ensure_string(item) for item in backends if ensure_string(item)]
+        for candidate in candidates:
+            if candidate and candidate.lower().startswith("s3://"):
+                return candidate
+        return candidates[0] if candidates else None
+    return None
+
+
+try:
+    import yaml
+except ModuleNotFoundError:
+    sys.stderr.write("[警告] 解析凭据文件需要 PyYAML，请运行 'pip install PyYAML'.\n")
+    sys.exit(0)
+
+
+path = sys.argv[1]
+try:
+    with open(path, "r", encoding="utf-8") as fh:
+        data = yaml.safe_load(fh) or {}
+except FileNotFoundError:
+    sys.exit(0)
+except yaml.YAMLError as exc:
+    sys.stderr.write(f"[警告] 无法解析凭据文件: {exc}\n")
+    sys.exit(1)
+
+exports = []
+
+iac_state = find_section(data, "iac_state")
+maybe_export("IAC_STATE_BACKEND", select_backend(find_section(iac_state, "backend")), exports)
+
+state_auth = find_section(iac_state, "auth")
+maybe_export("AWS_ACCESS_KEY_ID", find_value(state_auth, "ak", "access_key"), exports)
+maybe_export("AWS_SECRET_ACCESS_KEY", find_value(state_auth, "sk", "secret_key"), exports)
+
+aws_section = find_section(data, "aws-global") or find_section(data, "aws")
+maybe_export("AWS_ACCESS_KEY_ID", find_value(aws_section, "ak", "access_key", "access_key_id"), exports)
+maybe_export("AWS_SECRET_ACCESS_KEY", find_value(aws_section, "sk", "secret_key", "secret_access_key"), exports)
+
+alicloud_section = find_section(data, "alicloud")
+maybe_export("ALICLOUD_ACCESS_KEY", find_value(alicloud_section, "ak", "access_key", "access_key_id"), exports)
+maybe_export("ALICLOUD_SECRET_KEY", find_value(alicloud_section, "sk", "secret_key", "secret_access_key"), exports)
+
+vultr_section = find_section(data, "vultr")
+maybe_export("VULTR_API_KEY", find_value(vultr_section, "api_key", "apikey"), exports)
+
+if exports:
+    for key, value in exports:
+        print(f"export {key}={shlex.quote(value)}")
+PY
+); then
+        echo "[警告] 解析 ${CREDENTIALS_FILE} 失败，已跳过自动加载。" >&2
+        return
+    fi
+    if [[ -n "${exports}" ]]; then
+        eval "${exports}"
+    fi
+}
+
+load_credentials_file
+
+BACKEND_URL=${IAC_STATE_BACKEND:-${IAC_State_backend:-${BACKEND_URL:-}}}
 
 usage() {
     cat <<'USAGE'

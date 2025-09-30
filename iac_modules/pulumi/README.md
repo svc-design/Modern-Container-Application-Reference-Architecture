@@ -32,6 +32,48 @@ GitHub Actions 与本地调试共享相同的一组环境变量。根据目标�
 
 > 兼容变量：脚本同样支持 `IAC_State_backend` 形式的环境变量，以便与现有流水线兼容。
 
+### 2.1 使用 `~/.iac/credentials` 管理多云凭据
+
+`iac_run.sh` 会在启动时默认尝试读取 `~/.iac/credentials`（可通过 `IAC_CREDENTIALS_FILE` 覆盖）。
+
+- 为避免泄漏，文件权限需设置为 `0400`：
+
+  ```bash
+  chmod 0400 ~/.iac/credentials
+  ```
+
+- 文件内容为 YAML 格式，可同时存放 Pulumi 状态后端与多云访问密钥，例如：
+
+  ```yaml
+  IAC_STATE:
+    BACKEND:
+      - s3://my-pulumi-state/prod
+      - oss://backup-bucket/pulumi
+    AUTH:
+      ak: AWS_ACCESS_KEY_ID_FOR_STATE
+      sk: AWS_SECRET_ACCESS_KEY_FOR_STATE
+  aws-global:
+    ak: AWS_ACCESS_KEY_ID_FOR_WORKLOAD
+    sk: AWS_SECRET_ACCESS_KEY_FOR_WORKLOAD
+  ALICLOUD:
+    ak: ALICLOUD_ACCESS_KEY
+    sk: ALICLOUD_SECRET_KEY
+  VULTR:
+    api_key: VULTR_API_KEY
+  ```
+
+  - `IAC_STATE.BACKEND`：列表中的第一个 `s3://` 项会自动注入为 `IAC_STATE_BACKEND`。
+  - `IAC_STATE.AUTH`：若尚未显式设置 AWS 相关环境变量，将作为访问状态桶的默认凭据。
+  - `aws-global`、`ALICLOUD`、`VULTR` 节点分别为对应云厂商注入标准环境变量。
+
+- 解析 YAML 依赖 [PyYAML](https://pyyaml.org/)，若缺少请执行：
+
+  ```bash
+  pip install PyYAML
+  ```
+
+> 若环境变量已在外部显式设置，凭据文件不会覆盖已有值，便于 CI/CD 与本地调试共存。
+
 S3 backend 的 Bucket 需提前创建，并为 Pulumi 访问角色授予读写权限。例如：
 
 ```bash
