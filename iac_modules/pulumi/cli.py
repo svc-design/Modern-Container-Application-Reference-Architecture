@@ -14,6 +14,11 @@ from typing import Any, Callable, Dict, Optional, Union
 
 PROJECT_DIR = Path(__file__).resolve().parent
 DEFAULT_BACKUPS_DIR = Path("backups")
+DEFAULT_CONFIG_PATHS: Dict[str, str] = {
+    "alicloud": "config/alicloud",
+    "aws": "config/aws-global",
+    "vultr": "config/vultr",
+}
 DEFAULT_CREDENTIALS_FILE = Path(
     os.environ.get("IAC_CREDENTIALS_FILE", Path.home() / ".iac/credentials")
 )
@@ -31,6 +36,7 @@ class PulumiContext:
     stack_name: Optional[str]
     backend_url: Optional[str]
     backups_dir: Path
+    cloud: Optional[str]
 
     def run(
         self,
@@ -293,6 +299,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="cli.py",
         description="Pulumi stack helper commands for the Modern Container Application reference architecture.",
+        formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument(
         "--credentials",
@@ -301,7 +308,7 @@ def _build_parser() -> argparse.ArgumentParser:
         help="自定义凭据文件路径，默认读取 ~/.iac/credentials",
     )
 
-    parent = argparse.ArgumentParser(add_help=False)
+    parent = argparse.ArgumentParser(add_help=False, formatter_class=argparse.RawTextHelpFormatter)
     parent.add_argument(
         "--stack",
         dest="stack",
@@ -318,6 +325,21 @@ def _build_parser() -> argparse.ArgumentParser:
         type=Path,
         help="备份文件保存目录，默认为 ./backups",
     )
+    parent.add_argument(
+        "--cloud",
+        dest="cloud",
+        choices=sorted(DEFAULT_CONFIG_PATHS.keys()),
+        help=(
+            "选择部署的云厂商（支持 alicloud、aws、vultr）。\n"
+            "options:\n"
+            "  - migrate\n"
+            "  - create\n"
+            "  - upgrade\n"
+            "  - backup\n"
+            "  - restore\n"
+            "  - destroy"
+        ),
+    )
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -331,7 +353,12 @@ def _build_parser() -> argparse.ArgumentParser:
             "restore": "从备份文件恢复 Pulumi stack",
             "destroy": "销毁当前 Pulumi stack 资源",
         }[command]
-        subparser = subparsers.add_parser(command, parents=[parent], help=help_text)
+        subparser = subparsers.add_parser(
+            command,
+            parents=[parent],
+            help=help_text,
+            formatter_class=argparse.RawTextHelpFormatter,
+        )
         subparser.set_defaults(handler=handler)
         if command == "restore":
             subparser.add_argument(
@@ -365,6 +392,7 @@ def main(argv: Optional[list[str]] = None) -> None:
         stack_name=args.stack or os.environ.get("PULUMI_STACK") or os.environ.get("STACK_NAME") or os.environ.get("STACK"),
         backend_url=args.backend or os.environ.get("IAC_STATE_BACKEND") or os.environ.get("IAC_State_backend"),
         backups_dir=backups_dir,
+        cloud=args.cloud or os.environ.get("IAC_CLOUD") or os.environ.get("PULUMI_CLOUD"),
     )
 
     if args.stack:
@@ -373,6 +401,15 @@ def main(argv: Optional[list[str]] = None) -> None:
         os.environ["IAC_STATE_BACKEND"] = args.backend
     if args.backups_dir:
         os.environ["PULUMI_BACKUP_DIR"] = str(args.backups_dir)
+    if args.cloud:
+        os.environ["IAC_CLOUD"] = args.cloud
+
+    cloud = context.cloud
+    config_path = os.environ.get("CONFIG_PATH")
+    if not config_path and cloud:
+        default_path = DEFAULT_CONFIG_PATHS.get(cloud)
+        if default_path:
+            os.environ["CONFIG_PATH"] = default_path
 
     handler = getattr(args, "handler", COMMANDS[args.command])
 

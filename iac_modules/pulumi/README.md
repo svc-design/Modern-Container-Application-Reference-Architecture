@@ -96,7 +96,7 @@ python cli.py <命令>
 python cli.py init --stack dev --backend s3://my-state-bucket/dev
 ```
 
-`--credentials` 可用于指定其他凭据文件路径，默认读取 `~/.iac/credentials`。
+`--credentials` 可用于指定其他凭据文件路径，默认读取 `~/.iac/credentials`。若需要在多云配置之间快速切换，可使用 `--cloud {alicloud,aws,vultr}` 参数自动选择 `config/<cloud>` 目录并设置 `IAC_CLOUD` 环境变量。
 
 支持的命令如下：
 
