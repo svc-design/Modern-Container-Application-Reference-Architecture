@@ -118,7 +118,11 @@ except yaml.YAMLError as exc:
 exports = []
 
 iac_state = find_section(data, "iac_state")
-maybe_export("IAC_STATE_BACKEND", select_backend(find_section(iac_state, "backend")), exports)
+    backend_section = find_section(iac_state, "backend")
+    maybe_export("IAC_STATE_BACKEND", select_backend(backend_section), exports)
+    backend_region = find_value(backend_section, "region", "aws_region", "default_region")
+    maybe_export("AWS_REGION", backend_region, exports)
+    maybe_export("AWS_DEFAULT_REGION", backend_region, exports)
 
 state_auth = find_section(iac_state, "auth")
 maybe_export("AWS_ACCESS_KEY_ID", find_value(state_auth, "ak", "access_key"), exports)
