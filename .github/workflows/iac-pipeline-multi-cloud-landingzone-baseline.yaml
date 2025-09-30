@@ -47,3 +47,29 @@ jobs:
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
       config_path: ${{ matrix.config }}
     secrets: inherit
+
+  pulumi-up:
+    name: Pulumi up (${{ matrix.provider }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - provider: AWS
+            stack: svc-design/aws-lz-us-east-1-dev
+            region: us-east-1
+          - provider: Alicloud
+            stack: svc-design/alicloud-lz-cn-hangzhou-dev
+            region: cn-hangzhou
+          - provider: Vultr
+            stack: svc-design/vultr-lz-global-dev
+            region: global
+    steps:
+      - name: Pulumi up
+        run: pulumi up --stack ${{ matrix.stack }} --yes
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_AK }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SK }}
+          ALICLOUD_ACCESS_KEY: ${{ secrets.ALICLOUD_AK }}
+          ALICLOUD_SECRET_KEY: ${{ secrets.ALICLOUD_SK }}
+          VULTR_API_KEY: ${{ secrets.VULTR_API_KEY }}
