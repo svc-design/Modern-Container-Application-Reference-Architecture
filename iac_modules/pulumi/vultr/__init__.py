@@ -1,10 +1,14 @@
-"""Vultr landing zone baseline Pulumi modules."""
+"""Backwards compatible re-export of Vultr landing zone helpers."""
 
-from modules.vultr import (  # re-export for backwards compatibility
+from modules.vultr import (
     create_firewall_groups,
     create_instances,
     create_vpcs,
+    deploy_from_config,
+    deploy_from_directory,
+    load_configuration,
     merge_tags,
+    resolve_config_directory,
 )
 
 __all__ = [
@@ -12,4 +16,8 @@ __all__ = [
     "create_firewall_groups",
     "create_instances",
     "create_vpcs",
+    "resolve_config_directory",
+    "load_configuration",
+    "deploy_from_config",
+    "deploy_from_directory",
 ]
