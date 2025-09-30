@@ -6,9 +6,11 @@ from typing import Dict
 import pulumi
 import pulumi_alicloud as alicloud
 import pulumi_aws as aws
+import ediri_vultr as vultr
 
 from modules import alicloud as alicloud_modules
 from modules import aws as aws_modules
+from modules import vultr as vultr_modules
 from utils.config_loader import load_merged_config
 
 
@@ -95,6 +97,39 @@ def deploy_aws(config: Dict[str, object]) -> None:
     pulumi.export("s3_bucket_count", len(buckets))
 
 
+def deploy_vultr(config: Dict[str, object]) -> None:
+    vultr_conf: Dict[str, object] = config.get("vultr", {})  # type: ignore[assignment]
+    region = vultr_conf.get("region")
+    default_tags = vultr_conf.get("default_tags", {})
+
+    if region:
+        vultr.config.region = region  # type: ignore[assignment]
+        pulumi.export("region", region)
+
+    pulumi.log.info("Loaded Vultr configuration")
+
+    network_results = vultr_modules.create_vpcs(
+        config.get("network", {}),
+        region,
+    )
+
+    firewall_results = vultr_modules.create_firewall_groups(
+        config.get("security", {}),
+    )
+
+    instance_results = vultr_modules.create_instances(
+        config.get("compute", {}),
+        region,
+        default_tags,
+        firewall_results,
+        network_results,
+    )
+
+    pulumi.export("vpc_count", len(network_results))
+    pulumi.export("firewall_group_count", len(firewall_results))
+    pulumi.export("instance_count", len(instance_results))
+
+
 def main() -> None:
     config_dir = os.environ.get("CONFIG_PATH", "config/alicloud")
     config = load_merged_config(config_dir)
@@ -103,9 +138,11 @@ def main() -> None:
         deploy_alicloud(config)
     elif "aws" in config:
         deploy_aws(config)
+    elif "vultr" in config:
+        deploy_vultr(config)
     else:
         raise ValueError(
-            "Unsupported landing zone configuration. Expected either 'alicloud' or 'aws' section."
+            "Unsupported landing zone configuration. Expected a 'alicloud', 'aws', or 'vultr' section."
         )
 
 
