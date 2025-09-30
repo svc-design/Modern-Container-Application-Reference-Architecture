@@ -131,6 +131,9 @@ aws_section = (
 )
 maybe_export("AWS_ACCESS_KEY_ID", find_value(aws_section, "ak", "access_key", "access_key_id"), exports)
 maybe_export("AWS_SECRET_ACCESS_KEY", find_value(aws_section, "sk", "secret_key", "secret_access_key"), exports)
+aws_region = find_value(aws_section, "region", "aws_region", "default_region")
+maybe_export("AWS_REGION", aws_region, exports)
+maybe_export("AWS_DEFAULT_REGION", aws_region, exports)
 
 alicloud_section = find_section(data, "alicloud")
 maybe_export("ALICLOUD_ACCESS_KEY", find_value(alicloud_section, "ak", "access_key", "access_key_id"), exports)
@@ -153,6 +156,13 @@ PY
 }
 
 load_credentials_file
+
+# Ensure region environment variables are harmonized
+if [[ -z "${AWS_REGION:-}" && -n "${AWS_DEFAULT_REGION:-}" ]]; then
+    export AWS_REGION="${AWS_DEFAULT_REGION}"
+elif [[ -z "${AWS_DEFAULT_REGION:-}" && -n "${AWS_REGION:-}" ]]; then
+    export AWS_DEFAULT_REGION="${AWS_REGION}"
+fi
 
 BACKEND_URL=${IAC_STATE_BACKEND:-${IAC_State_backend:-${BACKEND_URL:-}}}
 
@@ -187,6 +197,17 @@ require_backend() {
     if [[ "${BACKEND_URL}" != s3://* ]]; then
         echo "[错误] IAC_STATE_BACKEND 必须为 s3:// 开头的 Pulumi 后端地址." >&2
         exit 1
+    fi
+    if [[ -z "${AWS_REGION:-}" && -z "${AWS_DEFAULT_REGION:-}" ]]; then
+        echo "[错误] 未设置 AWS_REGION 或 AWS_DEFAULT_REGION 环境变量，无法登录到 S3 backend." >&2
+        echo "       请在凭据文件中添加 region 字段，或在运行脚本前导出该环境变量。" >&2
+        exit 1
+    fi
+    if [[ -z "${AWS_REGION:-}" ]]; then
+        export AWS_REGION="${AWS_DEFAULT_REGION}"
+    fi
+    if [[ -z "${AWS_DEFAULT_REGION:-}" ]]; then
+        export AWS_DEFAULT_REGION="${AWS_REGION}"
     fi
     "${PULUMI_BIN}" login "${BACKEND_URL}" >/dev/null
 }
