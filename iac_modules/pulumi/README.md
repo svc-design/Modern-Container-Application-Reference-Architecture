@@ -34,7 +34,7 @@ GitHub Actions 与本地调试共享相同的一组环境变量。根据目标�
 
 ### 2.1 使用 `~/.iac/credentials` 管理多云凭据
 
-`iac_run.sh` 会在启动时默认尝试读取 `~/.iac/credentials`（可通过 `IAC_CREDENTIALS_FILE` 覆盖）。
+`cli.py` 会在启动时默认尝试读取 `~/.iac/credentials`（可通过 `IAC_CREDENTIALS_FILE` 或 `--credentials` 覆盖）。
 
 - 为避免泄漏，文件权限需设置为 `0400`：
 
@@ -80,14 +80,23 @@ S3 backend 的 Bucket 需提前创建，并为 Pulumi 访问角色授予读写�
 export IAC_STATE_BACKEND="s3://my-pulumi-state-bucket/modern-app"
 ```
 
-## 3. `iac_run.sh` 辅助脚本
+## 3. `cli.py` 辅助脚本
 
-为方便本地调试，目录下新增 `iac_run.sh`，与 GitHub Actions 的命令约定保持一致。执行前请确保以上环境变量均已配置。
+为方便本地调试，目录下提供了基于 Python 的 `cli.py`，与 GitHub Actions 的命令约定保持一致。执行前请确保以上环境变量（或凭据文件）均已配置。
 
 ```bash
 cd iac_modules/pulumi
-./iac_run.sh <命令>
+python cli.py <命令>
+# 或直接执行： ./cli.py <命令>
 ```
+
+脚本支持在命令后追加 `--stack`、`--backend`、`--backups-dir` 等参数来临时覆盖对应的环境变量。例如：
+
+```bash
+python cli.py init --stack dev --backend s3://my-state-bucket/dev
+```
+
+`--credentials` 可用于指定其他凭据文件路径，默认读取 `~/.iac/credentials`。
 
 支持的命令如下：
 
@@ -104,7 +113,7 @@ cd iac_modules/pulumi
 查看帮助信息：
 
 ```bash
-./iac_run.sh --help
+python cli.py --help
 ```
 
 ## 4. 配置目录与多云支持
@@ -121,7 +130,7 @@ Pulumi 入口脚本会根据配置文件中的根节点自动选择部署目标�
 export CONFIG_PATH="config/vultr/dev"
 ```
 
-随后运行 `./iac_run.sh init` 与 `./iac_run.sh create` 即可完成 Vultr 基线的部署与更新。
+随后运行 `python cli.py init` 与 `python cli.py create` 即可完成 Vultr 基线的部署与更新。
 
 ## 5. 常见问题
 
