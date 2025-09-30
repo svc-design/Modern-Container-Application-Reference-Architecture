@@ -75,12 +75,26 @@ def maybe_export(env_key, raw_value, exports):
 def select_backend(backends):
     if isinstance(backends, str):
         return ensure_string(backends)
+
     if isinstance(backends, (list, tuple)):
         candidates = [ensure_string(item) for item in backends if ensure_string(item)]
         for candidate in candidates:
             if candidate and candidate.lower().startswith("s3://"):
                 return candidate
         return candidates[0] if candidates else None
+
+    if isinstance(backends, dict):
+        direct = find_value(backends, "url", "uri", "s3", "backend")
+        if isinstance(direct, (str, list, tuple, dict)):
+            selected = select_backend(direct)
+            if selected:
+                return selected
+
+        for value in backends.values():
+            selected = select_backend(value)
+            if selected:
+                return selected
+
     return None
 
 
@@ -110,7 +124,11 @@ state_auth = find_section(iac_state, "auth")
 maybe_export("AWS_ACCESS_KEY_ID", find_value(state_auth, "ak", "access_key"), exports)
 maybe_export("AWS_SECRET_ACCESS_KEY", find_value(state_auth, "sk", "secret_key"), exports)
 
-aws_section = find_section(data, "aws-global") or find_section(data, "aws")
+aws_section = (
+    find_section(data, "aws-global")
+    or find_section(data, "aws_global")
+    or find_section(data, "aws")
+)
 maybe_export("AWS_ACCESS_KEY_ID", find_value(aws_section, "ak", "access_key", "access_key_id"), exports)
 maybe_export("AWS_SECRET_ACCESS_KEY", find_value(aws_section, "sk", "secret_key", "secret_access_key"), exports)
 
