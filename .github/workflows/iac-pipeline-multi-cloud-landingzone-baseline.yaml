@@ -9,6 +9,7 @@ on:
         options:
           - init
           - create
+          - migrate
           - upgrade
           - backup
           - restore
