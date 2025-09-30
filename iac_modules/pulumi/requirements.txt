@@ -1,0 +1,5 @@
+pulumi
+pulumi-alicloud
+pulumi-aws
+ediri_vultr
+PyYAML
