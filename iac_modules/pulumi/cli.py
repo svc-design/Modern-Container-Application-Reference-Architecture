@@ -15,10 +15,11 @@ from typing import Any, Callable, Dict, Optional, Union
 PROJECT_DIR = Path(__file__).resolve().parent
 DEFAULT_BACKUPS_DIR = Path("backups")
 DEFAULT_CONFIG_PATHS: Dict[str, str] = {
-    "alicloud": "config/alicloud",
     "aws": "config/aws-global",
+    "alicloud": "config/alicloud",
     "vultr": "config/vultr",
 }
+CLOUD_CHOICES = tuple(DEFAULT_CONFIG_PATHS.keys())
 DEFAULT_CREDENTIALS_FILE = Path(
     os.environ.get("IAC_CREDENTIALS_FILE", Path.home() / ".iac/credentials")
 )
@@ -305,7 +306,16 @@ def _build_parser() -> argparse.ArgumentParser:
         "--credentials",
         dest="credentials",
         type=Path,
+        metavar="CREDENTIALS",
         help="自定义凭据文件路径，默认读取 ~/.iac/credentials",
+    )
+    parser.add_argument(
+        "--cloud",
+        dest="cloud",
+        choices=CLOUD_CHOICES,
+        metavar="{aws, alicloud, vultr}",
+        required=True,
+        help="选择部署的云厂商（支持 aws、alicloud、vultr）",
     )
 
     parent = argparse.ArgumentParser(add_help=False, formatter_class=argparse.RawTextHelpFormatter)
@@ -325,20 +335,9 @@ def _build_parser() -> argparse.ArgumentParser:
         type=Path,
         help="备份文件保存目录，默认为 ./backups",
     )
-    parent.add_argument(
-        "--cloud",
-        dest="cloud",
-        choices=sorted(DEFAULT_CONFIG_PATHS.keys()),
-        help=(
-            "选择部署的云厂商（支持 alicloud、aws、vultr）。\n"
-            "options:\n"
-            "  - migrate\n"
-            "  - create\n"
-            "  - upgrade\n"
-            "  - backup\n"
-            "  - restore\n"
-            "  - destroy"
-        ),
+    parser.usage = (
+        "cli.py [-h] [--credentials CREDENTIALS 默认~/.iac/credentials] "
+        "--cloud {aws, alicloud, vultr} {init,create,migrate,upgrade,backup,restore,destroy}"
     )
 
     subparsers = parser.add_subparsers(dest="command", required=True)
