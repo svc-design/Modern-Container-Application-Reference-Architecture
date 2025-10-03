@@ -23,39 +23,50 @@ on:
           - 'false'
         default: 'true'
 jobs:
-  preview_alicloud:
-    name: Preview Alicloud baseline workflow
-    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-alicloud-landingzone-baseline.yaml@main
-    with:
-      deploy_action: ${{ inputs.deploy_action }}
-      deploy_dry_run: ${{ inputs.deploy_dry_run }}
-      config_path: config/alicloud/
-    secrets: inherit
-
-  preview_aws:
-    name: Preview AWS baseline workflow
-    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-aws-global-landingzone-baseline.yaml@main
-    with:
-      deploy_action: ${{ inputs.deploy_action }}
-      deploy_dry_run: ${{ inputs.deploy_dry_run }}
-      config_path: config/aws-global/
-    secrets: inherit
-
-  preview_vultr:
-    name: Preview Vultr baseline workflow
-    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-vultr-landingzone-baseline.yaml@main
-    with:
-      deploy_action: ${{ inputs.deploy_action }}
-      deploy_dry_run: ${{ inputs.deploy_dry_run }}
-      config_path: config/vultr/
-    secrets: inherit
+  preview:
+    name: Preview ${{ matrix.display_name }} baseline via Pulumi
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - provider: alicloud
+            display_name: Alicloud
+            stack: svc-design/alicloud-lz-cn-hangzhou-dev
+          - provider: aws
+            display_name: AWS
+            stack: svc-design/aws-lz-us-east-1-dev
+          - provider: vultr
+            display_name: Vultr
+            stack: svc-design/vultr-lz-global-dev
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Configure provider credentials
+        run: |
+          set -euo pipefail
+          case "${{ matrix.provider }}" in
+            alicloud)
+              echo "ALICLOUD_ACCESS_KEY=${{ secrets.ALICLOUD_ACCESS_KEY }}" >> "$GITHUB_ENV"
+              echo "ALICLOUD_SECRET_KEY=${{ secrets.ALICLOUD_SECRET_KEY }}" >> "$GITHUB_ENV"
+              ;;
+            aws)
+              echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> "$GITHUB_ENV"
+              echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> "$GITHUB_ENV"
+              echo "AWS_SESSION_TOKEN=${{ secrets.AWS_SESSION_TOKEN }}" >> "$GITHUB_ENV"
+              ;;
+            vultr)
+              echo "VULTR_API_KEY=${{ secrets.VULTR_API_KEY }}" >> "$GITHUB_ENV"
+              ;;
+          esac
+      - name: Dry-run preview baseline via Pulumi
+        run: pulumi preview --stack ${{ matrix.stack }} --diff
+        working-directory: iac_modules/pulumi
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
   apply:
     name: Apply ${{ matrix.display_name }} baseline via Pulumi
-    needs:
-      - preview_alicloud
-      - preview_aws
-      - preview_vultr
+    needs: preview
     runs-on: ubuntu-latest
     strategy:
       matrix:
