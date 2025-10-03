@@ -34,7 +34,7 @@ env:
 jobs:
   run-baseline-alicloud:
     name: Trigger baseline workflow (Alicloud)
-    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-alicloud-landingzone-baseline.yaml@main
+    uses: "svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-alicloud-landingzone-baseline.yaml@main"
     with:
       deploy_action: output
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
@@ -43,7 +43,7 @@ jobs:
 
   run-baseline-aws:
     name: Trigger baseline workflow (AWS)
-    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-aws-landingzone-baseline.yaml@main
+    uses: "svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-aws-landingzone-baseline.yaml@main"
     with:
       deploy_action: output
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
@@ -52,7 +52,7 @@ jobs:
 
   run-baseline-vultr:
     name: Trigger baseline workflow (Vultr)
-    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-vultr-landingzone-baseline.yaml@main
+    uses: "svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-vultr-landingzone-baseline.yaml@main"
     with:
       deploy_action: output
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
