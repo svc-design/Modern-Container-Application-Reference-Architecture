@@ -26,7 +26,7 @@ on:
 jobs:
   preview_alicloud:
     name: Preview baseline workflow (Alicloud)
-    uses: ./.github/workflows/iac-pipeline-alicloud-landingzone-baseline.yaml
+    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-alicloud-landingzone-baseline.yaml@main
     with:
       deploy_action: output
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
@@ -35,7 +35,7 @@ jobs:
 
   preview_aws:
     name: Preview baseline workflow (AWS)
-    uses: ./.github/workflows/iac-pipeline-aws-global-landingzone-baseline.yaml
+    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-aws-global-landingzone-baseline.yaml@main
     with:
       deploy_action: output
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
@@ -44,7 +44,7 @@ jobs:
 
   preview_vultr:
     name: Preview baseline workflow (Vultr)
-    uses: ./.github/workflows/iac-pipeline-vultr-landingzone-baseline.yaml
+    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-vultr-landingzone-baseline.yaml@main
     with:
       deploy_action: output
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
