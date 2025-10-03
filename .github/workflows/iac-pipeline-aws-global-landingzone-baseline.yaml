@@ -29,10 +29,42 @@ on:
           - 'true'
           - 'false'
         default: 'true'
+      config_path:
+        description: "Configuration directory path"
+        required: false
+        type: string
+        default: config/aws-global
+  workflow_call:
+    inputs:
+      deploy_action:
+        required: false
+        type: string
+        default: upgrade
+      deploy_dry_run:
+        required: false
+        type: string
+        default: 'true'
+      config_path:
+        required: false
+        type: string
+        default: config/aws-global
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_SESSION_TOKEN:
+        required: false
+      AWS_REGION:
+        required: true
+      PULUMI_ACCESS_TOKEN:
+        required: true
 
 env:
   PULUMI_CI: 'true'
-  CONFIG_PATH: config/aws-global
+  CONFIG_PATH: ${{ inputs.config_path || github.event.inputs.config_path || 'config/aws-global' }}
+  DEPLOY_ACTION: ${{ inputs.deploy_action || github.event.inputs.deploy_action || 'upgrade' }}
+  DEPLOY_DRY_RUN: ${{ inputs.deploy_dry_run || github.event.inputs.deploy_dry_run || 'true' }}
 
 jobs:
   preview:
@@ -86,19 +118,10 @@ jobs:
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
-  validation:
-    name: Validate AWS baseline readiness
-    needs: preview
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run baseline validation checks
-        run: scripts/validation/validate-baseline.sh "AWS" "${{ env.CONFIG_PATH }}" "iac_modules/pulumi"
-
   apply:
     name: Apply AWS baseline to production
-    needs: validation
-    if: github.ref == 'refs/heads/main'
+    needs: preview
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_call'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -145,3 +168,21 @@ jobs:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+  validation:
+    name: Validate AWS baseline readiness
+    needs: apply
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run baseline validation checks
+        run: scripts/validation/validate-baseline.sh "AWS" "${{ env.CONFIG_PATH }}" "iac_modules/pulumi"
+
+  delivery:
+    name: Deliver AWS baseline rollout notifications
+    needs: validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Notify stakeholders
+        run: scripts/notifications/notify-baseline-delivery.sh

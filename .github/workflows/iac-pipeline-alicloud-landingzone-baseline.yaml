@@ -88,19 +88,10 @@ jobs:
           ALICLOUD_REGION: ${{ secrets.ALICLOUD_REGION }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
-  validation:
-    name: Validate Alicloud baseline readiness
-    needs: preview
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run baseline validation checks
-        run: scripts/validation/validate-baseline.sh "Alicloud" "${{ env.CONFIG_PATH }}" "iac_modules/pulumi"
-
   apply:
     name: Apply to Alicloud production stack
-    needs: validation
-    if: github.ref == 'refs/heads/main'
+    needs: preview
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_call'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -122,3 +113,21 @@ jobs:
           ALICLOUD_SECRET_KEY: ${{ secrets.ALICLOUD_SECRET_KEY }}
           ALICLOUD_REGION: ${{ secrets.ALICLOUD_REGION }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+  validation:
+    name: Validate Alicloud baseline readiness
+    needs: apply
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run baseline validation checks
+        run: scripts/validation/validate-baseline.sh "Alicloud" "${{ env.CONFIG_PATH }}" "iac_modules/pulumi"
+
+  delivery:
+    name: Deliver Alicloud baseline rollout notifications
+    needs: validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Notify stakeholders
+        run: scripts/notifications/notify-baseline-delivery.sh

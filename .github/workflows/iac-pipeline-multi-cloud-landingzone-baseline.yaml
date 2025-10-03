@@ -35,7 +35,7 @@ jobs:
             action: output
           - provider: AWS
             config: config/aws-global/
-            workflow: iac-pipeline-aws-landingzone-baseline.yaml
+            workflow: iac-pipeline-aws-global-landingzone-baseline.yaml
             action: output
           - provider: Vultr
             config: config/vultr/
@@ -43,14 +43,42 @@ jobs:
             action: output
     uses: ./.github/workflows/${{ matrix.workflow }}
     with:
-      deploy_action: ${{ matrix.action || inputs.deploy_action }}
+      deploy_action: ${{ matrix.action != '' && matrix.action || inputs.deploy_action }}
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
       config_path: ${{ matrix.config }}
     secrets: inherit
 
+  apply:
+    name: Apply baseline via Pulumi (${{ matrix.provider }})
+    needs: preview
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - provider: AWS
+            stack: svc-design/aws-lz-us-east-1-dev
+            region: us-east-1
+          - provider: Alicloud
+            stack: svc-design/alicloud-lz-cn-hangzhou-dev
+            region: cn-hangzhou
+          - provider: Vultr
+            stack: svc-design/vultr-lz-global-dev
+            region: global
+    steps:
+      - name: Apply baseline via Pulumi
+        run: pulumi up --stack ${{ matrix.stack }} --yes
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          ALICLOUD_ACCESS_KEY: ${{ secrets.ALICLOUD_ACCESS_KEY }}
+          ALICLOUD_SECRET_KEY: ${{ secrets.ALICLOUD_SECRET_KEY }}
+          VULTR_API_KEY: ${{ secrets.VULTR_API_KEY }}
+
   validation:
     name: Validate baseline readiness (${{ matrix.provider }})
-    needs: preview
+    needs: apply
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -70,36 +98,9 @@ jobs:
       - name: Run baseline validation checks
         run: scripts/validation/validate-baseline.sh "${{ matrix.provider }}" "${{ matrix.config }}" "${{ matrix.pulumi_dir }}"
 
-  apply:
-    name: Apply baseline via Pulumi (${{ matrix.provider }})
-    needs: validation
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - provider: AWS
-            stack: svc-design/aws-lz-us-east-1-dev
-            region: us-east-1
-          - provider: Alicloud
-            stack: svc-design/alicloud-lz-cn-hangzhou-dev
-            region: cn-hangzhou
-          - provider: Vultr
-            stack: svc-design/vultr-lz-global-dev
-            region: global
-    steps:
-      - name: Apply baseline via Pulumi
-        run: pulumi up --stack ${{ matrix.stack }} --yes
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_AK }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SK }}
-          ALICLOUD_ACCESS_KEY: ${{ secrets.ALICLOUD_AK }}
-          ALICLOUD_SECRET_KEY: ${{ secrets.ALICLOUD_SK }}
-          VULTR_API_KEY: ${{ secrets.VULTR_API_KEY }}
-
   delivery:
     name: Deliver baseline rollout notifications
-    needs: apply
+    needs: validation
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
