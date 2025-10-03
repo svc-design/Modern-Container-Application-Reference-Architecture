@@ -24,123 +24,97 @@ on:
         default: 'true'
 
 jobs:
-  preview_alicloud:
-    name: Preview baseline workflow (Alicloud)
-    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-alicloud-landingzone-baseline.yaml@main
+  preview:
+    name: Preview baseline workflow (${{ matrix.display_name }})
+    strategy:
+      matrix:
+        include:
+          - provider: alicloud
+            display_name: Alicloud
+            workflow: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-alicloud-landingzone-baseline.yaml@main
+            config_path: config/alicloud/
+          - provider: aws
+            display_name: AWS
+            workflow: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-aws-global-landingzone-baseline.yaml@main
+            config_path: config/aws-global/
+          - provider: vultr
+            display_name: Vultr
+            workflow: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-vultr-landingzone-baseline.yaml@main
+            config_path: config/vultr/
+    uses: ${{ matrix.workflow }}
     with:
       deploy_action: output
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
-      config_path: config/alicloud/
+      config_path: ${{ matrix.config_path }}
     secrets: inherit
 
-  preview_aws:
-    name: Preview baseline workflow (AWS)
-    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-aws-global-landingzone-baseline.yaml@main
-    with:
-      deploy_action: output
-      deploy_dry_run: ${{ inputs.deploy_dry_run }}
-      config_path: config/aws-global/
-    secrets: inherit
-
-  preview_vultr:
-    name: Preview baseline workflow (Vultr)
-    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-vultr-landingzone-baseline.yaml@main
-    with:
-      deploy_action: output
-      deploy_dry_run: ${{ inputs.deploy_dry_run }}
-      config_path: config/vultr/
-    secrets: inherit
-
-  apply_alicloud:
-    name: Apply Alicloud baseline via Pulumi
-    needs:
-      - preview_alicloud
-      - preview_aws
-      - preview_vultr
+  apply:
+    name: Apply ${{ matrix.display_name }} baseline via Pulumi
+    needs: preview
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - provider: alicloud
+            display_name: Alicloud
+            stack: svc-design/alicloud-lz-cn-hangzhou-dev
+          - provider: aws
+            display_name: AWS
+            stack: svc-design/aws-lz-us-east-1-dev
+          - provider: vultr
+            display_name: Vultr
+            stack: svc-design/vultr-lz-global-dev
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+      - name: Configure provider credentials
+        run: |
+          set -euo pipefail
+          case "${{ matrix.provider }}" in
+            alicloud)
+              echo "ALICLOUD_ACCESS_KEY=${{ secrets.ALICLOUD_ACCESS_KEY }}" >> "$GITHUB_ENV"
+              echo "ALICLOUD_SECRET_KEY=${{ secrets.ALICLOUD_SECRET_KEY }}" >> "$GITHUB_ENV"
+              ;;
+            aws)
+              echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> "$GITHUB_ENV"
+              echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> "$GITHUB_ENV"
+              echo "AWS_SESSION_TOKEN=${{ secrets.AWS_SESSION_TOKEN }}" >> "$GITHUB_ENV"
+              ;;
+            vultr)
+              echo "VULTR_API_KEY=${{ secrets.VULTR_API_KEY }}" >> "$GITHUB_ENV"
+              ;;
+          esac
       - name: Apply baseline via Pulumi
-        run: pulumi up --stack svc-design/alicloud-lz-cn-hangzhou-dev --yes
+        run: pulumi up --stack ${{ matrix.stack }} --yes
         working-directory: iac_modules/pulumi
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-          ALICLOUD_ACCESS_KEY: ${{ secrets.ALICLOUD_ACCESS_KEY }}
-          ALICLOUD_SECRET_KEY: ${{ secrets.ALICLOUD_SECRET_KEY }}
 
-  apply_aws:
-    name: Apply AWS baseline via Pulumi
-    needs:
-      - preview_alicloud
-      - preview_aws
-      - preview_vultr
+  validate:
+    name: Validate ${{ matrix.display_name }} baseline readiness
+    needs: apply
     runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: Apply baseline via Pulumi
-        run: pulumi up --stack svc-design/aws-lz-us-east-1-dev --yes
-        working-directory: iac_modules/pulumi
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
-
-  apply_vultr:
-    name: Apply Vultr baseline via Pulumi
-    needs:
-      - preview_alicloud
-      - preview_aws
-      - preview_vultr
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: Apply baseline via Pulumi
-        run: pulumi up --stack svc-design/vultr-lz-global-dev --yes
-        working-directory: iac_modules/pulumi
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
-          VULTR_API_KEY: ${{ secrets.VULTR_API_KEY }}
-
-  validate_alicloud:
-    name: Validate Alicloud baseline readiness
-    needs: apply_alicloud
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - provider: alicloud
+            display_name: Alicloud
+            config_path: config/alicloud/
+          - provider: aws
+            display_name: AWS
+            config_path: config/aws-global/
+          - provider: vultr
+            display_name: Vultr
+            config_path: config/vultr/
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Run baseline validation checks
-        run: scripts/validation/validate-baseline.sh "Alicloud" "config/alicloud/" "iac_modules/pulumi"
-
-  validate_aws:
-    name: Validate AWS baseline readiness
-    needs: apply_aws
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Run baseline validation checks
-        run: scripts/validation/validate-baseline.sh "AWS" "config/aws-global/" "iac_modules/pulumi"
-
-  validate_vultr:
-    name: Validate Vultr baseline readiness
-    needs: apply_vultr
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Run baseline validation checks
-        run: scripts/validation/validate-baseline.sh "Vultr" "config/vultr/" "iac_modules/pulumi"
+        run: scripts/validation/validate-baseline.sh "${{ matrix.display_name }}" "${{ matrix.config_path }}" "iac_modules/pulumi"
 
   delivery:
     name: Deliver baseline rollout notifications
-    needs:
-      - validate_alicloud
-      - validate_aws
-      - validate_vultr
+    needs: validate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
