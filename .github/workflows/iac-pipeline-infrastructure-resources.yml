@@ -87,7 +87,8 @@ jobs:
               dependencyWorkflowFile: 'iac-pipeline-alicloud-landingzone-baseline.yaml',
             });
 
-  apply-cluster-resources-multi:
+
+  apply-multi-cluster-resources:
     name: Apply cluster Terraform (multi-cluster baseline)
     needs:
       - verify-baseline-status
@@ -102,7 +103,8 @@ jobs:
       SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
 
-  apply-cluster-resources-signal:
+
+  apply-signal-cluster-resources:
     name: Apply cluster Terraform (signal cluster baseline)
     needs:
       - verify-baseline-status
@@ -120,13 +122,14 @@ jobs:
   setup-monitor-cluster:
     name: Configure monitor exporters
     needs:
-      - apply-cluster-resources-multi
-      - apply-cluster-resources-signal
+      - apply-multi-cluster-resources
+      - apply-signal-cluster-resources
     if: >
       inputs.deploy_action != 'destroy' &&
       inputs.cloud_provider == 'gcp' &&
-      needs.apply-cluster-resources-multi.result == 'success' &&
-      needs.apply-cluster-resources-signal.result == 'success'
+      needs.apply-multi-cluster-resources.result == 'success' &&
+      needs.apply-signal-cluster-resources.result == 'success'
+
     uses: ./.github/workflows/iac-pipeline-infrastructure-monitor-exporter.yml
     with:
       deploy_action: ${{ inputs.deploy_action }}
