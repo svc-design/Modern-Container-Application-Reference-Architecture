@@ -23,32 +23,39 @@ on:
           - 'false'
         default: 'true'
 jobs:
-  preview:
-    name: Preview baseline workflow (${{ matrix.name }})
-    strategy:
-      matrix:
-        include:
-          - name: Alicloud
-            workflow: iac-pipeline-alicloud-landingzone-baseline.yaml
-            config: config/alicloud/
-          - name: AWS
-            workflow: iac-pipeline-aws-global-landingzone-baseline.yaml
-            config: config/aws-global/
-          - name: Vultr
-            workflow: iac-pipeline-vultr-landingzone-baseline.yaml
-            config: config/vultr/
-
-    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/${{ matrix.workflow }}@main
+  preview_alicloud:
+    name: Preview Alicloud baseline workflow
+    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-alicloud-landingzone-baseline.yaml@main
     with:
-      deploy_action: output
+      deploy_action: ${{ inputs.deploy_action }}
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
-      config_path: ${{ matrix.config }}
+      config_path: config/alicloud/
+    secrets: inherit
+
+  preview_aws:
+    name: Preview AWS baseline workflow
+    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-aws-global-landingzone-baseline.yaml@main
+    with:
+      deploy_action: ${{ inputs.deploy_action }}
+      deploy_dry_run: ${{ inputs.deploy_dry_run }}
+      config_path: config/aws-global/
+    secrets: inherit
+
+  preview_vultr:
+    name: Preview Vultr baseline workflow
+    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-vultr-landingzone-baseline.yaml@main
+    with:
+      deploy_action: ${{ inputs.deploy_action }}
+      deploy_dry_run: ${{ inputs.deploy_dry_run }}
+      config_path: config/vultr/
     secrets: inherit
 
   apply:
     name: Apply ${{ matrix.display_name }} baseline via Pulumi
     needs:
-      - preview
+      - preview_alicloud
+      - preview_aws
+      - preview_vultr
     runs-on: ubuntu-latest
     strategy:
       matrix:
