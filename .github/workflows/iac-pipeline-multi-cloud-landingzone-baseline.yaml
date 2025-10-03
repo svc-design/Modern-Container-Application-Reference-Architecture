@@ -24,33 +24,39 @@ on:
         default: 'true'
 
 jobs:
-  preview:
-    name: Preview baseline workflow (${{ matrix.display_name }})
-    strategy:
-      matrix:
-        include:
-          - provider: alicloud
-            display_name: Alicloud
-            workflow: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-alicloud-landingzone-baseline.yaml@main
-            config_path: config/alicloud/
-          - provider: aws
-            display_name: AWS
-            workflow: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-aws-global-landingzone-baseline.yaml@main
-            config_path: config/aws-global/
-          - provider: vultr
-            display_name: Vultr
-            workflow: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-vultr-landingzone-baseline.yaml@main
-            config_path: config/vultr/
-    uses: ${{ matrix.workflow }}
+  preview_alicloud:
+    name: Preview baseline workflow (Alicloud)
+    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-alicloud-landingzone-baseline.yaml@main
     with:
       deploy_action: output
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
-      config_path: ${{ matrix.config_path }}
+      config_path: config/alicloud/
+    secrets: inherit
+
+  preview_aws:
+    name: Preview baseline workflow (AWS)
+    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-aws-global-landingzone-baseline.yaml@main
+    with:
+      deploy_action: output
+      deploy_dry_run: ${{ inputs.deploy_dry_run }}
+      config_path: config/aws-global/
+    secrets: inherit
+
+  preview_vultr:
+    name: Preview baseline workflow (Vultr)
+    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-vultr-landingzone-baseline.yaml@main
+    with:
+      deploy_action: output
+      deploy_dry_run: ${{ inputs.deploy_dry_run }}
+      config_path: config/vultr/
     secrets: inherit
 
   apply:
     name: Apply ${{ matrix.display_name }} baseline via Pulumi
-    needs: preview
+    needs:
+      - preview_alicloud
+      - preview_aws
+      - preview_vultr
     runs-on: ubuntu-latest
     strategy:
       matrix:
