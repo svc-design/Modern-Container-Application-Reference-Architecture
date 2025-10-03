@@ -21,14 +21,6 @@ on:
           - "true"
           - "false"
         default: "true"
-      cloud_provider:
-        description: "Target cloud provider for provisioning"
-        type: choice
-        options:
-          - aws
-          - vultr
-          - alicloud
-        default: alicloud
 
 env:
   CLOUD: ${{ inputs.cloud_provider }}
@@ -42,7 +34,7 @@ env:
 jobs:
   run-baseline-alicloud:
     name: Trigger baseline workflow (Alicloud)
-    uses: ./.github/workflows/iac-pipeline-alicloud-landingzone-baseline.yaml
+    uses: ./iac-pipeline-alicloud-landingzone-baseline.yaml
     with:
       deploy_action: output
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
@@ -51,7 +43,7 @@ jobs:
 
   run-baseline-aws:
     name: Trigger baseline workflow (AWS)
-    uses: ./.github/workflows/iac-pipeline-aws-landingzone-baseline.yaml
+    uses: ./iac-pipeline-aws-landingzone-baseline.yaml
     with:
       deploy_action: output
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
@@ -60,7 +52,7 @@ jobs:
 
   run-baseline-vultr:
     name: Trigger baseline workflow (Vultr)
-    uses: ./.github/workflows/iac-pipeline-vultr-landingzone-baseline.yaml
+    uses: ./iac-pipeline-vultr-landingzone-baseline.yaml
     with:
       deploy_action: output
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
