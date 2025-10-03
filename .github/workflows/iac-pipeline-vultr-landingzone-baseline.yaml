@@ -118,27 +118,9 @@ jobs:
           VULTR_API_KEY: ${{ secrets.VULTR_API_KEY }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
-  validation:
-    name: Validate Vultr baseline readiness
-    needs: preview
-    if: >-
-      ${{
-        (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_action != 'init') ||
-        (github.event_name == 'workflow_call' && inputs.deploy_action != 'init') ||
-        (github.event_name != 'workflow_dispatch' && github.event_name != 'workflow_call')
-      }}
-    runs-on: ubuntu-latest
-    env:
-      PULUMI_CI: 'true'
-      CONFIG_PATH: ${{ inputs.config_path || github.event.inputs.config_path || 'config/vultr' }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run baseline validation checks
-        run: scripts/validation/validate-baseline.sh "Vultr" "${{ env.CONFIG_PATH }}" "iac_modules/pulumi"
-
   apply:
     name: Apply to production stack
-    needs: validation
+    needs: preview
     if: >-
       ${{
         (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_action != 'init') ||
@@ -175,3 +157,36 @@ jobs:
         env:
           VULTR_API_KEY: ${{ secrets.VULTR_API_KEY }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+
+  validation:
+    name: Validate Vultr baseline readiness
+    needs: apply
+    if: >-
+      ${{
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_action != 'init') ||
+        (github.event_name == 'workflow_call' && inputs.deploy_action != 'init') ||
+        (github.event_name != 'workflow_dispatch' && github.event_name != 'workflow_call')
+      }}
+    runs-on: ubuntu-latest
+    env:
+      PULUMI_CI: 'true'
+      CONFIG_PATH: ${{ inputs.config_path || github.event.inputs.config_path || 'config/vultr' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run baseline validation checks
+        run: scripts/validation/validate-baseline.sh "Vultr" "${{ env.CONFIG_PATH }}" "iac_modules/pulumi"
+
+  delivery:
+    name: Deliver Vultr baseline rollout notifications
+    needs: validation
+    if: >-
+      ${{
+        (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_action != 'init') ||
+        (github.event_name == 'workflow_call' && inputs.deploy_action != 'init') ||
+        (github.event_name != 'workflow_dispatch' && github.event_name != 'workflow_call')
+      }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Notify stakeholders
+        run: scripts/notifications/notify-baseline-delivery.sh
