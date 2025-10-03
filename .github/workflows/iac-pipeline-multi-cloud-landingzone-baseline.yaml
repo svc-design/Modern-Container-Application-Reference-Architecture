@@ -22,41 +22,33 @@ on:
           - 'true'
           - 'false'
         default: 'true'
-
 jobs:
-  preview_alicloud:
-    name: Preview baseline workflow (Alicloud)
-    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-alicloud-landingzone-baseline.yaml@main
-    with:
-      deploy_action: output
-      deploy_dry_run: ${{ inputs.deploy_dry_run }}
-      config_path: config/alicloud/
-    secrets: inherit
+  preview:
+    name: Preview baseline workflow (${{ matrix.name }})
+    strategy:
+      matrix:
+        include:
+          - name: Alicloud
+            workflow: iac-pipeline-alicloud-landingzone-baseline.yaml
+            config: config/alicloud/
+          - name: AWS
+            workflow: iac-pipeline-aws-global-landingzone-baseline.yaml
+            config: config/aws-global/
+          - name: Vultr
+            workflow: iac-pipeline-vultr-landingzone-baseline.yaml
+            config: config/vultr/
 
-  preview_aws:
-    name: Preview baseline workflow (AWS)
-    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-aws-global-landingzone-baseline.yaml@main
+    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/${{ matrix.workflow }}@main
     with:
       deploy_action: output
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
-      config_path: config/aws-global/
-    secrets: inherit
-
-  preview_vultr:
-    name: Preview baseline workflow (Vultr)
-    uses: svc-design/Modern-Container-Application-Reference-Architecture/.github/workflows/iac-pipeline-vultr-landingzone-baseline.yaml@main
-    with:
-      deploy_action: output
-      deploy_dry_run: ${{ inputs.deploy_dry_run }}
-      config_path: config/vultr/
+      config_path: ${{ matrix.config }}
     secrets: inherit
 
   apply:
     name: Apply ${{ matrix.display_name }} baseline via Pulumi
     needs:
-      - preview_alicloud
-      - preview_aws
-      - preview_vultr
+      - preview
     runs-on: ubuntu-latest
     strategy:
       matrix:
