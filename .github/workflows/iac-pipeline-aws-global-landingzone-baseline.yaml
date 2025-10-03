@@ -86,9 +86,18 @@ jobs:
           AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
+  validation:
+    name: Validate AWS baseline readiness
+    needs: preview
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run baseline validation checks
+        run: scripts/validation/validate-baseline.sh "AWS" "${{ env.CONFIG_PATH }}" "iac_modules/pulumi"
+
   apply:
     name: Apply AWS baseline to production
-    needs: preview
+    needs: validation
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
