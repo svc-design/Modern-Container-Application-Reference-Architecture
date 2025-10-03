@@ -21,14 +21,6 @@ on:
           - "true"
           - "false"
         default: "true"
-      cloud_provider:
-        description: "Target cloud provider for provisioning"
-        type: choice
-        options:
-          - aws
-          - vultr
-          - alicloud
-        default: alicloud
 
 env:
   CLOUD: ${{ inputs.cloud_provider }}
@@ -42,7 +34,7 @@ env:
 jobs:
   run-baseline-alicloud:
     name: Trigger baseline workflow (Alicloud)
-    uses: ./.github/workflows/iac-pipeline-alicloud-landingzone-baseline.yaml
+    uses: ./iac-pipeline-alicloud-landingzone-baseline.yaml
     with:
       deploy_action: output
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
@@ -51,7 +43,7 @@ jobs:
 
   run-baseline-aws:
     name: Trigger baseline workflow (AWS)
-    uses: ./.github/workflows/iac-pipeline-aws-landingzone-baseline.yaml
+    uses: ./iac-pipeline-aws-landingzone-baseline.yaml
     with:
       deploy_action: output
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
@@ -60,7 +52,7 @@ jobs:
 
   run-baseline-vultr:
     name: Trigger baseline workflow (Vultr)
-    uses: ./.github/workflows/iac-pipeline-vultr-landingzone-baseline.yaml
+    uses: ./iac-pipeline-vultr-landingzone-baseline.yaml
     with:
       deploy_action: output
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
@@ -95,6 +87,7 @@ jobs:
               dependencyWorkflowFile: 'iac-pipeline-alicloud-landingzone-baseline.yaml',
             });
 
+
   apply-multi-cluster-resources:
     name: Apply cluster Terraform (multi-cluster baseline)
     needs:
@@ -109,6 +102,7 @@ jobs:
     secrets:
       SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
 
   apply-signal-cluster-resources:
     name: Apply cluster Terraform (signal cluster baseline)
@@ -135,6 +129,7 @@ jobs:
       inputs.cloud_provider == 'gcp' &&
       needs.apply-multi-cluster-resources.result == 'success' &&
       needs.apply-signal-cluster-resources.result == 'success'
+
     uses: ./.github/workflows/iac-pipeline-infrastructure-monitor-exporter.yml
     with:
       deploy_action: ${{ inputs.deploy_action }}

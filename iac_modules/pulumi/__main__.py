@@ -4,15 +4,14 @@ import os
 from typing import Dict
 
 import pulumi
-import pulumi_alicloud as alicloud
 import pulumi_aws as aws
 import ediri_vultr as vultr
+import pulumi_alicloud as alicloud
 
-from modules import alicloud as alicloud_modules
 from modules import aws as aws_modules
 from modules import vultr as vultr_modules
+from modules import alicloud as alicloud_modules
 from utils.config_loader import load_merged_config
-
 
 def deploy_alicloud(config: Dict[str, object]) -> None:
     alicloud_conf: Dict[str, object] = config.get("alicloud", {})  # type: ignore[assignment]
