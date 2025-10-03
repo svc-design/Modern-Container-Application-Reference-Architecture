@@ -24,33 +24,39 @@ on:
         default: 'true'
 
 jobs:
-  preview:
-    name: Preview baseline workflow (${{ matrix.provider }})
-    strategy:
-      matrix:
-        include:
-          - provider: Alicloud
-            config: config/alicloud/
-            workflow: iac-pipeline-alicloud-landingzone-baseline.yaml
-            action: output
-          - provider: AWS
-            config: config/aws-global/
-            workflow: iac-pipeline-aws-global-landingzone-baseline.yaml
-            action: output
-          - provider: Vultr
-            config: config/vultr/
-            workflow: iac-pipeline-vultr-landingzone-baseline.yaml
-            action: output
-    uses: ./.github/workflows/${{ matrix.workflow }}
+  preview_alicloud:
+    name: Preview baseline workflow (Alicloud)
+    uses: ./.github/workflows/iac-pipeline-alicloud-landingzone-baseline.yaml
     with:
-      deploy_action: ${{ matrix.action != '' && matrix.action || inputs.deploy_action }}
+      deploy_action: output
       deploy_dry_run: ${{ inputs.deploy_dry_run }}
-      config_path: ${{ matrix.config }}
+      config_path: config/alicloud/
+    secrets: inherit
+
+  preview_aws:
+    name: Preview baseline workflow (AWS)
+    uses: ./.github/workflows/iac-pipeline-aws-global-landingzone-baseline.yaml
+    with:
+      deploy_action: output
+      deploy_dry_run: ${{ inputs.deploy_dry_run }}
+      config_path: config/aws-global/
+    secrets: inherit
+
+  preview_vultr:
+    name: Preview baseline workflow (Vultr)
+    uses: ./.github/workflows/iac-pipeline-vultr-landingzone-baseline.yaml
+    with:
+      deploy_action: output
+      deploy_dry_run: ${{ inputs.deploy_dry_run }}
+      config_path: config/vultr/
     secrets: inherit
 
   apply:
     name: Apply baseline via Pulumi (${{ matrix.provider }})
-    needs: preview
+    needs:
+      - preview_alicloud
+      - preview_aws
+      - preview_vultr
     runs-on: ubuntu-latest
     strategy:
       matrix:
