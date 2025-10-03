@@ -95,24 +95,32 @@ jobs:
               dependencyWorkflowFile: 'iac-pipeline-alicloud-landingzone-baseline.yaml',
             });
 
-  apply-cluster-resources:
-    name: Apply cluster Terraform (${{ matrix.name }})
+  apply-multi-cluster-resources:
+    name: Apply cluster Terraform (multi-cluster baseline)
     needs:
       - verify-baseline-status
     if: >
       inputs.deploy_action != 'destroy' &&
       inputs.cloud_provider == 'gcp' &&
       needs.verify-baseline-status.outputs.should-run == 'true'
-    strategy:
-      matrix:
-        include:
-          - name: multi-cluster baseline
-            config: multi-cluster-config.yaml
-          - name: signal cluster baseline
-            config: signal-cluster-config.yaml
     uses: svc-design/actions/.github/workflows/setup-gcp-cloud.yml@main
     with:
-      config: ${{ matrix.config }}
+      config: multi-cluster-config.yaml
+    secrets:
+      SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+      GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
+
+  apply-signal-cluster-resources:
+    name: Apply cluster Terraform (signal cluster baseline)
+    needs:
+      - verify-baseline-status
+    if: >
+      inputs.deploy_action != 'destroy' &&
+      inputs.cloud_provider == 'gcp' &&
+      needs.verify-baseline-status.outputs.should-run == 'true'
+    uses: svc-design/actions/.github/workflows/setup-gcp-cloud.yml@main
+    with:
+      config: signal-cluster-config.yaml
     secrets:
       SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
       GCP_CREDENTIALS_JSON: ${{ secrets.GCP_CREDENTIALS_JSON }}
@@ -120,11 +128,13 @@ jobs:
   setup-monitor-cluster:
     name: Configure monitor exporters
     needs:
-      - apply-cluster-resources
+      - apply-multi-cluster-resources
+      - apply-signal-cluster-resources
     if: >
       inputs.deploy_action != 'destroy' &&
       inputs.cloud_provider == 'gcp' &&
-      needs.apply-cluster-resources.result == 'success'
+      needs.apply-multi-cluster-resources.result == 'success' &&
+      needs.apply-signal-cluster-resources.result == 'success'
     uses: ./.github/workflows/iac-pipeline-infrastructure-monitor-exporter.yml
     with:
       deploy_action: ${{ inputs.deploy_action }}
