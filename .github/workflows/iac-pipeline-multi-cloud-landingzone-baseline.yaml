@@ -24,8 +24,8 @@ on:
         default: 'true'
 
 jobs:
-  run-baseline:
-    name: Trigger baseline workflow (${{ matrix.provider }})
+  preview:
+    name: Preview baseline workflow (${{ matrix.provider }})
     strategy:
       matrix:
         include:
@@ -48,8 +48,31 @@ jobs:
       config_path: ${{ matrix.config }}
     secrets: inherit
 
-  pulumi-up:
-    name: Pulumi up (${{ matrix.provider }})
+  validation:
+    name: Validate baseline readiness (${{ matrix.provider }})
+    needs: preview
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - provider: Alicloud
+            config: config/alicloud/
+            pulumi_dir: iac_modules/pulumi
+          - provider: AWS
+            config: config/aws-global/
+            pulumi_dir: iac_modules/pulumi
+          - provider: Vultr
+            config: config/vultr/
+            pulumi_dir: iac_modules/pulumi
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Run baseline validation checks
+        run: scripts/validation/validate-baseline.sh "${{ matrix.provider }}" "${{ matrix.config }}" "${{ matrix.pulumi_dir }}"
+
+  apply:
+    name: Apply baseline via Pulumi (${{ matrix.provider }})
+    needs: validation
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -64,7 +87,7 @@ jobs:
             stack: svc-design/vultr-lz-global-dev
             region: global
     steps:
-      - name: Pulumi up
+      - name: Apply baseline via Pulumi
         run: pulumi up --stack ${{ matrix.stack }} --yes
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
@@ -73,3 +96,14 @@ jobs:
           ALICLOUD_ACCESS_KEY: ${{ secrets.ALICLOUD_AK }}
           ALICLOUD_SECRET_KEY: ${{ secrets.ALICLOUD_SK }}
           VULTR_API_KEY: ${{ secrets.VULTR_API_KEY }}
+
+  delivery:
+    name: Deliver baseline rollout notifications
+    needs: apply
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Notify stakeholders
+        run: scripts/notifications/notify-baseline-delivery.sh
+

@@ -88,9 +88,18 @@ jobs:
           ALICLOUD_REGION: ${{ secrets.ALICLOUD_REGION }}
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
 
+  validation:
+    name: Validate Alicloud baseline readiness
+    needs: preview
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run baseline validation checks
+        run: scripts/validation/validate-baseline.sh "Alicloud" "${{ env.CONFIG_PATH }}" "iac_modules/pulumi"
+
   apply:
     name: Apply to Alicloud production stack
-    needs: preview
+    needs: validation
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
