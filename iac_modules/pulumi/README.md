@@ -27,6 +27,8 @@ GitHub Actions 与本地调试共享相同的一组环境变量。根据目标�
 | `ALICLOUD_ACCESS_KEY` / `ALICLOUD_SECRET_KEY` | 部署阿里云资源时所需的访问密钥。 |
 | `VULTR_API_KEY` | 部署 Vultr 资源时使用的 API Key。 |
 | `IAC_STATE_BACKEND` | Pulumi 后端地址，**必须**为 `s3://<bucket>/<path>` 形式，以确保状态文件全部存储在 S3。 |
+| `PULUMI_LOGIN_RETRIES` | （可选）登录 S3 backend 失败时的重试次数，默认 3。 |
+| `PULUMI_LOGIN_RETRY_DELAY` | （可选）首次重试前的等待秒数，默认 2，之后指数退避至最多 30 秒。 |
 | `PULUMI_STACK` | 当前操作的 Stack 名称，例如 `dev`、`prod`。 |
 | `CONFIG_PATH` | （可选）指定配置目录，默认根据云厂商选择 `config/<provider>`。 |
 
@@ -34,7 +36,7 @@ GitHub Actions 与本地调试共享相同的一组环境变量。根据目标�
 
 ### 2.1 使用 `~/.iac/credentials` 管理多云凭据
 
-`cli.py` 会在启动时默认尝试读取 `~/.iac/credentials`（可通过 `IAC_CREDENTIALS_FILE` 或 `--credentials` 覆盖）。
+`cli.py` 会在启动时默认尝试读取 `~/.iac/credentials`（可通过 `IAC_CREDENTIALS_FILE` 或 `--credentials` 覆盖），并在访问 S3 backend 时自动针对网络抖动进行重试。
 
 - 为避免泄漏，文件权限需设置为 `0400`：
 

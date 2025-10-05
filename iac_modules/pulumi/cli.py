@@ -8,6 +8,7 @@ import os
 import stat
 import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Union
@@ -221,6 +222,95 @@ def _ensure_region_harmony() -> None:
 # Command helpers
 # ---------------------------------------------------------------------------
 
+def _emit_process_output(result: subprocess.CompletedProcess[str]) -> None:
+    if result.stdout:
+        print(result.stdout, end="")
+    if result.stderr:
+        print(result.stderr, file=sys.stderr, end="")
+
+
+def _should_retry_login(message: str) -> bool:
+    lowered = message.lower()
+    transient_terms = (
+        "timeout",
+        "temporarily unavailable",
+        "connection reset",
+        "connection refused",
+        "i/o timeout",
+        "tls handshake timeout",
+        "requesterror",
+    )
+    return any(term in lowered for term in transient_terms)
+
+
+def _login_backend_with_retry(context: PulumiContext, backend: str) -> None:
+    default_attempts = 3
+    default_delay = 2.0
+
+    raw_attempts = os.environ.get("PULUMI_LOGIN_RETRIES")
+    raw_delay = os.environ.get("PULUMI_LOGIN_RETRY_DELAY")
+
+    attempts = default_attempts
+    delay = default_delay
+
+    if raw_attempts:
+        try:
+            attempts = max(1, int(raw_attempts))
+        except ValueError:
+            _warn(
+                "PULUMI_LOGIN_RETRIES 必须为整数，已回退至默认值 3。",
+            )
+    if raw_delay:
+        try:
+            delay = max(0.0, float(raw_delay))
+        except ValueError:
+            _warn(
+                "PULUMI_LOGIN_RETRY_DELAY 必须为数字，已回退至默认值 2 秒。",
+            )
+
+    last_error: Optional[subprocess.CompletedProcess[str]] = None
+    for attempt in range(1, attempts + 1):
+        result = context.run(
+            "login",
+            backend,
+            check=False,
+            capture_output=True,
+        )
+        if result.returncode == 0:
+            _emit_process_output(result)
+            return
+
+        last_error = result
+        combined_message = "\n".join(
+            part.strip()
+            for part in (result.stderr or "", result.stdout or "")
+            if part
+        )
+
+        if attempt == attempts or not _should_retry_login(combined_message):
+            _emit_process_output(result)
+            detail = combined_message or "Pulumi 未返回详细错误信息"
+            raise CLIError(
+                "Pulumi 登录 S3 backend 失败，请检查网络连通性、代理设置或 S3 权限。"
+                f" 原始错误：{detail}",
+            )
+
+        wait_seconds = min(delay * (2 ** (attempt - 1)), 30.0)
+        short_error = combined_message.splitlines()[0] if combined_message else "未知错误"
+        _warn(
+            "Pulumi 登录失败 (第 {attempt} 次)。将在 {wait:.1f}s 后重试。错误: {error}".format(
+                attempt=attempt,
+                wait=wait_seconds,
+                error=short_error,
+            )
+        )
+        time.sleep(wait_seconds)
+
+    if last_error is not None:
+        _emit_process_output(last_error)
+    raise CLIError("Pulumi 登录失败，且未返回具体错误信息。")
+
+
 def _require_backend(context: PulumiContext) -> str:
     backend = (
         context.backend_url
@@ -239,7 +329,7 @@ def _require_backend(context: PulumiContext) -> str:
 
     context.backend_url = backend
     _require_passphrase()
-    context.run("login", backend)
+    _login_backend_with_retry(context, backend)
     return backend
 
 
