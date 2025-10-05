@@ -23,6 +23,7 @@ CLOUD_CHOICES = tuple(DEFAULT_CONFIG_PATHS.keys())
 DEFAULT_CREDENTIALS_FILE = Path(
     os.environ.get("IAC_CREDENTIALS_FILE", Path.home() / ".iac/credentials")
 )
+DEFAULT_PASSPHRASE_FILE = Path.home() / ".pulumi-passphrase"
 
 
 class CLIError(RuntimeError):
@@ -87,6 +88,10 @@ def _find_value(section: Dict[str, Any], *names: str) -> Optional[Any]:
 
 def _ensure_string(value: Any) -> Optional[str]:
     return value.strip() if isinstance(value, str) else None
+
+
+def _expand_path(value: str) -> Path:
+    return Path(os.path.expandvars(value)).expanduser()
 
 
 def _select_backend(backends: Any) -> Optional[str]:
@@ -179,6 +184,31 @@ def _load_credentials_file(path: Path) -> None:
     vultr_section = _find_section(data, "vultr")
     _maybe_set_env("VULTR_API_KEY", _find_value(vultr_section, "api_key", "apikey"))
 
+    pulumi_section = _find_section(data, "pulumi")
+    passphrase = _ensure_string(
+        _find_value(
+            pulumi_section,
+            "passphrase",
+            "config_passphrase",
+            "pulumi_passphrase",
+        )
+    )
+    if passphrase and not os.environ.get("PULUMI_CONFIG_PASSPHRASE"):
+        os.environ["PULUMI_CONFIG_PASSPHRASE"] = passphrase
+
+    passphrase_file = _ensure_string(
+        _find_value(
+            pulumi_section,
+            "passphrase_file",
+            "config_passphrase_file",
+            "pulumi_passphrase_file",
+        )
+    )
+    if passphrase_file and not os.environ.get("PULUMI_CONFIG_PASSPHRASE_FILE"):
+        os.environ["PULUMI_CONFIG_PASSPHRASE_FILE"] = str(
+            _expand_path(passphrase_file)
+        )
+
 
 def _ensure_region_harmony() -> None:
     if os.environ.get("AWS_REGION") and not os.environ.get("AWS_DEFAULT_REGION"):
@@ -208,6 +238,7 @@ def _require_backend(context: PulumiContext) -> str:
         )
 
     context.backend_url = backend
+    _require_passphrase()
     context.run("login", backend)
     return backend
 
@@ -222,6 +253,34 @@ def _require_stack(context: PulumiContext) -> str:
     if result.returncode != 0:
         context.run("stack", "init", stack_name)
     return stack_name
+
+
+def _require_passphrase() -> None:
+    if os.environ.get("PULUMI_CONFIG_PASSPHRASE"):
+        return
+
+    file_env = os.environ.get("PULUMI_CONFIG_PASSPHRASE_FILE")
+    if file_env:
+        file_path = _expand_path(file_env)
+        if file_path.is_file():
+            os.environ["PULUMI_CONFIG_PASSPHRASE_FILE"] = str(file_path)
+            return
+        raise CLIError(
+            f"PULUMI_CONFIG_PASSPHRASE_FILE 指向不存在的文件: {file_path}."
+            " 请确认该文件存在或改用 PULUMI_CONFIG_PASSPHRASE 环境变量。"
+        )
+
+    if DEFAULT_PASSPHRASE_FILE.is_file():
+        os.environ.setdefault(
+            "PULUMI_CONFIG_PASSPHRASE_FILE", str(DEFAULT_PASSPHRASE_FILE)
+        )
+        return
+
+    raise CLIError(
+        "未检测到 Pulumi passphrase，无法登录到 S3 backend."
+        " 请设置 PULUMI_CONFIG_PASSPHRASE 环境变量，"
+        "或创建 ~/.pulumi-passphrase 文件并写入密钥后重试。"
+    )
 
 
 def _command_init(context: PulumiContext, _: argparse.Namespace) -> None:
