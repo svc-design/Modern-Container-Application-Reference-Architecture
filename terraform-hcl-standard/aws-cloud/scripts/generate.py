@@ -32,14 +32,14 @@ import yaml
 from jinja2 import Environment, FileSystemLoader
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-# scripts/ -> vultr-vps 根
-VULTR_VPS_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
-TEMPLATE_DIR = os.path.join(VULTR_VPS_ROOT, "templates")
+# scripts/ -> aws-cloud 根
+AWS_CLOUD_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
+TEMPLATE_DIR = os.path.join(AWS_CLOUD_ROOT, "templates")
 
 DEFAULT_RESOURCES = os.path.join(
-    VULTR_VPS_ROOT, "config", "resources", "ai-workspace-hosts.yaml"
+    AWS_CLOUD_ROOT, "config", "resources", "ai-workspace-hosts.yaml"
 )
-DEFAULT_WORKDIR = os.path.join(VULTR_VPS_ROOT, "envs", "ai-workspace")
+DEFAULT_WORKDIR = os.path.join(AWS_CLOUD_ROOT, "envs", "ai-workspace")
 
 # render 时从 templates/ 拷入运行目录的静态文件（使 workdir 成为独立根模块）。
 COPY_INTO_WORKDIR = ["provider.tf", "variables.tf", "cloud-init.yaml"]
@@ -102,26 +102,12 @@ def _terraform_output(workdir, name):
 
 
 def cmd_render(args):
-    workdir = args.workdir
+    resources, workdir = args.resources, args.workdir
     os.makedirs(workdir, exist_ok=True)
-    
-    merged_glob = {}
-    merged_ssh_keys = []
-    merged_hosts = []
-    
-    for res_path in args.resources.split(','):
-        res_path = res_path.strip()
-        if not res_path: continue
-        data = load_yaml(res_path)
-        merged_glob.update(data.get("global", {}) or {})
-        for key in (data.get("ssh_keys", []) or []):
-            if key not in merged_ssh_keys:
-                merged_ssh_keys.append(key)
-        merged_hosts.extend(data.get("hosts", []) or [])
-
-    glob = merged_glob
-    ssh_keys = merged_ssh_keys
-    hosts = merged_hosts
+    data = load_yaml(resources)
+    glob = data.get("global", {}) or {}
+    ssh_keys = data.get("ssh_keys", []) or []
+    hosts = data.get("hosts", []) or []
 
     rendered = (
         _jinja()
@@ -155,8 +141,8 @@ def cmd_render(args):
         json.dump(tfvars, fh, indent=2, ensure_ascii=False)
         fh.write("\n")
 
-    print(f"  resources: {args.resources}")
-    print(f"  workdir:   {os.path.relpath(workdir, VULTR_VPS_ROOT)}")
+    print(f"  resources: {os.path.relpath(resources, AWS_CLOUD_ROOT)}")
+    print(f"  workdir:   {os.path.relpath(workdir, AWS_CLOUD_ROOT)}")
     print(
         f"  wrote generated_hosts.tf + {', '.join(COPY_INTO_WORKDIR)}"
         " + terraform.auto.tfvars.json"
@@ -165,19 +151,10 @@ def cmd_render(args):
 
 
 def cmd_inventory(args):
-    workdir = args.workdir
-    merged_glob = {}
-    merged_hosts = []
-    
-    for res_path in args.resources.split(','):
-        res_path = res_path.strip()
-        if not res_path: continue
-        data = load_yaml(res_path)
-        merged_glob.update(data.get("global", {}) or {})
-        merged_hosts.extend(data.get("hosts", []) or [])
-        
-    glob = merged_glob
-    hosts = merged_hosts
+    resources, workdir = args.resources, args.workdir
+    data = load_yaml(resources)
+    glob = data.get("global", {}) or {}
+    hosts = data.get("hosts", []) or []
     default_region = glob.get("region", "nrt")
 
     try:
@@ -266,7 +243,7 @@ def cmd_inventory(args):
     with open(os.path.join(workdir, "inventory.ini"), "w", encoding="utf-8") as fh:
         fh.write(rendered)
 
-    rel = os.path.relpath(workdir, VULTR_VPS_ROOT)
+    rel = os.path.relpath(workdir, AWS_CLOUD_ROOT)
     print(f"  wrote {os.path.join(rel, 'cmdb.json')}")
     print(f"  wrote {os.path.join(rel, 'inventory.ini')}")
 
