@@ -141,8 +141,8 @@ def cmd_render(args):
         json.dump(tfvars, fh, indent=2, ensure_ascii=False)
         fh.write("\n")
 
-    print(f"  resources: {os.path.relpath(resources, VULTR_VPS_ROOT)}")
-    print(f"  workdir:   {os.path.relpath(workdir, VULTR_VPS_ROOT)}")
+    print(f"  resources: {os.path.relpath(resources, AWS_CLOUD_ROOT)}")
+    print(f"  workdir:   {os.path.relpath(workdir, AWS_CLOUD_ROOT)}")
     print(
         f"  wrote generated_hosts.tf + {', '.join(COPY_INTO_WORKDIR)}"
         " + terraform.auto.tfvars.json"
@@ -243,7 +243,7 @@ def cmd_inventory(args):
     with open(os.path.join(workdir, "inventory.ini"), "w", encoding="utf-8") as fh:
         fh.write(rendered)
 
-    rel = os.path.relpath(workdir, VULTR_VPS_ROOT)
+    rel = os.path.relpath(workdir, AWS_CLOUD_ROOT)
     print(f"  wrote {os.path.join(rel, 'cmdb.json')}")
     print(f"  wrote {os.path.join(rel, 'inventory.ini')}")
 
