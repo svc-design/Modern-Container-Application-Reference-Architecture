@@ -155,7 +155,7 @@ def cmd_render(args):
         json.dump(tfvars, fh, indent=2, ensure_ascii=False)
         fh.write("\n")
 
-    print(f"  resources: {os.path.relpath(resources, VULTR_VPS_ROOT)}")
+    print(f"  resources: {args.resources}")
     print(f"  workdir:   {os.path.relpath(workdir, VULTR_VPS_ROOT)}")
     print(
         f"  wrote generated_hosts.tf + {', '.join(COPY_INTO_WORKDIR)}"
