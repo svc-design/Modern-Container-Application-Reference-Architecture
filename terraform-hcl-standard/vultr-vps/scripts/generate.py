@@ -102,12 +102,26 @@ def _terraform_output(workdir, name):
 
 
 def cmd_render(args):
-    resources, workdir = args.resources, args.workdir
+    workdir = args.workdir
     os.makedirs(workdir, exist_ok=True)
-    data = load_yaml(resources)
-    glob = data.get("global", {}) or {}
-    ssh_keys = data.get("ssh_keys", []) or []
-    hosts = data.get("hosts", []) or []
+    
+    merged_glob = {}
+    merged_ssh_keys = []
+    merged_hosts = []
+    
+    for res_path in args.resources.split(','):
+        res_path = res_path.strip()
+        if not res_path: continue
+        data = load_yaml(res_path)
+        merged_glob.update(data.get("global", {}) or {})
+        for key in (data.get("ssh_keys", []) or []):
+            if key not in merged_ssh_keys:
+                merged_ssh_keys.append(key)
+        merged_hosts.extend(data.get("hosts", []) or [])
+
+    glob = merged_glob
+    ssh_keys = merged_ssh_keys
+    hosts = merged_hosts
 
     rendered = (
         _jinja()
@@ -151,10 +165,19 @@ def cmd_render(args):
 
 
 def cmd_inventory(args):
-    resources, workdir = args.resources, args.workdir
-    data = load_yaml(resources)
-    glob = data.get("global", {}) or {}
-    hosts = data.get("hosts", []) or []
+    workdir = args.workdir
+    merged_glob = {}
+    merged_hosts = []
+    
+    for res_path in args.resources.split(','):
+        res_path = res_path.strip()
+        if not res_path: continue
+        data = load_yaml(res_path)
+        merged_glob.update(data.get("global", {}) or {})
+        merged_hosts.extend(data.get("hosts", []) or [])
+        
+    glob = merged_glob
+    hosts = merged_hosts
     default_region = glob.get("region", "nrt")
 
     try:
