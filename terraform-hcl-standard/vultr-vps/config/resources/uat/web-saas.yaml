@@ -28,4 +28,7 @@ hosts:
         # 少了这条 A 记录, Caddy 的 ACME HTTP-01 验证拿不到解析、签不出证书,
         # 而 console 那个站点照常可用 —— 于是表现成"登录跳转过去就白屏"。
         - accounts-uat.{{ env['TARGET_DOMAIN_BASE'] }}
+        # Billing job trigger 只允许 agent-proxy 通过 web-saas Caddy 访问；
+        # 该域名与 agent-proxy CIDR matcher 配套生成。
+        - billing-uat.{{ env['TARGET_DOMAIN_BASE'] }}
         - postgresql-saas-uat.{{ env['TARGET_DOMAIN_BASE'] }}
