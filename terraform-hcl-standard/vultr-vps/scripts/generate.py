@@ -47,11 +47,92 @@ COPY_INTO_WORKDIR = ["provider.tf", "variables.tf", "cloud-init.yaml"]
 # 逐主机可选字段的缺省值（集中定义，避免散落的硬编码字面量）。
 DEFAULT_PLAN = "vc2-4c-8gb"
 DEFAULT_ANSIBLE_USER = "root"
+DEFAULT_BACKUPS_SCHEDULE = {"type": "daily", "hour": 5}
+
+# render 阶段就落盘的静态清单：apply 之前即可读，供 destroy 作用域断言与
+# 备份计划对账使用（二者都需要“这份 profile 应该有哪些实例”这一事实，而
+# cmdb.json 要等 apply 之后才存在）。
+MANIFEST_FILE = "hosts_manifest.json"
 
 
 def _tf_id(value):
     """把任意名字转成合法的 Terraform 标识符。"""
     return re.sub(r"[^0-9a-zA-Z_]", "_", str(value))
+
+
+def _host_label(host):
+    """实例 label：前缀只来自该主机自己那份声明的 global.name_prefix。
+
+    多份资源声明组合成一个 workspace 时（web-saas + agent-proxy），全局
+    tfvars 的 name_prefix 只保留最后读到的那份，用它渲染会把别的域的前缀
+    安到本主机头上。因此前缀在合并时逐主机记住（_merge_sources 注入
+    _name_prefix），此处只做拼接。
+    """
+    prefix = str(host.get("_name_prefix", "") or "").strip()
+    name = host["name"]
+    return f"{prefix}-{name}" if prefix else name
+
+
+def _host_tags(host):
+    """实例 tags：同样带上该主机自己的前缀，空前缀不产生空标签。"""
+    prefix = str(host.get("_name_prefix", "") or "").strip()
+    tags = [str(t) for t in (host.get("tags", []) or []) if str(t).strip()]
+    return ([prefix] if prefix else []) + tags
+
+
+def _merge_sources(resources):
+    """按顺序读入多份资源声明并合并。
+
+    global 仍然合并成一份（region/user_data_file 等确实是整个 workspace 的
+    属性），但 name_prefix 属于“这份声明里的主机怎么命名”，会逐主机粘在
+    host['_name_prefix'] 上，不随后续文件被覆盖。
+    """
+    merged_glob = {}
+    merged_ssh_keys = []
+    merged_hosts = []
+
+    for res_path in resources.split(","):
+        res_path = res_path.strip()
+        if not res_path:
+            continue
+        data = load_yaml(res_path)
+        source_glob = data.get("global", {}) or {}
+        merged_glob.update(source_glob)
+        for key in data.get("ssh_keys", []) or []:
+            if key not in merged_ssh_keys:
+                merged_ssh_keys.append(key)
+        for host in data.get("hosts", []) or []:
+            host = dict(host)
+            host["_name_prefix"] = source_glob.get("name_prefix", "") or ""
+            host["_source"] = res_path
+            host["label"] = _host_label(host)
+            host["tf_tags"] = _host_tags(host)
+            merged_hosts.append(host)
+
+    return merged_glob, merged_ssh_keys, merged_hosts
+
+
+def _write_manifest(workdir, hosts):
+    """写 hosts_manifest.json：apply 之前就成立的静态事实。"""
+    manifest = {
+        "hosts": [
+            {
+                "name": host["name"],
+                "label": host["label"],
+                "source": host.get("_source", ""),
+                "backups": bool(host.get("backups", False)),
+                "backups_schedule": host.get(
+                    "backups_schedule", DEFAULT_BACKUPS_SCHEDULE
+                ),
+            }
+            for host in hosts
+        ]
+    }
+    path = os.path.join(workdir, MANIFEST_FILE)
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(manifest, fh, indent=2, ensure_ascii=False)
+        fh.write("\n")
+    return path
 
 
 def _jinja():
@@ -105,23 +186,7 @@ def cmd_render(args):
     workdir = args.workdir
     os.makedirs(workdir, exist_ok=True)
     
-    merged_glob = {}
-    merged_ssh_keys = []
-    merged_hosts = []
-    
-    for res_path in args.resources.split(','):
-        res_path = res_path.strip()
-        if not res_path: continue
-        data = load_yaml(res_path)
-        merged_glob.update(data.get("global", {}) or {})
-        for key in (data.get("ssh_keys", []) or []):
-            if key not in merged_ssh_keys:
-                merged_ssh_keys.append(key)
-        merged_hosts.extend(data.get("hosts", []) or [])
-
-    glob = merged_glob
-    ssh_keys = merged_ssh_keys
-    hosts = merged_hosts
+    glob, ssh_keys, hosts = _merge_sources(args.resources)
 
     rendered = (
         _jinja()
@@ -155,29 +220,20 @@ def cmd_render(args):
         json.dump(tfvars, fh, indent=2, ensure_ascii=False)
         fh.write("\n")
 
+    _write_manifest(workdir, hosts)
+
     print(f"  resources: {args.resources}")
     print(f"  workdir:   {os.path.relpath(workdir, VULTR_VPS_ROOT)}")
     print(
         f"  wrote generated_hosts.tf + {', '.join(COPY_INTO_WORKDIR)}"
-        " + terraform.auto.tfvars.json"
+        f" + terraform.auto.tfvars.json + {MANIFEST_FILE}"
     )
     print(f"  next: terraform -chdir={workdir} init && terraform -chdir={workdir} apply")
 
 
 def cmd_inventory(args):
     workdir = args.workdir
-    merged_glob = {}
-    merged_hosts = []
-    
-    for res_path in args.resources.split(','):
-        res_path = res_path.strip()
-        if not res_path: continue
-        data = load_yaml(res_path)
-        merged_glob.update(data.get("global", {}) or {})
-        merged_hosts.extend(data.get("hosts", []) or [])
-        
-    glob = merged_glob
-    hosts = merged_hosts
+    glob, _, hosts = _merge_sources(args.resources)
     default_region = glob.get("region", "nrt")
 
     try:
@@ -208,6 +264,9 @@ def cmd_inventory(args):
         cmdb[fqdn] = {
             "name": name,
             "fqdn": fqdn,
+            # 云上实例的真实 label。instance_id 会因重建而失效，label 不会，
+            # 是按名反查真实实例（resize preflight 的自愈路径）的稳定锚点。
+            "label": host["label"],
             "ip": rt.get("ip"),
             "instance_id": rt.get("instance_id"),
             "os_id": rt.get("os_id"),

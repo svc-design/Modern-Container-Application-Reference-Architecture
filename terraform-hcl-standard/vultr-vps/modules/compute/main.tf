@@ -25,13 +25,19 @@ variable "enable_ipv6" {
 }
 
 variable "backups" {
-  description = "启用自动备份"
+  description = <<-EOT
+    是否为该实例启用自动备份。
+
+    注意: 这个开关不由 vultr_instance 直接执行, 见下方 resource 里的说明。
+    渲染层把它写进 hosts_manifest.json, 由 apply 之后的幂等对账步骤
+    (platform-ops_provision_reconcile-backup-schedules.sh) 调 Vultr API 落实。
+  EOT
   type        = bool
   default     = false
 }
 
 variable "backups_schedule" {
-  description = "自动备份计划（UTC）"
+  description = "自动备份计划（UTC）；与 var.backups 一样由 apply 后的对账步骤落实"
   type = object({
     type = string
     hour = number
@@ -68,27 +74,37 @@ variable "user_data" {
   default     = ""
 }
 
+# 备份计划刻意不在这里声明 —— 这不是偷懒, 是绕开一个会污染 state 的
+# provider 缺陷:
+#
+# vultr provider 的 Create 在实例 status=active 之后紧接着调
+# PUT /v2/instances/{id}/backup-schedule。Vultr 侧此时实例常常还没在
+# 备份子系统里注册完, 返回 {"error":"Invalid instance-id.","status":404},
+# 于是 Create 以 "error setting backup schedule" 失败 —— 但实例已经建出来
+# 了, 它的 ID 也已经 SetId() 进了 state。结果是一条半成品记录: 资源存在于
+# state, 云上却处在一个我们没有走完创建流程的状态。人一旦手工清掉那台机器
+# (或它本就被回滚), state 里就留下一个指向已删实例的孤儿 ID, 而 2.21.0 的
+# Read 只把 "invalid instance ID" 当作 gone, 对 "instance not found" 这个
+# 措辞直接抛错, 于是之后每一次 plan 都在 refresh 阶段硬失败, 整条流水线
+# 卡死在 provision, 且重跑不会自愈。
+#
+# 因此: 实例恒以 backups=disabled 创建(创建期不再有 backup-schedule 调用),
+# 备份由 apply 之后的幂等对账步骤按 hosts_manifest.json 落实。ignore_changes
+# 保证那一步把备份打开后, 下一次 plan 不会再把它改回 disabled。
 resource "vultr_instance" "this" {
   label       = var.label
   region      = var.region
   plan        = var.plan
   os_id       = var.os_id
   enable_ipv6 = var.enable_ipv6
-  backups     = var.backups ? "enabled" : "disabled"
+  backups     = "disabled"
   tags        = var.tags
   vpc_ids     = var.vpc_id == null ? [] : [var.vpc_id]
   ssh_key_ids = var.ssh_key_ids
   user_data   = var.user_data
 
-  dynamic "backups_schedule" {
-    for_each = var.backups ? [var.backups_schedule] : []
-
-    content {
-      type = backups_schedule.value.type
-      hour = backups_schedule.value.hour
-      dow  = backups_schedule.value.dow
-      dom  = backups_schedule.value.dom
-    }
+  lifecycle {
+    ignore_changes = [backups, backups_schedule]
   }
 }
 
