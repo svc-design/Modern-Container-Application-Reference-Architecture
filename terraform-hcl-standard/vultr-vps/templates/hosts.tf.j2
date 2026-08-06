@@ -27,7 +27,13 @@ data "vultr_os" "{{ hid }}" {
 module "compute_{{ hid }}" {
   source = "../../modules/compute"
 
-  label       = var.name_prefix != "" ? "${var.name_prefix}-{{ host.name }}" : "{{ host.name }}"
+  # label/tags 的前缀取自该主机所属那份资源声明的 global.name_prefix, 由
+  # generate.py 逐主机解析后写死在这里 —— 不能读 var.name_prefix。多份声明
+  # 组合部署时(例如 web-saas + agent-proxy), tfvars 里的 name_prefix 只剩最
+  # 后一份文件的值, 用它会给别的域的主机安上不属于自己的前缀, 使同一台主机
+  # 的 label 随 profile 组合漂移。label 是 resize 自愈按名反查真实实例的锚点,
+  # 必须只由主机自己的声明决定。
+  label       = "{{ host.label }}"
   region      = {% if host.region %}"{{ host.region }}"{% else %}var.region{% endif %}
 
   plan        = "{{ host.plan | default('vc2-4c-8gb') }}"
@@ -35,7 +41,7 @@ module "compute_{{ hid }}" {
 
   enable_ipv6 = {{ 'true' if host.get('enable_ipv6', true) else 'false' }}
   backups     = {{ 'true' if host.get('backups', false) else 'false' }}
-  tags        = [for t in concat([var.name_prefix], {{ host.get('tags', []) | tojson }}) : t if t != ""]
+  tags        = {{ host.tf_tags | tojson }}
   ssh_key_ids = [{% for k in ssh_keys %}vultr_ssh_key.{{ k.name | tf_id }}.id{{ ", " if not loop.last }}{% endfor %}]
   user_data   = file(var.user_data_file)
 }
