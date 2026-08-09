@@ -1,59 +1,187 @@
 [🇺🇸 English](README.md) | [🇨🇳 中文](README.zh.md)
 
-# AI Workspace Infrastructure Modules (iac_modules)
+# AI Workspace 基础设施模块仓库 (`iac_modules`)
 
-`iac_modules` 是 AI Workspace 生态系统的核心基础设施即代码 (IaC) 仓库。它提供云中立的多云 GitOps 编排、标准的 Terraform/Terragrunt 模块，以及自动化的部署流水线，旨在构建弹性、可扩展的 AI 基础设施平台。
+`iac_modules` 是 AI Workspace 平台的基础设施即代码（IaC）仓库。资源以 YAML 声明，由 Python + Jinja2
+渲染成显式的 Terraform HCL，按环境 apply，并产出供 Ansible 消费的 CMDB（`cmdb.json`）。
+本仓库中的 Terraform 只负责计算 / 网络 / 存储 / 身份等云资源，软件层配置属于 CMDB 契约另一侧的
+playbooks 仓库。
 
-## 关于 (About)
+## 核心范式
 
-- **云中立设计 (Cloud-Neutral)**：跨 AWS、GCP、Azure、阿里云和 Vultr 等环境提供一致的资源抽象。
-- **GitOps 编排**：自动化的多环境流水线，支持引导层 (Bootstrap)、登陆区 (Landing Zone) 和多云账户矩阵。
-- **VPN Overlay 与网络**：包含建立安全 `vpn-overlay`（WireGuard、Xray）连接的配置。
-- **标准化 HCL 代码**：为计算、网络和安全提供强大且预配置的 `terraform-hcl-standard` 模块库。
+```
+config/resources/<env>/<group>.yaml          声明层 —— 唯一的人工维护入口
+        │   scripts/generate.py render       循环在 Python + Jinja2 侧完成，绝不进 HCL
+        ▼
+generated_hosts.tf                           每台主机一个命名唯一的显式 module/resource 块
+terraform.auto.tfvars.json ──▶ variables.tf  YAML 的 global 段
+        │   terraform apply
+        ▼
+output "cmdb_runtime"                        仅运行时才确定的事实（ip / instance_id / 解析后的 os_id）
+        │   scripts/generate.py inventory    合并 YAML 静态字段 + Terraform 运行时输出
+        ▼
+cmdb.json + inventory.ini                    IaC ↔ Ansible 契约
+```
 
-## 快速开始 (Start TLDR)
+由此派生的强制约束，完整条款见
+[`terraform-hcl-standard/AGENTS.md`](terraform-hcl-standard/AGENTS.md) 与 [`skills/`](skills)：
 
-> **注意：** 这些模块主要设计供 CI/CD 流水线（例如 GitHub Actions）和编排工具调用，而不是完全通过手动运行。
+- **HCL 内禁用控制结构**：不得使用 `for_each` / `count` / `dynamic`，不得用 `templatefile()` 配合
+  `%{ for }` / `%{ if }` 渲染；「多份资源」在渲染阶段展开为多个命名唯一的显式块。
+- **拓扑不进 HCL**：区域、机型、实例数量、域名与 host_vars 一律写在 YAML 里。
+- **HCL 内禁止内嵌脚本**：不得使用 `local-exec` provisioner，不得用 `null_resource` 跑 shell/python。
+- **状态按环境隔离**：`sit` / `uat` / `prod` 绝不复用同一个 backend key。
+- **机密不落文件**：API Key 通过 `TF_VAR_*` 环境变量注入；IaC 生成的凭证直接推送 Vault 供 Ansible
+  读取，绝不写入 YAML / tfvars，也不以文件形式向后传递。
+- **渲染产物不入库**：`generated_hosts.tf`、`terraform.auto.tfvars.json`、`cmdb.json`、
+  `inventory.ini` 均被 gitignore；运行目录只跟踪 `README.md` 与 `.gitignore`。
 
-### 前置依赖 (Prerequisites)
+## 单个 Provider 内的分层
 
-如果计划在本地运行模块，请确保安装了以下工具：
+`terraform-hcl-standard/` 下每个 provider 都遵循同一套三层切分 —— 声明 / 可复用模板 / 组合逻辑，
+env 目录退化为纯粹的 Terraform 运行目录。
+
+| 分层 | 路径 | 职责 | 是否入库 |
+|------|------|------|----------|
+| 声明 | `<provider>/config/resources/<env>/*.yaml` | 按环境、按资源分类描述拓扑 | ✅ |
+| 声明 | `<provider>/config/accounts/` | 账号 / bootstrap 事实（state 桶、锁表、角色）的占位目录；实际 YAML 由外部 GitOps 仓库经 `BOOTSTRAP_CONFIG_PATH` / `TF_VAR_config_root` 提供 | 仅 `.gitkeep` |
+| 模板 | `<provider>/templates/` | 共享的 `provider.tf`、`variables.tf`、`backend.tf`、`cloud-init.yaml` 及对应 `.j2` | ✅ |
+| 组合 | `<provider>/scripts/generate.py`、`provision.sh` | `render` + `inventory` 子命令与一键编排 | ✅ |
+| 模块 | `<provider>/modules/<resource>/` | 被渲染块复用的资源模块 | ✅ |
+| 根模块 | `<provider>/component/`（AWS）、`<provider>/instance/`（GCP） | 逐资源的 Terraform 根模块，各带一个 `Makefile` | ✅ |
+| 运行目录 | `<provider>/envs/<name>/` | Terraform workdir，承接渲染产物与 tfstate | 仅 README + `.gitignore` |
+| Bootstrap | `<provider>/bootstrap/{state,lock,identity}` | 远端状态桶、锁表、部署角色/用户，先于一切执行 | ✅ |
+
+## Provider 与成熟度分类
+
+| Provider | 路径 | 状态 | 模块数 | 现状 |
+|----------|------|------|--------|------|
+| AWS | `terraform-hcl-standard/aws-cloud/` | 生产可用 | 14 | Terragrunt bootstrap（`state` / `lock` / `identity`）、`component/` 根模块、`sit` + `uat` + `prod` 资源声明、render + inventory 脚本 |
+| Vultr | `terraform-hcl-standard/vultr-vps/` | 生产可用 —— 渲染范式的基准实现 | 7 | 四个运行目录（`ai-workspace`、`dev`、`platform-ops-toolkit`、`site-migration-toolkit`）、`sit` + `uat` + `prod` 声明、`provision.sh` |
+| 阿里云 | `terraform-hcl-standard/ali-cloud/` | 部分完成 | 9 | 模块 + bootstrap + `envs/dev`；`config/resources` 仍为空 |
+| GCP | `terraform-hcl-standard/gcp-cloud/` | 骨架 | 14 | 每个模块仅一个 `main.tf`，另有 `instance/` 根模块；无资源声明 |
+| Azure | `terraform-hcl-standard/azure-cloud/` | 骨架 | 14 | 每个模块仅一个 `main.tf`；无运行目录、无资源声明 |
+
+`terraform-hcl-standard/utils/` 存放共享的 Python 渲染器（`renderer.py`、`config_loader.py`、
+`render_provider_backend.py`）。
+
+## 模块目录（按能力域分类）
+
+| 能力域 | AWS | 阿里云 | Vultr | GCP / Azure（骨架） |
+|--------|-----|--------|-------|---------------------|
+| 身份与治理 | `iam`、`landingzone` | `ram` | `iam` | `iam`、`landingzone` |
+| 计算 | `ec2`、`keypair`、`ami_lookup` | `ecs` | `compute`、`resize-instance` | `ec2`、`keypair`、`ami_lookup` |
+| 网络 | `vpc`、`sg`、`alb`、`nlb` | `vpc`、`alb`、`nlb` | `vpc` | `vpc`、`sg`、`alb`、`nlb` |
+| 数据与存储 | `rds`、`redis`、`msk`、`s3` | `rds`、`redis`、`oss` | `data_store`、`storage` | `rds`、`redis`、`msk`、`s3` |
+| 拆除 | `bootstrap-destroy` | `bootstrap-destroy` | `bootstrap-destroy` | `bootstrap-destroy` |
+
+> GCP 与 Azure 目录里声明的确实是 `google_*` / `azurerm_*` 资源，但目录名沿用了 AWS 的叫法
+> （`ec2`、`s3`、`msk`、`ami_lookup`），命名尚未归一化。
+
+## 环境与资源分类
+
+三套环境，各自拥有独立的 YAML 目录、独立的运行目录与独立的状态：
+**`sit`**（集成）、**`uat`**（预生产）、**`prod`**（生产）。
+
+资源分类（resource group）是环境内的声明单位 —— 一个分类一份 YAML，一个分类一次 Terraform 运行：
+
+| 分类 | Ansible group / tags | 承载内容 |
+|------|----------------------|----------|
+| `web-saas` | `web_saas`、`database` | Console / accounts / PostgreSQL SaaS 主机，含 Caddy 需要签发证书的对外服务域名 |
+| `ai-workspace` | `ai_workspace`、`database` | AI workspace 应用节点 |
+| `infra-platform` | `infra_platform`、`database` | 平台侧共享服务 |
+| `agent-proxy` | `agent_proxy` | Agent 出口 / 代理节点 |
+| `action-runner` | `action_runner` | 自托管 CI Runner |
+| `all-in-one`（仅 `sit`） | 混合 | 整套栈收敛到单台 SIT 主机 |
+
+`uat` 与 `prod` 刻意是独立的声明与独立的状态：某次 apply 产出的 CMDB 就是该环境的部署事实来源，
+任何一次运行都不得指向另一个环境的主机变量。
+
+## Terraform 之外的组成部分
+
+| 路径 | 内容 |
+|------|------|
+| `vpn-overlay/` | 跨站点 L2/L3 覆盖网络：`wireguard/`、`xray/`、`vxlan/`、`gretap/`、`config/sites.yaml` 与拓扑图 |
+| `skills/` | 约束性规范 —— `IAC-Spec`（IaC 红线）、`terraform-yaml-render-pattern`（渲染范式）、`release-branch-policy` |
+| `scripts/` | 仓库级辅助脚本 —— `dynamic_inventory.py`、WireGuard 密钥生成、gitleaks 自动修复，以及 `workflows/` 下的 Flux / Ansible / kubeconfig / xconfig helper |
+| `.github/actions/` | 流水线定义 —— 各云的 Landing Zone 基线、基础设施资源、监控 exporter/server、SSL 证书续期 |
+| `.github/workflows/` | `validate-release-pr.yml` —— 本仓库唯一实际运行的 workflow |
+| `example/` | 参考样例：Pulumi（Python）与 AWS / Azure / GCP 的原生 Terraform |
+| `docs/` | 双语文档集，入口见 [`docs/README.md`](docs/README.md) |
+
+## 快速开始
+
+> 这些模块面向流水线与 `generate.py` 驱动；直接进入某个 provider 目录手跑 `terraform` 是无效的 ——
+> 运行目录要在 render 之后才成为可用的根模块。
+
+### 前置依赖
+
 - Terraform >= 1.5.0
-- Terragrunt >= 0.50.0
-- 云服务商 CLI 工具 (AWS CLI, gcloud 等)
+- Terragrunt >= 0.67.14（仅 AWS bootstrap 需要）
+- Python 3，安装 `PyYAML` 与 `Jinja2`（`requirements.txt` 除此之外还包含 Pulumi 示例的依赖）
+- Provider 凭证 —— AWS 走标准凭证链 / OIDC，Vultr 走 `TF_VAR_vultr_api_key`
 
-### 使用 (Usage)
+### 1. 账号 Bootstrap（一次性）
 
-1. 多云流水线 (Multi-cloud Pipelines)：
-请参考 `.github/workflows` 目录中自动化的矩阵配置：
+账号事实（桶名、锁表、角色名）来自外部 GitOps 仓库，而非本仓库：
+
 ```bash
-.github/workflows/iac-pipeline-mutli-cloud-bootstrap.yaml
-.github/workflows/iac-pipeline-mutli-cloud-landingzone-baseline.yaml
+git clone https://github.com/cloud-neutral-workshop/gitops.git ../gitops
+cd terraform-hcl-standard/aws-cloud/bootstrap
+BOOTSTRAP_CONFIG_PATH=../../../../gitops/config/accounts/bootstrap.yaml make bootstrap-init bootstrap-apply
 ```
 
-2. 标准 Terraform 模块：
-进入模块目录并初始化：
+创建 S3 状态桶（开启版本控制与加密）、DynamoDB 锁表与部署角色/用户。凭证模式与拆除流程见
+[`aws-cloud/README.md`](terraform-hcl-standard/aws-cloud/README.md)。
+
+### 2. 渲染、apply 并产出 CMDB
+
 ```bash
-cd terraform-hcl-standard/
-terraform init
-terraform plan
+export TF_VAR_vultr_api_key=...
+cd terraform-hcl-standard/vultr-vps/scripts
+
+RESOURCES=../config/resources/uat/web-saas.yaml \
+WORKDIR=../envs/ai-workspace \
+./provision.sh
 ```
 
-3. 配置 VPN Overlay：
+`provision.sh` 按序执行四步 —— `generate.py render` → `terraform init && apply` →
+`generate.py inventory` →（可选）Ansible。也可以逐步执行：
+
 ```bash
-cd vpn-overlay/
-# 根据具体说明进行 wireguard 或 xray 配置
+python3 generate.py render    --resources ../config/resources/uat/web-saas.yaml --workdir ../envs/ai-workspace
+terraform -chdir=../envs/ai-workspace init && terraform -chdir=../envs/ai-workspace apply
+python3 generate.py inventory --resources ../config/resources/uat/web-saas.yaml --workdir ../envs/ai-workspace
 ```
 
-## 仓库结构 (Repository Structure)
+### 3. 交接给 Ansible
 
-- `terraform-hcl-standard/`: 核心且可重用的 Terraform 模块。
-- `vpn-overlay/`: 安全网络与覆盖网络配置。
-- `.github/workflows/`: GitOps 流水线和 CI/CD 矩阵。
-- `scripts/`: 环境搭建与部署的辅助脚本。
-- `example/`: 示例实现与参考架构。
+playbooks 仓库通过动态 inventory（`playbooks/inventory/terraform_cmdb.py`）消费 `cmdb.json`，
+不直接读取 tfstate。每次基础设施变更后都要重跑 `generate.py inventory`。
 
-## 文档 / 链接 (Docs / Links)
+```bash
+ansible web_saas -i ../../../../playbooks/inventory/terraform_cmdb.py -m ping
+```
+
+## 动手改之前先读
+
+- [`terraform-hcl-standard/AGENTS.md`](terraform-hcl-standard/AGENTS.md) —— Terraform 强制约束
+- [`skills/IAC-Spec/SKILL.md`](skills/IAC-Spec/SKILL.md) —— IaC 红线与 IaC ↔ Config-as-Code 边界
+- [`skills/terraform-yaml-render-pattern/SKILL.md`](skills/terraform-yaml-render-pattern/SKILL.md) —— 渲染范式与提交前自检清单
+- [`skills/release-branch-policy/SKILL.md`](skills/release-branch-policy/SKILL.md) —— 分支与发布策略
+
+提交前自检：`terraform fmt` 无 diff、`terraform validate` 通过、`generate.py render` 产出合法 HCL、
+`ansible-inventory --graph` 能解析生成的 inventory、渲染产物与机密未被 stage。
+
+## 已知缺口
+
+- GCP 与 Azure 目前是单文件骨架，且模块命名沿用 AWS，尚不可直接部署。
+- `ali-cloud/config/resources/` 为空，仅有 `envs/dev`。
+- `generate.py` 里 `--resources` 的默认值仍指向拆分前的 `config/resources/ai-workspace-hosts.yaml`，
+  请始终显式传入 `--resources` / `RESOURCES`。
+- 文档归并进度记录在 [`docs/DOC_COVERAGE.md`](docs/DOC_COVERAGE.md)。
+
+## 文档 / 链接
 
 - [官方网站](https://www.svc.plus/)
-- [CloudNativeSuite 文档](https://github.com/ai-workspace-infra)
+- [ai-workspace-infra 组织](https://github.com/ai-workspace-infra)
