@@ -120,6 +120,7 @@ def _write_manifest(workdir, hosts):
                 "name": host["name"],
                 "label": host["label"],
                 "source": host.get("_source", ""),
+                "snapshot_id": host.get("snapshot_id", None),
                 "backups": bool(host.get("backups", False)),
                 "backups_schedule": host.get(
                     "backups_schedule", DEFAULT_BACKUPS_SCHEDULE
@@ -270,6 +271,7 @@ def cmd_inventory(args):
             "ip": rt.get("ip"),
             "instance_id": rt.get("instance_id"),
             "os_id": rt.get("os_id"),
+            "snapshot_id": host.get("snapshot_id"),
             "os_name": host.get("os_name", ""),
             "plan": host.get("plan", DEFAULT_PLAN),
             "region": host.get("region") or default_region,
