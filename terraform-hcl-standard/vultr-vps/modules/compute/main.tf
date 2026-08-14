@@ -96,6 +96,12 @@ resource "vultr_instance" "this" {
   region      = var.region
   plan        = var.plan
   os_id       = var.os_id
+  # The Vultr provider models snapshot_id as Optional+Computed+ForceNew.  If a
+  # previous instance was created from a Golden Image, leaving this attribute
+  # implicit allows a deleted snapshot ID from state to leak into a later OS
+  # based replacement and fail with "Invalid snapshot".  This module's normal
+  # path is OS-based, so make that intent explicit and clear stale state.
+  snapshot_id = null
   enable_ipv6 = var.enable_ipv6
   backups     = "disabled"
   tags        = var.tags
