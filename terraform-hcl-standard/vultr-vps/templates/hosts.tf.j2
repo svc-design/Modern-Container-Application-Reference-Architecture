@@ -16,7 +16,7 @@ resource "vultr_ssh_key" "{{ key.name | tf_id }}" {
 {% endfor -%}
 {% for host in hosts -%}
 {%- set hid = host.name | tf_id -%}
-{%- if host.os_id is not defined or host.os_id is none %}
+{%- if (host.os_id is not defined or host.os_id is none) and (host.snapshot_id is not defined or host.snapshot_id is none) %}
 data "vultr_os" "{{ hid }}" {
   filter {
     name   = "name"
@@ -37,7 +37,8 @@ module "compute_{{ hid }}" {
   region      = {% if host.region %}"{{ host.region }}"{% else %}var.region{% endif %}
 
   plan        = "{{ host.plan | default('vc2-4c-8gb') }}"
-  os_id       = {% if host.os_id %}{{ host.os_id }}{% else %}data.vultr_os.{{ hid }}.id{% endif %}
+  os_id       = {% if host.snapshot_id %}null{% elif host.os_id %}{{ host.os_id }}{% else %}data.vultr_os.{{ hid }}.id{% endif %}
+  snapshot_id = {% if host.snapshot_id %}"{{ host.snapshot_id }}"{% else %}null{% endif %}
 
   enable_ipv6 = {{ 'true' if host.get('enable_ipv6', true) else 'false' }}
   backups     = {{ 'true' if host.get('backups', false) else 'false' }}
@@ -57,7 +58,7 @@ output "cmdb_runtime" {
     "{{ host.name }}" = {
       ip          = module.compute_{{ hid }}.main_ip
       instance_id = module.compute_{{ hid }}.instance_id
-      os_id       = {% if host.os_id %}{{ host.os_id }}{% else %}data.vultr_os.{{ hid }}.id{% endif %}
+      os_id       = {% if host.snapshot_id %}null{% elif host.os_id %}{{ host.os_id }}{% else %}data.vultr_os.{{ hid }}.id{% endif %}
 
     }
 {% endfor -%}

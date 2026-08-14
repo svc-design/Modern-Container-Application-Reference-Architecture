@@ -9,6 +9,7 @@ ssh_keys:
 
 hosts:
   - name: infra-platform-node-uat
+    snapshot_id: {{ env.get('SNAPSHOT_ID_DEBIAN13_WEBSAAS', '415a1cd7-149f-4f4e-b904-072a179d90dc') | tojson }}
     os_name: "Debian 13 x64 (trixie)"
     plan: {{ env.get('INSTANCE_PLAN_API', 'vc2-4c-8gb') }}
     backups: true
