@@ -74,6 +74,12 @@ variable "user_data" {
   default     = ""
 }
 
+variable "snapshot_id" {
+  description = "Vultr 自定义快照 ID (Golden Image)，优先于 os_id"
+  type        = string
+  default     = null
+}
+
 # 备份计划刻意不在这里声明 —— 这不是偷懒, 是绕开一个会污染 state 的
 # provider 缺陷:
 #
@@ -95,7 +101,8 @@ resource "vultr_instance" "this" {
   label       = var.label
   region      = var.region
   plan        = var.plan
-  os_id       = var.os_id
+  os_id       = (var.snapshot_id != null && var.snapshot_id != "") ? null : var.os_id
+  snapshot_id = (var.snapshot_id != null && var.snapshot_id != "") ? var.snapshot_id : null
   enable_ipv6 = var.enable_ipv6
   backups     = "disabled"
   tags        = var.tags
