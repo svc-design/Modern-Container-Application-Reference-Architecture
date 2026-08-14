@@ -9,7 +9,7 @@ ssh_keys:
 
 hosts:
   - name: agent-proxy-node-uat
-    snapshot_id: {{ env.get('SNAPSHOT_ID_DEBIAN13_AGENT_PROXY', 'b6755c99-d9b7-4b69-b0cf-a7b5e57ea18a') | tojson }}
+    snapshot_id: {{ env.get('SNAPSHOT_ID_DEBIAN13_AGENT_PROXY', '') | tojson }}
     os_name: "Debian 13 x64 (trixie)"
     plan: vc2-1c-2gb
     backups: false
