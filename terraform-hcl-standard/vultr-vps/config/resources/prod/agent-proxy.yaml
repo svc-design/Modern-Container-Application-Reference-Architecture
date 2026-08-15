@@ -10,7 +10,10 @@ ssh_keys:
 hosts:
   - name: agent-proxy-node-prod
     os_name: "Debian 13 x64 (trixie)"
-    plan: vc2-1c-2gb
+    # Agent Proxy is a lightweight native systemd workload. Keep the runtime
+    # default at 1C1G; callers may override it with AGENT_PROXY_PLAN_API when
+    # a larger node is required.
+    plan: {{ env.get('AGENT_PROXY_PLAN_API', 'vc2-1c-1gb') }}
     backups: false
     enable_ipv6: true
     ansible_user: root
