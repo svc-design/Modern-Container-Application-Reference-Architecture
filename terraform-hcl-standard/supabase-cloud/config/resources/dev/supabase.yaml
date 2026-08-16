@@ -6,7 +6,7 @@ global:
   project_ref: "{{ env.get('SUPABASE_PROJECT_REF', '') }}"
   organization_id: "{{ env.get('SUPABASE_ORGANIZATION_ID', '') }}"
   project_name: "ai-workspace-dev"
-  region: "ap-southeast-1"
+  region: "ap-northeast-1"
   instance_size: "micro"
   pooler_mode: "session"
 
