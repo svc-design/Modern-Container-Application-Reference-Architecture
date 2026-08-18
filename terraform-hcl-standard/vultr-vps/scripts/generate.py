@@ -298,6 +298,42 @@ def cmd_inventory(args):
             + "\n".join(problems)
         )
 
+    # Web SaaS is intentionally a co-located full-stack host, so its Console,
+    # Accounts and PostgreSQL aliases may share one IP.  The safety boundary is
+    # between the web_saas role and the separate agent_proxy role: if those two
+    # roles share an IP, Ansible can silently deploy the agent role onto the
+    # Web SaaS host and DNS reconciliation can publish the wrong address.
+    role_ip_owners = {"web_saas": {}, "agent_proxy": {}}
+    for fqdn, host in cmdb.items():
+        ip = str(host.get("ip") or "").strip()
+        if not ip:
+            continue
+        for role in role_ip_owners:
+            if role in (host.get("groups") or []):
+                role_ip_owners[role].setdefault(ip, []).append(fqdn)
+
+    cross_role_ips = sorted(
+        set(role_ip_owners["web_saas"]) & set(role_ip_owners["agent_proxy"])
+    )
+    sit_all_in_one = (
+        any(
+            os.path.basename(os.path.dirname(os.path.normpath(resource))) == "sit"
+            and os.path.basename(os.path.normpath(resource)) == "all-in-one.yaml"
+            for resource in args.resources.split(",")
+        )
+    )
+    if cross_role_ips and not sit_all_in_one:
+        details = [
+            f"  - {ip}: web_saas={', '.join(role_ip_owners['web_saas'][ip])}; "
+            f"agent_proxy={', '.join(role_ip_owners['agent_proxy'][ip])}"
+            for ip in cross_role_ips
+        ]
+        sys.exit(
+            "CMDB role/IP 校验失败：web_saas 与 agent_proxy 共享同一个运行时 IP；"
+            "请检查 Terraform workspace/state 与 cmdb_runtime 映射后再部署：\n"
+            + "\n".join(details)
+        )
+
     with open(os.path.join(workdir, "cmdb.json"), "w", encoding="utf-8") as fh:
         json.dump(cmdb, fh, indent=2, ensure_ascii=False)
         fh.write("\n")
