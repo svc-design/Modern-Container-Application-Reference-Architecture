@@ -23,4 +23,4 @@ hosts:
     host_vars:
       role: primary
       service_domains:
-        - agent-proxy-uat.{{ env['TARGET_DOMAIN_BASE'] }}
+        - agent-proxy-vps-uat.{{ env['TARGET_DOMAIN_BASE'] }}
