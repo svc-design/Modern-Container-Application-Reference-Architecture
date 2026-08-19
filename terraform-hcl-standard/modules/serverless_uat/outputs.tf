@@ -13,12 +13,12 @@ output "content_service_uri" {
   value       = google_cloud_run_v2_service.content_uat.uri
 }
 
-output "billing_origin_host" {
-  description = "DNS-only Cloudflare hostname used for the Billing origin override"
-  value       = cloudflare_record.billing_origin.name
+output "billing_host" {
+  description = "Billing custom domain owned by the core Edge Gateway Worker"
+  value       = cloudflare_workers_domain.billing.hostname
 }
 
-output "billing_origin_target" {
-  description = "Cloud Run hostname targeted by the Billing origin alias"
-  value       = cloudflare_record.billing_origin.content
+output "billing_worker_service" {
+  description = "Worker service attached to the Billing custom domain"
+  value       = cloudflare_workers_domain.billing.service
 }
