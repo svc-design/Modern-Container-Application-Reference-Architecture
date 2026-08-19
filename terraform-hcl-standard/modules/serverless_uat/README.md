@@ -14,5 +14,13 @@ module "serverless_uat" {
   gcp_region          = "asia-east1"
   image_tag           = "v1.0.0"
   supabase_pooler_url = "postgres://postgres.xxx:pwd@aws-0-asia-east1.pooler.supabase.com:6543/postgres"
+  cloudflare_zone_id  = "eab572e5680befe7e00c6d5ff966b050"
+  billing_origin_host = "billing-origin-serverless-uat.onwalk.net"
 }
 ```
+
+The module creates the Billing origin alias as a DNS-only CNAME to the deployed
+Cloud Run service. The public `billing-serverless-uat.onwalk.net` record remains
+the proxied application entry. Cloudflare Origin Rules use the alias for
+`origin.host`, while the Cloud Run `run.app` hostname remains the Host header and
+TLS SNI. Do not use a Cloud Run domain mapping for this path.
