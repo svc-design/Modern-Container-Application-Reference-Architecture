@@ -22,3 +22,14 @@ variable "supabase_pooler_url" {
   sensitive   = true
   default     = ""
 }
+
+variable "cloudflare_zone_id" {
+  type        = string
+  description = "Cloudflare zone ID containing the serverless Billing origin alias"
+}
+
+variable "billing_origin_host" {
+  type        = string
+  description = "DNS-only same-zone hostname used by the Cloudflare Billing Origin Rule"
+  default     = "billing-origin-serverless-uat.onwalk.net"
+}

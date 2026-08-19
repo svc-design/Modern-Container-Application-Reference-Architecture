@@ -109,3 +109,15 @@ resource "google_cloud_run_v2_service" "content_uat" {
     }
   }
 }
+
+# 4. Cloudflare DNS-only origin alias for the Billing Origin Rule.
+# The public billing hostname remains proxied; this same-zone alias is used
+# only for Cloudflare's DNS record override and must never be proxied.
+resource "cloudflare_record" "billing_origin" {
+  zone_id = var.cloudflare_zone_id
+  name    = var.billing_origin_host
+  content = replace(google_cloud_run_v2_service.billing_uat.uri, "https://", "")
+  type    = "CNAME"
+  ttl     = 60
+  proxied = false
+}
