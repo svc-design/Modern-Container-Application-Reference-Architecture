@@ -25,11 +25,22 @@ variable "supabase_pooler_url" {
 
 variable "cloudflare_zone_id" {
   type        = string
-  description = "Cloudflare zone ID containing the serverless Billing origin alias"
+  description = "Cloudflare zone ID containing the serverless Billing custom domain"
 }
 
-variable "billing_origin_host" {
+variable "cloudflare_account_id" {
   type        = string
-  description = "DNS-only same-zone hostname used by the Cloudflare Billing Origin Rule"
-  default     = "billing-origin-serverless-uat.onwalk.net"
+  description = "Cloudflare account ID owning the core Edge Gateway Worker"
+}
+
+variable "billing_host" {
+  type        = string
+  description = "Public Billing Worker custom domain"
+  default     = "billing-serverless-uat.onwalk.net"
+}
+
+variable "edge_gateway_core_worker" {
+  type        = string
+  description = "Core Edge Gateway Worker service that proxies Billing to Cloud Run"
+  default     = "edge-gateway-core-uat"
 }
