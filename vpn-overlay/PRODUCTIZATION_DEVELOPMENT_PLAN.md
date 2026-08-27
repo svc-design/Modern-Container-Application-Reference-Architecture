@@ -1,7 +1,7 @@
 # XConnect Zero Trust Overlay 产品化开发计划
 
-状态：Draft v1  
-日期：2026-08-27  
+状态：Draft v1
+日期：2026-08-27
 范围：产品化 CLI、多平台运行时、动态 ACL、控制面投影、Gateway 动态配置、测试与文档体系
 
 ## 1. 目标与边界

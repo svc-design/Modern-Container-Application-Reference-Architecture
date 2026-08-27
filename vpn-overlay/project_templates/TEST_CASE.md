@@ -63,4 +63,3 @@ client-a → gateway-a ⇄ gateway-b → service-b
 ## Pass/fail rule
 
 写出机器可判断的规则，不能只写“看起来可以”。
-
