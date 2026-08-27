@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://xconnect.one/schemas/v1/signed-config.schema.json",
+  "$id": "https://accounts.svc.plus/schemas/overlay/v1/signed-config.schema.json",
   "title": "XConnect-One Signed Client Config v1",
   "type": "object",
   "additionalProperties": false,

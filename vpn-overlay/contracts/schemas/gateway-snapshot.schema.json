@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://xconnect.one/schemas/v1/gateway-snapshot.schema.json",
+  "$id": "https://accounts.svc.plus/schemas/overlay/v1/gateway-snapshot.schema.json",
   "title": "XConnect-One Gateway Snapshot v1",
   "type": "object",
   "additionalProperties": false,
