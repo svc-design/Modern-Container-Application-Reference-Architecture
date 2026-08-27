@@ -703,6 +703,28 @@ POST   /api/overlay/v1/policies/{revision}/activate
 
 ## 12. CI/CD 与发布门禁
 
+### 12.0 分支与分批编码策略
+
+- 本计划文档使用独立文档分支并提交到 `main` 的文档 PR。
+- 产品化编码使用长期特性分支 `codex/xconnect-overlay-productization`，不直接提交到 `main`。
+- 每个 Phase 再按可独立验证的 Batch 建立短期分支，例如：
+
+```text
+codex/xconnect-overlay-productization
+├── codex/xconnect-batch-01-contracts
+├── codex/xconnect-batch-02-cli-join
+├── codex/xconnect-batch-03-gateway-shadow
+├── codex/xconnect-batch-04-dynamic-peers
+├── codex/xconnect-batch-05-acl-compiler
+└── codex/xconnect-batch-06-platform-closure
+```
+
+- Batch 分支只合入产品化特性分支；未经明确指令，不向 `main` 创建编码 PR。
+- 每个 Batch 必须有明确输入、输出、测试 Case、evidence 和 rollback 点，验证通过后才开始下一 Batch。
+- 特性分支持续同步 `main`，但禁止用破坏性 reset 清理用户或其他分支的工作。
+- 文档、OpenAPI、schema、golden 和测试可以随 Batch 一起演进，但每个 Batch 结束时必须保持特性分支可构建、可测试、可恢复。
+- 最终是否拆分为多个 `main` PR 或使用一个汇总 PR，在 GA 前由维护者明确决定。
+
 ### 12.1 Pull Request 门禁
 
 - Go format、vet、test、race（支持的平台）。
