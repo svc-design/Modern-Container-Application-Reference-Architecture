@@ -32,6 +32,8 @@ xconnect join <controller-or-invite>
 - iOS、Android 通过 App 登录、邀请链接或二维码执行等价 Join 协议。
 - WireGuard 提供端到端加密。
 - 现有 VLESS/TLS/XUDP 作为第一版可靠传输。
+- 第一版唯一代理内核为 Xray-core：客户端统一通过仓库锁定的 `libXray` 嵌入，Gateway/Relay 使用锁定版本的 Xray-core。
+- 第一版不包含 sing-box 依赖、运行时适配器、配置生成器、二进制、服务、fallback 或测试矩阵。
 - ACL 默认拒绝，按用户、组、设备、标签、服务和端口授权。
 - `accounts.svc.plus` 成为设备、地址、节点、策略和配置版本的唯一事实来源。
 - Ansible 只负责 Gateway/Relay 的初始安装和升级，不再维护终端 Peer 静态列表。
@@ -41,7 +43,7 @@ xconnect join <controller-or-invite>
 - iOS/Android 完整 L2 Ethernet TAP。
 - 默认启用 VXLAN、广播或 DHCP 延伸。
 - 任意多租户共享 L2 广播域。
-- 第一版同时支持 Xray 和 sing-box 两套运行时。
+- sing-box runtime、adapter、配置兼容层和双内核自动切换。
 - 第一版实现完全去中心化的控制面。
 - 在 Join 命令中直接运行服务器 Ansible Playbook。
 
@@ -147,7 +149,7 @@ type ProductPlugin interface {
 扩展点分为：
 
 - `ControlPlaneProvider`：注册、配置同步、事件和 ACK。
-- `TransportProvider`：VLESS/TLS/XUDP，后续可接直连 WireGuard、QUIC 或其他穿透传输。
+- `TransportProvider`：第一版仅注册由 Xray-core/libXray 驱动的 VLESS/TLS/XUDP；其他实现不进入 v1。
 - `PolicyProvider`：策略验证、解释和本地快速拒绝；Gateway 仍是强制执行点。
 - `ProfileProvider`：把产品配置编译为平台无关 Tunnel Profile。
 - `DiagnosticsContributor`：向统一诊断包添加已脱敏证据。
@@ -335,15 +337,20 @@ INIT
   "config_etag": "sha256:...",
   "runtime": {
     "state": "connected",
+    "proxy_core": "xray",
     "platform_adapter": "darwin-packet-tunnel",
     "active_transport": "vless-tls-xudp"
   }
 }
 ```
 
+SignedConfig、GatewaySnapshot、manifest 和本地状态中的 `proxy_core` 在 v1 必须使用闭集枚举 `xray`，不能接受自由字符串后再尝试其他运行时。
+
 私钥和 refresh token 必须存系统安全存储：Apple Keychain、Android Keystore、Windows Credential Manager/DPAPI、Linux Secret Service；没有安全存储时使用 root-only 文件并明确降级状态。
 
 ## 6. 多平台 Runtime SPI
+
+这里的 Runtime SPI 只抽象系统 VPN 生命周期、权限、路由和平台桥接，不表示第一版支持多个代理内核。v1 的唯一 core ID 为 `xray`：客户端实现绑定 `libXray/xray-core`，Gateway/Relay 实现绑定 Xray-core。任何 `sing-box` core ID、依赖或配置均视为不支持并在校验阶段拒绝。
 
 ### 6.1 平台无关接口
 
@@ -369,6 +376,7 @@ type Runtime interface {
   "l2_gateway": false,
   "wireguard_backend": "userspace",
   "system_tunnel": "network-extension",
+  "proxy_core": "xray",
   "transports": ["vless-tls-xudp"],
   "ipv6": true,
   "policy_enforcement": "packet-filter"
@@ -379,11 +387,11 @@ type Runtime interface {
 
 | 平台 | 系统入口 | Runtime 实现 | 首期支持 |
 |---|---|---|---|
-| macOS | `NEPacketTunnelProvider` | Swift Host + Go/Xray core | L3、配置、状态、诊断 |
-| iOS | `NEPacketTunnelProvider` | Swift Packet Tunnel + Go/Xray core | L3、邀请链接/二维码、移动网络切换 |
-| Android | `VpnService` | Kotlin service + Go core/JNI | L3、Always-on 兼容 |
-| Windows | Windows Service + Wintun/WireGuard backend | Go service + native helper | L3、开机启动、升级回滚 |
-| Linux | systemd + kernel WG，必要时 userspace | Go daemon + netlink/polkit | L3、route gateway、后续 L2 |
+| macOS | `NEPacketTunnelProvider` | Swift Host + `libXray` | L3、配置、状态、诊断 |
+| iOS | `NEPacketTunnelProvider` | Swift Packet Tunnel + static `libxray.a` | L3、邀请链接/二维码、移动网络切换 |
+| Android | `VpnService` | Kotlin service + `libXray`/JNI | L3、Always-on 兼容 |
+| Windows | Windows Service + Wintun/WireGuard backend | Go service + `libXray` helper | L3、开机启动、升级回滚 |
+| Linux | systemd + kernel WG，必要时 userspace | Go daemon + `libXray`/netlink/polkit | L3、route gateway、后续 L2 |
 
 Apple 平台必须继续使用现有 Packet Tunnel，不引入 sudo 路由修改或第二种系统网络入口。
 
@@ -724,6 +732,7 @@ POST   /api/overlay/v1/policies/{revision}/activate
 | NET-008 | 错误 VLESS credential | 鉴权失败，不泄露服务信息 |
 | NET-009 | MTU 边界 | 大包不黑洞，诊断能发现 MTU 问题 |
 | NET-010 | 双 Gateway 切换 | 配置和路由保持一致，无地址冲突 |
+| NET-011 | 配置声明 `proxy_core != xray` | 客户端和 Gateway 在启动前拒绝，不做其他内核 fallback |
 
 ### 11.6 平台 Cases
 
@@ -743,7 +752,7 @@ POST   /api/overlay/v1/policies/{revision}/activate
 | PLUG-004 | XConnect-One 初始化或运行失败 | 故障隔离，XConnect-APP 其他连接模式仍可使用 |
 | PLUG-005 | CLI 与 GUI 调用同一产品插件 | 同一 fixture 产生相同状态、配置和 ACK |
 | PLUG-006 | 两个产品请求系统 VPN 入口 | Host 仲裁并保持单一入口，不产生路由竞争 |
-| PLUG-007 | TransportProvider 替换 | 不修改 Join/Policy use case 即可运行 contract suite |
+| PLUG-007 | 注册 sing-box 或未知代理内核 | v1 Host 拒绝注册，构建产物不包含对应依赖和二进制 |
 | PLUG-008 | 插件升级与回滚 | manifest/schema 迁移可回滚，last-known-good 可恢复 |
 
 ### 11.8 测试 Case 模板
@@ -927,7 +936,7 @@ disaster-recovery.md
 - ADR-006：完整签名 snapshot + generation，而非命令增量。
 - ADR-007：L3 默认，L2 仅 Linux Gateway。
 - ADR-008：Product Plugin API、权限边界和移动端静态集成策略。
-- ADR-009：Xray VLESS/TLS/XUDP 为首期 transport。
+- ADR-009：v1 仅使用 Xray-core/libXray，移除 sing-box runtime 和 fallback。
 
 ADR 模板：
 
@@ -960,6 +969,7 @@ ADR 模板：
 - 从当前 group_vars 导出 baseline fixture。
 - 在 xconnect-app 建立 `overlay/` package 和 Runtime SPI。
 - 建立 XConnect-APP Product Plugin API、manifest schema、HostServices fake 和 XConnect-One 内置插件骨架。
+- 清除并禁止 sing-box dependency、adapter、config renderer、artifact 和 CI matrix；增加依赖与发布物扫描门禁。
 - 将 closure 脚本接入 CI 的 check-only 模式。
 
 退出条件：现有生产闭环不回归；OpenAPI 可生成 Go/Dart client；baseline snapshot golden 通过。
@@ -1107,19 +1117,20 @@ Pull Request checklist：
 
 1. 修复或重新检出 `accounts.svc.plus` 本地工作树，确认原 overlayctl/API 实际源码版本，并建立 `overlayctl → xconnect` 重命名清单。
 2. 定义 XConnect-APP Product Plugin API、manifest schema、HostServices 权限边界和兼容策略。
-3. 创建 Overlay OpenAPI v1 和 SignedConfig/GatewaySnapshot schemas。
-4. 为现有 `group_vars` 和 Xray/WG 模板建立 golden fixtures。
-5. 在 xconnect-app 增加 XConnect-One 内置插件、Runtime SPI、fake host 和 fake runtime。
-6. 将原 overlayctl Join 状态机提取为 shared Go package，入口安装为 `xconnect`。
-7. 建立 `xconnect join/status/diagnose` CLI。
-8. 将 Flutter 登录/同步通过产品插件接入相同 use case。
-9. 实现 snapshot signing、generation 和 last-known-good。
-10. 实现 Gateway Agent shadow mode。
-11. 编写 group_vars importer 和 static-vs-projected diff。
-12. 切换到动态 `wg syncconf`。
-13. 实现 ACL schema/compiler 和 gateway nftables backend。
-14. 补齐 Windows、Android、iOS 平台闭环。
-15. 删除静态客户端列表和过渡命令。
+3. 固定 v1 core ID 为 `xray`，移除并用 CI 禁止 sing-box 依赖、适配器、配置和发布物。
+4. 创建 Overlay OpenAPI v1 和 SignedConfig/GatewaySnapshot schemas。
+5. 为现有 `group_vars` 和 Xray/WG 模板建立 golden fixtures。
+6. 在 xconnect-app 增加 XConnect-One 内置插件、Runtime SPI、fake host 和 fake runtime。
+7. 将原 overlayctl Join 状态机提取为 shared Go package，入口安装为 `xconnect`。
+8. 建立 `xconnect join/status/diagnose` CLI。
+9. 将 Flutter 登录/同步通过产品插件接入相同 use case。
+10. 实现 snapshot signing、generation 和 last-known-good。
+11. 实现 Gateway Agent shadow mode。
+12. 编写 group_vars importer 和 static-vs-projected diff。
+13. 切换到动态 `wg syncconf`。
+14. 实现 ACL schema/compiler 和 gateway nftables backend。
+15. 补齐 Windows、Android、iOS 平台闭环。
+16. 删除静态客户端列表和过渡命令。
 
 ## 20. 关键风险和缓解
 
