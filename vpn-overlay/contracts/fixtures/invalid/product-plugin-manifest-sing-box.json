@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "plugin_id": "xconnect-one",
+  "display_name": "XConnect-One",
+  "version": "0.1.0",
+  "host_api": {
+    "min": "1.0.0",
+    "max": "1.0.0"
+  },
+  "distribution": "built_in",
+  "proxy_core": "sing-box",
+  "config_schema_version": 1,
+  "capabilities": ["tunnel_runtime"],
+  "integrity": {
+    "algorithm": "sha256",
+    "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+}

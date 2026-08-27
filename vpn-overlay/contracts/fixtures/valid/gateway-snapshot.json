@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "snapshot_id": "snap_tokyo_42",
+  "node_id": "gw_tokyo_01",
+  "generation": 42,
+  "expected_previous_generation": 41,
+  "issued_at": "2026-08-27T12:00:00Z",
+  "expires_at": "2026-08-28T12:00:00Z",
+  "proxy_core": "xray",
+  "safety": {
+    "allow_empty_peers": false,
+    "max_peer_removal_percent": 20
+  },
+  "wireguard": {
+    "interface_name": "wg-xco",
+    "listen_port": 51820,
+    "addresses": ["10.77.0.1/32"],
+    "peers": [
+      {
+        "device_id": "dev_laptop",
+        "public_key": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=",
+        "allowed_ips": ["10.77.0.10/32"],
+        "persistent_keepalive_seconds": 25
+      }
+    ]
+  },
+  "relay": {
+    "transport": "vless-tls-xudp",
+    "listen_host": "0.0.0.0",
+    "listen_port": 443,
+    "server_names": ["gateway.example.net"],
+    "credential_refs": ["vault_xconnect_relay_01"]
+  },
+  "policy": {
+    "generation": 7,
+    "backend": "nftables",
+    "ruleset_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "signature": {
+    "algorithm": "Ed25519",
+    "key_id": "signing_key_01",
+    "value": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=="
+  }
+}

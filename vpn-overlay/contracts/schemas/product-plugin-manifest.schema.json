@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://xconnect.one/schemas/v1/product-plugin-manifest.schema.json",
+  "title": "XConnect Product Plugin Manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "plugin_id",
+    "display_name",
+    "version",
+    "host_api",
+    "distribution",
+    "proxy_core",
+    "config_schema_version",
+    "capabilities",
+    "integrity"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "plugin_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
+    },
+    "display_name": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "version": { "$ref": "#/$defs/semver" },
+    "host_api": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min", "max"],
+      "properties": {
+        "min": { "$ref": "#/$defs/semver" },
+        "max": { "$ref": "#/$defs/semver" }
+      }
+    },
+    "distribution": { "const": "built_in" },
+    "proxy_core": { "const": "xray" },
+    "config_schema_version": { "type": "integer", "minimum": 1 },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "account_session",
+          "secret_store",
+          "tunnel_runtime",
+          "controlled_http",
+          "event_bus",
+          "telemetry",
+          "diagnostics",
+          "ui_routes"
+        ]
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "digest"],
+      "properties": {
+        "algorithm": { "const": "sha256" },
+        "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      }
+    }
+  },
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    }
+  }
+}

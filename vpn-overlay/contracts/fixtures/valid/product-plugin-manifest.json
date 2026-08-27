@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "plugin_id": "xconnect-one",
+  "display_name": "XConnect-One",
+  "version": "0.1.0",
+  "host_api": {
+    "min": "1.0.0",
+    "max": "1.0.0"
+  },
+  "distribution": "built_in",
+  "proxy_core": "xray",
+  "config_schema_version": 1,
+  "capabilities": [
+    "account_session",
+    "secret_store",
+    "tunnel_runtime",
+    "controlled_http",
+    "event_bus",
+    "telemetry",
+    "diagnostics",
+    "ui_routes"
+  ],
+  "integrity": {
+    "algorithm": "sha256",
+    "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+}
