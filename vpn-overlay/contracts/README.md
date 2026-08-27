@@ -22,6 +22,22 @@ XConnect-APP, the control plane, and Gateway Agent implementations.
   explicitly authorizes an empty peer set.
 - Configuration generation is monotonic and expired documents are rejected.
 
+## SignedConfig signing bytes
+
+The Ed25519 signature covers compact UTF-8 JSON with no trailing newline and
+without the top-level `signature` member. Top-level member order is fixed as:
+
+```text
+schema_version, config_id, network_id, device_id, generation,
+issued_at, expires_at, proxy_core, transport, wireguard
+```
+
+Nested member order and timestamp requirements are frozen by the reusable
+`vectors/signed-config-ed25519.json` interoperability vector. Go, Dart, Swift,
+Kotlin, and Windows implementations must reproduce and verify that vector
+before accepting the v1 SignedConfig capability. The included seed is test
+material and must never be used as a deployment key.
+
 ## Validation
 
 Install the isolated development dependency and run the fixture suite:
@@ -36,6 +52,6 @@ valid fixture and a negative case when extending a security-sensitive field.
 The JSON Schema checks structure; the test suite also enforces temporal,
 generation, empty-peer, unique-device, and secret-field invariants.
 
-The control-plane repository becomes the canonical API source once its working
-tree is restored. Until then these immutable `$id` values are the integration
-baseline. Generated or mirrored copies must remain byte-for-byte compatible.
+The accounts control-plane repository is the canonical API and signing-protocol
+source. These infrastructure copies are integration mirrors and must remain
+byte-for-byte compatible with its schemas and interoperability vectors.

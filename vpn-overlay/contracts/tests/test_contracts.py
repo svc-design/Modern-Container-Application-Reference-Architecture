@@ -1,16 +1,19 @@
 import json
 import unittest
+from base64 import b64decode
 from copy import deepcopy
 from datetime import datetime
 from ipaddress import ip_interface, ip_network
 from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMAS = ROOT / "schemas"
 FIXTURES = ROOT / "fixtures"
+VECTORS = ROOT / "vectors"
 
 
 CASES = (
@@ -156,6 +159,41 @@ class ContractFixtureTests(unittest.TestCase):
         document["wireguard"]["peers"][0]["allowed_ips"] = ["999.77.0.10/32"]
         errors = semantic_errors("gateway-snapshot.schema.json", document)
         self.assertIn("invalid allowed IP network: 999.77.0.10/32", errors)
+
+    def test_signed_config_ed25519_interoperability_vector(self):
+        vector = load_json(VECTORS / "signed-config-ed25519.json")
+        payload = vector["signing_payload_utf8"].encode("utf-8")
+        document = json.loads(payload)
+
+        expected_top_level_order = [
+            "schema_version",
+            "config_id",
+            "network_id",
+            "device_id",
+            "generation",
+            "issued_at",
+            "expires_at",
+            "proxy_core",
+            "transport",
+            "wireguard",
+        ]
+        self.assertEqual(list(document), expected_top_level_order)
+        self.assertEqual(
+            list(document["transport"]),
+            ["kind", "loopback", "remote", "auth_id"],
+        )
+        self.assertEqual(
+            list(document["wireguard"]),
+            ["interface_name", "addresses", "mtu", "peers"],
+        )
+
+        public_key = Ed25519PublicKey.from_public_bytes(
+            b64decode(vector["public_key_base64"], validate=True)
+        )
+        public_key.verify(
+            b64decode(vector["signature_base64"], validate=True),
+            payload,
+        )
 
 
 if __name__ == "__main__":
