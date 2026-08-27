@@ -1,14 +1,22 @@
-# XConnect Zero Trust Overlay 产品化开发计划
+# XConnect-One Zero Trust Overlay 产品化开发计划
 
 状态：Draft v1
 日期：2026-08-27
 范围：产品化 CLI、多平台运行时、动态 ACL、控制面投影、Gateway 动态配置、测试与文档体系
 
+## 0. 产品命名
+
+- 产品系列和对外品牌统一为 **XConnect-One**。
+- 终端产品命名为 **XConnect-One Client**，控制面命名为 **XConnect-One Controller**，网关组件命名为 **XConnect-One Gateway Agent**，中继节点命名为 **XConnect-One Relay**。
+- CLI 可执行文件、用户命令和稳定技术标识保持小写 `xconnect`；守护进程和服务名可使用 `xconnectd`、`xconnect-gateway-agent`。
+- 现有仓库名 `xconnect-app`、`accounts.svc.plus`、`playbooks` 和 `iac_modules` 保持不变，避免仅因品牌命名制造代码迁移。
+- 分支、API、配置键和协议标识中的 `xconnect` 保持稳定；面向用户的标题、安装包说明和文档使用 XConnect-One。
+
 ## 1. 目标与边界
 
 ### 1.1 产品目标
 
-将现有可工作的 WireGuard-over-VLESS、现有 CLI 能力、`accounts.svc.plus` Overlay API、Ansible Gateway 部署和 XConnect 多平台客户端收敛为一个产品。现有 `overlayctl` 正式重命名为 `xconnect`，发布物、进程帮助、文档和用户命令均使用 `xconnect`：
+将现有可工作的 WireGuard-over-VLESS、现有 CLI 能力、`accounts.svc.plus` Overlay API、Ansible Gateway 部署和 XConnect-One 多平台客户端收敛为一个产品。现有 `overlayctl` 正式重命名为 `xconnect`，发布物、进程帮助、文档和用户命令均使用 `xconnect`：
 
 ```bash
 xconnect join <controller-or-invite>
@@ -47,20 +55,20 @@ xconnect join <controller-or-invite>
 | `vpn-overlay/wireguard` | 通用 Hub/Site WireGuard | 保留为普通 UDP 和站点网络部署能力 |
 | `vpn-overlay/vxlan` | Linux VXLAN over WG | 后续作为 Linux L2 Gateway 后端，不进入移动端 |
 | `setup-dnat` | 网络和服务映射 | 后续映射成受 ACL 管理的 route/service publish |
-| `xray-exporter`、Alloy | Xray 和系统日志观测 | 统一为 XConnect transport/runtime 指标 |
+| `xray-exporter`、Alloy | Xray 和系统日志观测 | 统一为 XConnect-One transport/runtime 指标 |
 | closure scripts | 可重放的端到端闭环与证据目录 | 升级为 CI/E2E 的正式验收框架 |
 
 ## 3. 目标系统架构
 
 ```text
                          HTTPS / mTLS
- ┌──────────────────┐  enroll/config/events/ack  ┌────────────────────────┐
- │ XConnect Clients │────────────────────────────▶│ accounts.svc.plus      │
- │                  │                             │ Overlay Control Plane  │
- │ CLI / Flutter UI │                             └────────────┬───────────┘
- │ Runtime SPI      │                                          │ signed snapshot
- │ WG + Xray        │                                          │ SSE/long poll
- └────────┬─────────┘                                          ▼
+ ┌───────────────────┐ enroll/config/events/ack  ┌────────────────────────┐
+ │XConnect-One Client│───────────────────────────▶│ accounts.svc.plus      │
+ │                   │                            │ Overlay Control Plane  │
+ │ CLI / Flutter UI  │                            └────────────┬───────────┘
+ │ Runtime SPI       │                                         │ signed snapshot
+ │ WG + Xray         │                                         │ SSE/long poll
+ └────────┬──────────┘                                         ▼
           │ encrypted WG packets                    ┌────────────────────────┐
           │ wrapped by VLESS/TLS/XUDP               │ xconnect-gateway-agent │
           └────────────────────────────────────────▶│ wg syncconf + policy   │
@@ -1060,7 +1068,7 @@ Pull Request checklist：
 | 风险 | 缓解 |
 |---|---|
 | accounts 本地源码状态不完整 | Phase 0 首要恢复；以线上契约和 closure evidence 反向验证 |
-| XConnect 当前以通用 Xray Secure Tunnel 为主，未闭环 WG-over-VLESS | 使用独立 Overlay profile，不破坏现有模式；feature flag 灰度 |
+| XConnect-One 当前以通用 Xray Secure Tunnel 为主，未闭环 WG-over-VLESS | 使用独立 Overlay profile，不破坏现有模式；feature flag 灰度 |
 | VLESS/TCP 承载 UDP 的延迟/队头阻塞 | 保留 transport SPI；首期量化 SLO，后续增加直连 UDP/QUIC transport |
 | 动态配置错误清空 Gateway peers | 完整签名 snapshot、last-known-good、空集保护、shadow diff |
 | ACL 只在客户端执行可被绕过 | Gateway 强制执行；客户端策略仅作补充 |
@@ -1071,4 +1079,4 @@ Pull Request checklist：
 
 ---
 
-本计划的核心原则是：保留已经证明可用的数据面，把产品化工作集中到共享 Join use case、版本化契约、动态 Gateway 投影和不可绕过的策略执行。Ansible 继续做它擅长的节点部署，XConnect App 继续做它已经具备的五平台系统 VPN，accounts 控制面成为唯一动态事实来源。
+本计划的核心原则是：保留已经证明可用的数据面，把产品化工作集中到共享 Join use case、版本化契约、动态 Gateway 投影和不可绕过的策略执行。Ansible 继续做它擅长的节点部署，XConnect-One Client 继续做它已经具备的五平台系统 VPN，accounts 控制面成为唯一动态事实来源。
