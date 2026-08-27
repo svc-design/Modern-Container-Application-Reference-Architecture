@@ -47,12 +47,22 @@ def semantic_errors(schema_name: str, document: dict) -> list[str]:
         if parse_time(document["expires_at"]) <= parse_time(document["issued_at"]):
             errors.append("expires_at must be later than issued_at")
 
-    if document.get("proxy_core") != "xray":
+    core_id = document.get("proxy_core", document.get("runtime_core_id"))
+    if core_id != "xray":
         errors.append("v1 proxy_core must be xray")
 
     if schema_name == "product-plugin-manifest.schema.json":
-        if document.get("distribution") != "built_in":
-            errors.append("v1 plugins must be built_in")
+        if document.get("delivery") != "built-in":
+            errors.append("v1 plugins must use built-in delivery")
+        minimum = tuple(
+            int(part) for part in document["host_api"]["minimum"].split(".")
+        )
+        maximum = tuple(
+            int(part)
+            for part in document["host_api"]["maximum_exclusive"].split(".")
+        )
+        if minimum >= maximum:
+            errors.append("host_api maximum_exclusive must exceed minimum")
 
     if schema_name == "gateway-snapshot.schema.json":
         if document["generation"] <= document["expected_previous_generation"]:

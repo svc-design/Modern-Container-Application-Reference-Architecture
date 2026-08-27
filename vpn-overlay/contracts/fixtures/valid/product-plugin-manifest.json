@@ -1,27 +1,25 @@
 {
-  "schema_version": 1,
-  "plugin_id": "xconnect-one",
+  "manifest_schema_version": 1,
+  "plugin_id": "com.xconnect.one",
   "display_name": "XConnect-One",
   "version": "0.1.0",
   "host_api": {
-    "min": "1.0.0",
-    "max": "1.0.0"
+    "minimum": "1.0.0",
+    "maximum_exclusive": "2.0.0"
   },
-  "distribution": "built_in",
-  "proxy_core": "xray",
   "config_schema_version": 1,
-  "capabilities": [
-    "account_session",
-    "secret_store",
-    "tunnel_runtime",
-    "controlled_http",
-    "event_bus",
-    "telemetry",
+  "required_capabilities": [
+    "account.session",
+    "secret.store",
+    "tunnel.runtime",
+    "network.controlled",
+    "event.bus",
+    "observability.logging",
     "diagnostics",
-    "ui_routes"
+    "registration.cli-commands",
+    "registration.ui-routes",
+    "registration.tunnel-profiles"
   ],
-  "integrity": {
-    "algorithm": "sha256",
-    "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-  }
+  "runtime_core_id": "xray",
+  "delivery": "built-in"
 }

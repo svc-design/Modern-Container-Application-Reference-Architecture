@@ -5,65 +5,61 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "schema_version",
+    "manifest_schema_version",
     "plugin_id",
     "display_name",
     "version",
     "host_api",
-    "distribution",
-    "proxy_core",
     "config_schema_version",
-    "capabilities",
-    "integrity"
+    "required_capabilities",
+    "runtime_core_id",
+    "delivery"
   ],
   "properties": {
-    "schema_version": { "const": 1 },
+    "manifest_schema_version": { "const": 1 },
     "plugin_id": {
       "type": "string",
-      "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$"
+      "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)+$"
     },
     "display_name": { "type": "string", "minLength": 1, "maxLength": 80 },
     "version": { "$ref": "#/$defs/semver" },
     "host_api": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["min", "max"],
+      "required": ["minimum", "maximum_exclusive"],
       "properties": {
-        "min": { "$ref": "#/$defs/semver" },
-        "max": { "$ref": "#/$defs/semver" }
+        "minimum": { "$ref": "#/$defs/api_version" },
+        "maximum_exclusive": { "$ref": "#/$defs/api_version" }
       }
     },
-    "distribution": { "const": "built_in" },
-    "proxy_core": { "const": "xray" },
     "config_schema_version": { "type": "integer", "minimum": 1 },
-    "capabilities": {
+    "required_capabilities": {
       "type": "array",
-      "minItems": 1,
       "uniqueItems": true,
       "items": {
         "enum": [
-          "account_session",
-          "secret_store",
-          "tunnel_runtime",
-          "controlled_http",
-          "event_bus",
-          "telemetry",
+          "account.session",
+          "secret.store",
+          "tunnel.runtime",
+          "network.controlled",
+          "event.bus",
+          "observability.logging",
+          "observability.metrics",
           "diagnostics",
-          "ui_routes"
+          "registration.cli-commands",
+          "registration.ui-routes",
+          "registration.tunnel-profiles"
         ]
       }
     },
-    "integrity": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["algorithm", "digest"],
-      "properties": {
-        "algorithm": { "const": "sha256" },
-        "digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
-      }
-    }
+    "runtime_core_id": { "const": "xray" },
+    "delivery": { "const": "built-in" }
   },
   "$defs": {
+    "api_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
     "semver": {
       "type": "string",
       "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
