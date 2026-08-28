@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra.xconnect.one/contracts/v1/enrollment-signed-config-ack.schema.json",
+  "title": "XConnect-One enrollment SignedConfig ACK v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["config_id", "device_id"],
+  "properties": {
+    "config_id": { "$ref": "#/$defs/id" },
+    "device_id": { "$ref": "#/$defs/id" },
+    "applied_at": { "$ref": "#/$defs/time" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{2,127}$" },
+    "time": { "type": "string", "format": "date-time" }
+  }
+}

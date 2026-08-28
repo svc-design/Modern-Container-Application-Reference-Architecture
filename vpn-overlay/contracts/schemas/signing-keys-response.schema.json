@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra.xconnect.one/contracts/v1/signing-keys-response.schema.json",
+  "title": "XConnect-One signing keys response v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["keys"],
+  "properties": {
+    "keys": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/key" }
+    }
+  },
+  "$defs": {
+    "key": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key_id", "algorithm", "public_key", "status", "not_before"],
+      "properties": {
+        "key_id": { "$ref": "#/$defs/id" },
+        "algorithm": { "const": "Ed25519" },
+        "public_key": { "type": "string", "pattern": "^[A-Za-z0-9+/]{43}=$" },
+        "status": { "enum": ["current", "previous"] },
+        "not_before": { "$ref": "#/$defs/time" },
+        "not_after": { "$ref": "#/$defs/time" }
+      }
+    },
+    "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{2,127}$" },
+    "time": { "type": "string", "format": "date-time" }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "join_token": "xjt_<redacted>",
+  "device_id": "device-alpha",
+  "name": "Development Mac",
+  "platform": "darwin",
+  "hostname": "dev-mac.example.test",
+  "wireguard_public_key": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+}

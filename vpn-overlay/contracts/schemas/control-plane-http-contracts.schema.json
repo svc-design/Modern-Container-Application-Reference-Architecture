@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra.xconnect.one/contracts/v1/control-plane-http-contracts.schema.json",
+  "title": "XConnect-One infra consumer HTTP boundary v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source", "https_required", "endpoints"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "source": { "const": "accounts overlay-v1 API and handler contracts" },
+    "https_required": { "const": true },
+    "endpoints": {
+      "type": "array",
+      "minItems": 12,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["method", "path", "auth", "request", "response", "request_content_type", "response_content_type", "cache_control", "idempotency_key", "strict_json"],
+        "properties": {
+          "method": { "enum": ["GET", "POST", "DELETE"] },
+          "path": { "type": "string", "pattern": "^/api/(internal/)?overlay/v1/" },
+          "auth": { "enum": ["account-bearer", "one-time-join-secret", "enrollment-bearer", "gateway-node-bearer", "x-service-token"] },
+          "request": { "type": ["string", "null"] },
+          "response": { "type": ["string", "null"] },
+          "request_content_type": { "type": ["string", "null"] },
+          "response_content_type": { "type": ["string", "null"] },
+          "cache_control": { "enum": ["no-store", "private, no-store", "private, max-age=300", "not-applicable"] },
+          "idempotency_key": { "enum": ["none", "sha256-canonical-body"] },
+          "strict_json": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}

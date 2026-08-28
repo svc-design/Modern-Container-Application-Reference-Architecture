@@ -1,4 +1,7 @@
+import hashlib
 import json
+import os
+import re
 import unittest
 from base64 import b64decode
 from copy import deepcopy
@@ -6,8 +9,8 @@ from datetime import datetime
 from ipaddress import ip_interface, ip_network
 from pathlib import Path
 
-from jsonschema import Draft202012Validator, FormatChecker
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+from jsonschema import Draft202012Validator, FormatChecker
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -18,52 +21,99 @@ VECTORS = ROOT / "vectors"
 
 CASES = (
     ("product-plugin-manifest.schema.json", "valid/product-plugin-manifest.json", True),
-    (
-        "product-plugin-manifest.schema.json",
-        "invalid/product-plugin-manifest-sing-box.json",
-        False,
-    ),
+    ("product-plugin-manifest.schema.json", "invalid/product-plugin-manifest-sing-box.json", False),
     ("signed-config.schema.json", "valid/signed-config.json", True),
     ("signed-config.schema.json", "invalid/signed-config-expired.json", False),
     ("gateway-snapshot.schema.json", "valid/gateway-snapshot.json", True),
-    (
-        "gateway-snapshot.schema.json",
-        "invalid/gateway-snapshot-empty-peers.json",
-        False,
-    ),
+    ("gateway-snapshot.schema.json", "invalid/gateway-snapshot-empty-peers.json", False),
+    ("signing-keys-response.schema.json", "valid/signing-keys-response.json", True),
+    ("signing-keys-response.schema.json", "invalid/signing-keys-private-key.json", False),
+    ("join-token-create-request.schema.json", "valid/join-token-create-request.json", True),
+    ("join-token-create-request.schema.json", "invalid/join-token-create-remaining-uses.json", False),
+    ("join-token-create-response.schema.json", "valid/join-token-create-response.json", True),
+    ("join-token-create-response.schema.json", "invalid/join-token-create-response-reusable.json", False),
+    ("join-token-exchange-request.schema.json", "valid/join-token-exchange-request.json", True),
+    ("join-token-exchange-request.schema.json", "invalid/join-token-exchange-raw-secret-redaction.json", False),
+    ("join-token-exchange-response.schema.json", "valid/join-token-exchange-response.json", True),
+    ("join-token-exchange-response.schema.json", "invalid/join-token-exchange-admin-scope.json", False),
+    ("enrollment-config-ack.schema.json", "valid/enrollment-config-ack.json", True),
+    ("enrollment-config-ack.schema.json", "invalid/enrollment-config-ack-secret.json", False),
+    ("enrollment-config-ack-receipt.schema.json", "valid/enrollment-config-ack-receipt.json", True),
+    ("enrollment-config-ack-receipt.schema.json", "invalid/enrollment-config-ack-receipt-negative.json", False),
+    ("enrollment-signed-config-ack.schema.json", "valid/enrollment-signed-config-ack.json", True),
+    ("enrollment-signed-config-ack.schema.json", "invalid/enrollment-signed-config-ack-trailing-field.json", False),
+    ("enrollment-signed-config-ack-receipt.schema.json", "valid/enrollment-signed-config-ack-receipt.json", True),
+    ("enrollment-signed-config-ack-receipt.schema.json", "invalid/enrollment-signed-config-ack-receipt-zero-generation.json", False),
+    ("gateway-heartbeat.schema.json", "valid/gateway-heartbeat.json", True),
+    ("gateway-heartbeat.schema.json", "invalid/gateway-heartbeat-runtime-apply.json", False),
+    ("gateway-apply-result.schema.json", "valid/gateway-apply-result.json", True),
+    ("gateway-apply-result.schema.json", "invalid/gateway-apply-result-runtime-write.json", False),
+    ("gateway-apply-result-receipt.schema.json", "valid/gateway-apply-result-receipt.json", True),
+    ("gateway-apply-result-receipt.schema.json", "invalid/gateway-apply-result-receipt-extra.json", False),
+    ("node-credential-create-request.schema.json", "valid/node-credential-create-request.json", True),
+    ("node-credential-create-request.schema.json", "invalid/node-credential-create-expiry.json", False),
+    ("node-credential-create-response.schema.json", "valid/node-credential-create-response.json", True),
+    ("node-credential-create-response.schema.json", "invalid/node-credential-create-response-private-key.json", False),
+    ("static-client-import.schema.json", "valid/static-client-import.json", True),
+    ("static-client-import.schema.json", "invalid/static-client-import-secret-tag.json", False),
+    ("static-client-import-receipt.schema.json", "valid/static-client-import-receipt.json", True),
+    ("static-client-import-receipt.schema.json", "invalid/static-client-import-receipt-bad-idempotency.json", False),
+    ("control-plane-http-contracts.schema.json", "valid/control-plane-http-contracts.json", True),
+    ("control-plane-http-contracts.schema.json", "invalid/control-plane-http-contracts-insecure.json", False),
+)
+
+RAW_SECRET = re.compile(r"\bx(?:jt|enr|gn)_[A-Za-z0-9_-]{40,}\b")
+SECRET_TAG_PREFIXES = (
+    "private_key:", "preshared_key:", "auth_id:", "password:", "token:",
+    "secret:", "credential:", "uuid:", "vless_uuid:",
 )
 
 
+def _unique_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON member: {key}")
+        result[key] = value
+    return result
+
+
+def strict_json_bytes(raw: bytes):
+    text = raw.decode("utf-8")
+    decoder = json.JSONDecoder(object_pairs_hook=_unique_object)
+    value, end = decoder.raw_decode(text)
+    if text[end:].strip():
+        raise ValueError("trailing JSON value or content")
+    return value
+
+
 def load_json(path: Path):
-    with path.open(encoding="utf-8") as stream:
-        return json.load(stream)
+    return strict_json_bytes(path.read_bytes())
 
 
 def parse_time(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
 
-def semantic_errors(schema_name: str, document: dict) -> list[str]:
-    errors: list[str] = []
+def static_device_bytes(devices: list[dict]) -> bytes:
+    return json.dumps(devices, separators=(",", ":"), ensure_ascii=False).encode()
 
+
+def semantic_errors(schema_name: str, document: dict, fixture_name: str = "") -> list[str]:
+    errors: list[str] = []
     if "issued_at" in document and "expires_at" in document:
         if parse_time(document["expires_at"]) <= parse_time(document["issued_at"]):
             errors.append("expires_at must be later than issued_at")
-
-    core_id = document.get("proxy_core", document.get("runtime_core_id"))
-    if core_id != "xray":
+    if "proxy_core" in document and document["proxy_core"] != "xray":
         errors.append("v1 proxy_core must be xray")
+    if "runtime_core_id" in document and document["runtime_core_id"] != "xray":
+        errors.append("v1 runtime_core_id must be xray")
 
     if schema_name == "product-plugin-manifest.schema.json":
         if document.get("delivery") != "built-in":
             errors.append("v1 plugins must use built-in delivery")
-        minimum = tuple(
-            int(part) for part in document["host_api"]["minimum"].split(".")
-        )
-        maximum = tuple(
-            int(part)
-            for part in document["host_api"]["maximum_exclusive"].split(".")
-        )
+        minimum = tuple(int(part) for part in document["host_api"]["minimum"].split("."))
+        maximum = tuple(int(part) for part in document["host_api"]["maximum_exclusive"].split("."))
         if minimum >= maximum:
             errors.append("host_api maximum_exclusive must exceed minimum")
 
@@ -76,6 +126,63 @@ def semantic_errors(schema_name: str, document: dict) -> list[str]:
         device_ids = [peer["device_id"] for peer in peers]
         if len(device_ids) != len(set(device_ids)):
             errors.append("gateway peer device_id values must be unique")
+
+    if schema_name == "signing-keys-response.schema.json":
+        keys = document.get("keys", [])
+        key_ids = [item.get("key_id") for item in keys]
+        if len(key_ids) != len(set(key_ids)):
+            errors.append("signing key ids must be unique")
+        if sum(item.get("status") == "current" for item in keys) != 1:
+            errors.append("exactly one signing key must be current")
+        for item in keys:
+            if item.get("not_after") and parse_time(item["not_after"]) <= parse_time(item["not_before"]):
+                errors.append("signing key not_after must follow not_before")
+
+    if schema_name == "gateway-apply-result.schema.json":
+        diff = document.get("diff", {})
+        if diff.get("status") == "unavailable":
+            if diff.get("equal") or any(diff.get(key) for key in ("current_peers", "missing_peers", "unexpected_peers", "route_mismatches")):
+                errors.append("unavailable WireGuard diff must not invent current state")
+        elif diff.get("status") == "available":
+            common_projected = diff.get("projected_peers", 0) - diff.get("missing_peers", 0)
+            common_current = diff.get("current_peers", 0) - diff.get("unexpected_peers", 0)
+            equal = not any(diff.get(key) for key in ("missing_peers", "unexpected_peers", "route_mismatches"))
+            if common_projected != common_current or diff.get("route_mismatches", 0) > common_projected or diff.get("equal") != equal:
+                errors.append("Gateway diff counters are inconsistent")
+
+    if schema_name == "static-client-import.schema.json":
+        devices = document.get("devices", [])
+        if devices != sorted(devices, key=lambda item: item.get("device_id", "")):
+            errors.append("static import devices must be sorted by device_id")
+        for field in ("device_id", "wireguard_public_key"):
+            values = [item.get(field) for item in devices]
+            if len(values) != len(set(values)):
+                errors.append(f"static import {field} values must be unique")
+        addresses = [value for item in devices for value in item.get("addresses", [])]
+        if len(addresses) != len(set(addresses)):
+            errors.append("static import addresses must be unique")
+        for item in devices:
+            if item.get("tags", []) != sorted(item.get("tags", [])):
+                errors.append("static import tags must be sorted")
+            if item.get("attachments", []) != sorted(item.get("attachments", [])):
+                errors.append("static import attachments must be sorted")
+            for tag in item.get("tags", []):
+                if tag.lower().startswith(SECRET_TAG_PREFIXES):
+                    errors.append("static import tags must not contain secret material")
+        digest = hashlib.sha256(static_device_bytes(devices)).hexdigest()
+        if document.get("source", {}).get("baseline_sha256") != digest:
+            errors.append("static import baseline_sha256 does not match canonical devices")
+
+    if schema_name == "control-plane-http-contracts.schema.json" and document.get("https_required"):
+        endpoints = document.get("endpoints", [])
+        identities = [(item.get("method"), item.get("path")) for item in endpoints]
+        if len(identities) != len(set(identities)):
+            errors.append("HTTP endpoint method/path pairs must be unique")
+        for endpoint in endpoints:
+            for member in ("request", "response"):
+                referenced = endpoint.get(member)
+                if referenced is not None and not (SCHEMAS / referenced).is_file():
+                    errors.append(f"HTTP contract references missing schema: {referenced}")
 
     def validate_network_values(value):
         if isinstance(value, dict):
@@ -98,13 +205,17 @@ def semantic_errors(schema_name: str, document: dict) -> list[str]:
                 validate_network_values(child)
 
     validate_network_values(document)
-
-    forbidden = {"private_key", "refresh_token", "vault_token"}
+    allowed_secret_fields = {
+        "join-token-exchange-request.schema.json": {"join_token"},
+        "join-token-exchange-response.schema.json": {"enrollment_token"},
+        "node-credential-create-response.schema.json": {"bearer_token"},
+    }.get(schema_name, set())
+    forbidden = {"private_key", "preshared_key", "refresh_token", "vault_token", "password", "token", "secret"}
 
     def walk(value):
         if isinstance(value, dict):
             for key, child in value.items():
-                if key.lower() in forbidden:
+                if key.lower() in forbidden and key not in allowed_secret_fields:
                     errors.append(f"forbidden secret field: {key}")
                 walk(child)
         elif isinstance(value, list):
@@ -112,6 +223,8 @@ def semantic_errors(schema_name: str, document: dict) -> list[str]:
                 walk(child)
 
     walk(document)
+    if RAW_SECRET.search(json.dumps(document)):
+        errors.append("raw secret-shaped value is forbidden in committed consumer fixtures")
     return errors
 
 
@@ -126,74 +239,143 @@ class ContractFixtureTests(unittest.TestCase):
             with self.subTest(schema=schema_name, fixture=fixture_name):
                 schema = load_json(SCHEMAS / schema_name)
                 document = load_json(FIXTURES / fixture_name)
-                validator = Draft202012Validator(
-                    schema,
-                    format_checker=FormatChecker(),
-                )
-                errors = [error.message for error in validator.iter_errors(document)]
-                errors.extend(semantic_errors(schema_name, document))
-                self.assertEqual(
-                    expected_valid,
-                    not errors,
-                    msg="; ".join(errors),
-                )
+                errors = [error.message for error in Draft202012Validator(schema, format_checker=FormatChecker()).iter_errors(document)]
+                errors.extend(semantic_errors(schema_name, document, fixture_name))
+                self.assertEqual(expected_valid, not errors, msg="; ".join(errors))
 
     def test_every_fixture_is_registered(self):
         registered = {fixture for _, fixture, _ in CASES}
-        discovered = {
-            str(path.relative_to(FIXTURES))
-            for path in FIXTURES.glob("*/*.json")
-        }
+        discovered = {str(path.relative_to(FIXTURES)) for path in FIXTURES.glob("*/*.json")}
         self.assertEqual(discovered, registered)
 
+    def test_valid_documents_reject_unknown_top_level_members(self):
+        seen = set()
+        for schema_name, fixture_name, expected_valid in CASES:
+            if not expected_valid or schema_name in seen:
+                continue
+            seen.add(schema_name)
+            document = deepcopy(load_json(FIXTURES / fixture_name))
+            document["unexpected_contract_member"] = True
+            validator = Draft202012Validator(load_json(SCHEMAS / schema_name))
+            with self.subTest(schema=schema_name):
+                self.assertTrue(list(validator.iter_errors(document)))
+
+    def test_one_time_and_shadow_guard_property_smoke(self):
+        join_schema = load_json(SCHEMAS / "join-token-create-request.schema.json")
+        join_validator = Draft202012Validator(join_schema)
+        for remaining_uses in range(-8, 9):
+            document = {"remaining_uses": remaining_uses}
+            self.assertEqual(not list(join_validator.iter_errors(document)), remaining_uses in (0, 1))
+
+        heartbeat_schema = load_json(SCHEMAS / "gateway-heartbeat.schema.json")
+        heartbeat = load_json(FIXTURES / "valid/gateway-heartbeat.json")
+        for field, unsafe_value in (
+            ("mode", "apply"),
+            ("proxy_core", "sing-box"),
+            ("applied_generation", 1),
+        ):
+            candidate = deepcopy(heartbeat)
+            candidate[field] = unsafe_value
+            with self.subTest(field=field):
+                self.assertTrue(list(Draft202012Validator(heartbeat_schema).iter_errors(candidate)))
+
+    def test_all_contract_json_is_strict(self):
+        for path in sorted(ROOT.rglob("*.json")):
+            with self.subTest(path=path.relative_to(ROOT)):
+                load_json(path)
+        with self.assertRaisesRegex(ValueError, "duplicate JSON member"):
+            strict_json_bytes(b'{"schema_version":1,"schema_version":1}')
+        with self.assertRaisesRegex(ValueError, "trailing JSON"):
+            strict_json_bytes(b'{} {}')
+
     def test_secret_fields_are_rejected_semantically(self):
-        document = load_json(FIXTURES / "valid/signed-config.json")
-        document = deepcopy(document)
+        document = deepcopy(load_json(FIXTURES / "valid/signed-config.json"))
         document["wireguard"]["private_key"] = "must-not-cross-the-control-plane"
-        errors = semantic_errors("signed-config.schema.json", document)
-        self.assertIn("forbidden secret field: private_key", errors)
+        self.assertIn("forbidden secret field: private_key", semantic_errors("signed-config.schema.json", document))
+
+    def test_raw_token_material_is_quarantined_to_redaction_case(self):
+        raw_secret_files = []
+        for path in sorted(ROOT.rglob("*.json")):
+            if RAW_SECRET.search(path.read_text(encoding="utf-8")):
+                raw_secret_files.append(str(path.relative_to(ROOT)))
+        self.assertEqual(raw_secret_files, ["fixtures/invalid/join-token-exchange-raw-secret-redaction.json"])
 
     def test_invalid_cidr_is_rejected_semantically(self):
-        document = load_json(FIXTURES / "valid/gateway-snapshot.json")
-        document = deepcopy(document)
+        document = deepcopy(load_json(FIXTURES / "valid/gateway-snapshot.json"))
         document["wireguard"]["peers"][0]["allowed_ips"] = ["999.77.0.10/32"]
-        errors = semantic_errors("gateway-snapshot.schema.json", document)
-        self.assertIn("invalid allowed IP network: 999.77.0.10/32", errors)
+        self.assertIn("invalid allowed IP network: 999.77.0.10/32", semantic_errors("gateway-snapshot.schema.json", document))
+
+    def test_static_import_canonical_hash_and_receipt(self):
+        document = load_json(FIXTURES / "valid/static-client-import.json")
+        canonical = json.dumps(document, separators=(",", ":"), ensure_ascii=False).encode()
+        expected = "911905502b4aa02c4c82b16e200f5f13caebd534898566b8b87384d972ed1fd2"
+        self.assertEqual(hashlib.sha256(canonical).hexdigest(), expected)
+        receipt = load_json(FIXTURES / "valid/static-client-import-receipt.json")
+        self.assertEqual(receipt["idempotency_key"], f"sha256-{expected}")
+        tampered = deepcopy(document)
+        tampered["devices"][0]["addresses"] = ["10.77.0.99/32"]
+        self.assertIn("static import baseline_sha256 does not match canonical devices", semantic_errors("static-client-import.schema.json", tampered))
+        for duplicate_field in ("device_id", "wireguard_public_key", "addresses"):
+            duplicate = deepcopy(document)
+            if duplicate_field == "addresses":
+                duplicate["devices"][1]["addresses"] = duplicate["devices"][0]["addresses"]
+            else:
+                duplicate["devices"][1][duplicate_field] = duplicate["devices"][0][duplicate_field]
+            self.assertTrue(
+                any("must be unique" in error for error in semantic_errors("static-client-import.schema.json", duplicate)),
+                msg=f"duplicate {duplicate_field} escaped semantic validation",
+            )
+
+    def _verify_vector(self, name: str, expected_order: list[str]):
+        vector = load_json(VECTORS / name)
+        payload = vector["signing_payload_utf8"].encode("utf-8")
+        document = strict_json_bytes(payload)
+        self.assertEqual(list(document), expected_order)
+        public_key = Ed25519PublicKey.from_public_bytes(b64decode(vector["public_key_base64"], validate=True))
+        public_key.verify(b64decode(vector["signature_base64"], validate=True), payload)
 
     def test_signed_config_ed25519_interoperability_vector(self):
-        vector = load_json(VECTORS / "signed-config-ed25519.json")
-        payload = vector["signing_payload_utf8"].encode("utf-8")
-        document = json.loads(payload)
+        self._verify_vector("signed-config-ed25519.json", [
+            "schema_version", "config_id", "network_id", "device_id", "generation",
+            "issued_at", "expires_at", "proxy_core", "transport", "wireguard",
+        ])
 
-        expected_top_level_order = [
-            "schema_version",
-            "config_id",
-            "network_id",
-            "device_id",
-            "generation",
-            "issued_at",
-            "expires_at",
-            "proxy_core",
-            "transport",
-            "wireguard",
+    def test_gateway_snapshot_ed25519_interoperability_vector(self):
+        expected_order = [
+            "schema_version", "snapshot_id", "node_id", "generation", "expected_previous_generation",
+            "issued_at", "expires_at", "proxy_core", "safety", "wireguard", "relay", "policy",
         ]
-        self.assertEqual(list(document), expected_top_level_order)
-        self.assertEqual(
-            list(document["transport"]),
-            ["kind", "loopback", "remote", "auth_id"],
-        )
-        self.assertEqual(
-            list(document["wireguard"]),
-            ["interface_name", "addresses", "mtu", "peers"],
-        )
+        self._verify_vector("gateway-snapshot-ed25519.json", expected_order)
+        vector = load_json(VECTORS / "gateway-snapshot-ed25519.json")
+        document = strict_json_bytes(vector["signing_payload_utf8"].encode())
+        document["signature"] = {"algorithm": "Ed25519", "key_id": vector["key_id"], "value": vector["signature_base64"]}
+        schema = load_json(SCHEMAS / "gateway-snapshot.schema.json")
+        self.assertFalse(list(Draft202012Validator(schema, format_checker=FormatChecker()).iter_errors(document)))
+        self.assertFalse(semantic_errors("gateway-snapshot.schema.json", document))
 
-        public_key = Ed25519PublicKey.from_public_bytes(
-            b64decode(vector["public_key_base64"], validate=True)
-        )
-        public_key.verify(
-            b64decode(vector["signature_base64"], validate=True),
-            payload,
-        )
+    def test_signed_config_vector_compatibility_hash(self):
+        matrix = load_json(VECTORS / "compatibility-matrix.json")
+        expected = matrix["signed_config"]["sha256"]
+        self.assertEqual(hashlib.sha256((VECTORS / "signed-config-ed25519.json").read_bytes()).hexdigest(), expected)
+        for variable in ("XCONNECT_ACCOUNTS_SIGNED_CONFIG_VECTOR", "XCONNECT_CLIENT_SIGNED_CONFIG_VECTOR"):
+            candidate = os.environ.get(variable)
+            if candidate:
+                with self.subTest(mirror=variable):
+                    self.assertEqual(hashlib.sha256(Path(candidate).read_bytes()).hexdigest(), expected)
+
+    def test_http_security_boundary(self):
+        document = load_json(FIXTURES / "valid/control-plane-http-contracts.json")
+        by_path = {item["path"]: item for item in document["endpoints"]}
+        self.assertTrue(document["https_required"])
+        self.assertEqual(by_path["/api/internal/overlay/v1/nodes/heartbeat"]["auth"], "gateway-node-bearer")
+        self.assertEqual(by_path["/api/internal/overlay/v1/imports/static-clients"]["auth"], "x-service-token")
+        self.assertEqual(by_path["/api/internal/overlay/v1/imports/static-clients"]["idempotency_key"], "sha256-canonical-body")
+        for path in (
+            "/api/overlay/v1/join-tokens", "/api/overlay/v1/join-tokens/exchange",
+            "/api/internal/overlay/v1/nodes/heartbeat", "/api/internal/overlay/v1/nodes/{node_id}/snapshot",
+            "/api/internal/overlay/v1/nodes/{node_id}/apply-result", "/api/internal/overlay/v1/imports/static-clients",
+        ):
+            self.assertIn("no-store", by_path[path]["cache_control"])
 
 
 if __name__ == "__main__":

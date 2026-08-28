@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra.xconnect.one/contracts/v1/gateway-apply-result-receipt.schema.json",
+  "title": "XConnect-One Gateway Agent apply-result receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["accepted", "duplicate", "received_at"],
+  "properties": {
+    "accepted": { "const": true },
+    "duplicate": { "type": "boolean" },
+    "received_at": { "$ref": "#/$defs/time" }
+  },
+  "$defs": {
+    "time": { "type": "string", "format": "date-time" }
+  }
+}

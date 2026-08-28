@@ -1,0 +1,11 @@
+{
+  "acked": true,
+  "duplicate": false,
+  "ack": {
+    "device_id": "device-alpha",
+    "config_id": "cfg_test_42",
+    "generation": 0,
+    "applied_at": "2026-08-28T12:01:00Z",
+    "received_at": "2026-08-28T12:01:01Z"
+  }
+}

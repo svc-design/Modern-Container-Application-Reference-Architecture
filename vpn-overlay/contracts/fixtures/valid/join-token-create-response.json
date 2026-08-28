@@ -1,0 +1,11 @@
+{
+  "join_token": {
+    "id": "join_test_01",
+    "join_uri": "xconnect://join/REDACTED_ONE_TIME_TOKEN?controller=https%3A%2F%2Faccounts.example.test",
+    "network_id": "network-private",
+    "device_id": "device-alpha",
+    "platform": "darwin",
+    "remaining_uses": 1,
+    "expires_at": "2026-08-28T12:15:00Z"
+  }
+}

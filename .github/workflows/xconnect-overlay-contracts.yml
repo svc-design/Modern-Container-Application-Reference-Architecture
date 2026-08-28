@@ -4,12 +4,14 @@ on:
   pull_request:
     paths:
       - 'vpn-overlay/contracts/**'
+      - 'vpn-overlay/project_templates/**'
       - '.github/workflows/xconnect-overlay-contracts.yml'
   push:
     branches:
       - 'codex/xconnect-*'
     paths:
       - 'vpn-overlay/contracts/**'
+      - 'vpn-overlay/project_templates/**'
       - '.github/workflows/xconnect-overlay-contracts.yml'
 
 permissions:

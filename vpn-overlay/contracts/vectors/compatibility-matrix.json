@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "signed_config": {
+    "sha256": "5302888289f008df6389e1165ac4f79d8a4ad967b139ea2c889f49208ae0f0a7",
+    "mirrors": [
+      "accounts:tests/fixtures/overlay/signed-config-ed25519-vector.json",
+      "iac:vpn-overlay/contracts/vectors/signed-config-ed25519.json",
+      "XConnect-APP:go_core/overlay/signedconfig/testdata/signed-config-ed25519-vector.json"
+    ]
+  },
+  "gateway_snapshot": {
+    "consumer": "playbooks:tools/xconnect-gateway-agent",
+    "vector": "gateway-snapshot-ed25519.json",
+    "signing_field_order": ["schema_version", "snapshot_id", "node_id", "generation", "expected_previous_generation", "issued_at", "expires_at", "proxy_core", "safety", "wireguard", "relay", "policy"]
+  },
+  "static_client_import": {
+    "canonical_body_sha256": "911905502b4aa02c4c82b16e200f5f13caebd534898566b8b87384d972ed1fd2",
+    "idempotency_key": "sha256-911905502b4aa02c4c82b16e200f5f13caebd534898566b8b87384d972ed1fd2"
+  }
+}

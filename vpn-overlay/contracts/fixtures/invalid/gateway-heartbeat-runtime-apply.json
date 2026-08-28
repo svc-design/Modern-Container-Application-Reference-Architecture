@@ -1,0 +1,8 @@
+{
+  "node_id": "gw_test_01",
+  "agent_version": "0.3.0",
+  "mode": "apply",
+  "proxy_core": "sing-box",
+  "observed_generation": 42,
+  "applied_generation": 42
+}

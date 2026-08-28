@@ -1,0 +1,12 @@
+{
+  "keys": [
+    {
+      "key_id": "signing_key_01",
+      "algorithm": "Ed25519",
+      "public_key": "A6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=",
+      "status": "current",
+      "not_before": "2026-08-28T00:00:00Z",
+      "not_after": "2026-09-28T00:00:00Z"
+    }
+  ]
+}

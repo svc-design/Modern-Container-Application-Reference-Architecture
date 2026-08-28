@@ -1,0 +1,9 @@
+{
+  "description": "Byte-for-byte mirror of Playbooks Gateway Agent Batch03 GatewaySnapshot Ed25519 golden",
+  "source": "tools/xconnect-gateway-agent/internal/gateway/gateway_test.go::TestGatewaySnapshotSigningGoldenVector",
+  "seed_base64": "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=",
+  "public_key_base64": "A6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=",
+  "key_id": "key_test_01",
+  "signing_payload_utf8": "{\"schema_version\":1,\"snapshot_id\":\"snap_vector_42\",\"node_id\":\"gw_test_01\",\"generation\":42,\"expected_previous_generation\":41,\"issued_at\":\"2026-08-28T11:59:00Z\",\"expires_at\":\"2026-08-28T13:00:00Z\",\"proxy_core\":\"xray\",\"safety\":{\"allow_empty_peers\":false,\"max_peer_removal_percent\":100},\"wireguard\":{\"interface_name\":\"wg-xco\",\"listen_port\":51820,\"addresses\":[\"10.77.0.1/32\"],\"peers\":[{\"device_id\":\"dev_test_01\",\"public_key\":\"AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI=\",\"allowed_ips\":[\"10.77.0.10/32\"],\"persistent_keepalive_seconds\":25}]},\"relay\":{\"transport\":\"vless-tls-xudp\",\"listen_host\":\"0.0.0.0\",\"listen_port\":443,\"server_names\":[\"gateway.example\"],\"credential_refs\":[\"vault_test_01\"]},\"policy\":{\"generation\":1,\"backend\":\"nftables\",\"ruleset_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}}",
+  "signature_base64": "6ntypTf83jAGH4aTxIsmkPvGnBiI+3d+YLmAtRLi2G6d/BZW/PPB00ANbMH/yVrg+cOOpDDQMSDtKB8WUeIyBw=="
+}

@@ -1,0 +1,9 @@
+{
+  "import_id": "import_911905502b4aa02c4c82b16e",
+  "idempotency_key": "sha256-911905502b4aa02c4c82b16e200f5f13caebd534898566b8b87384d972ed1fd2",
+  "owner_user_id": "11111111-1111-4111-8111-111111111111",
+  "network_id": "network-private",
+  "baseline_sha256": "42001fd0d7734955c2f0d33d0f4583f96523d09dca36b3e149cec78eff795e69",
+  "device_count": 2,
+  "created_at": "2026-08-28T12:00:00Z"
+}

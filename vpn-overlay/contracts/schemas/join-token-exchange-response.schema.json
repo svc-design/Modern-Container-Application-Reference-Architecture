@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra.xconnect.one/contracts/v1/join-token-exchange-response.schema.json",
+  "title": "XConnect-One enrollment exchange response v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["enrollment_token", "token_type", "expires_at", "scope", "device", "network", "signing_keys"],
+  "properties": {
+    "enrollment_token": { "type": "string", "writeOnly": true, "pattern": "^xenr_" },
+    "token_type": { "const": "Bearer" },
+    "expires_at": { "$ref": "#/$defs/time" },
+    "scope": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": { "enum": ["overlay:config:read", "overlay:config:ack"] },
+      "allOf": [
+        { "contains": { "const": "overlay:config:read" } },
+        { "contains": { "const": "overlay:config:ack" } }
+      ]
+    },
+    "device": { "$ref": "#/$defs/device" },
+    "network": { "$ref": "#/$defs/network" },
+    "signing_keys": { "type": "array", "items": { "$ref": "#/$defs/key" } }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{2,127}$" },
+    "time": { "type": "string", "format": "date-time" },
+    "device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "user_id", "network_id", "name", "platform", "hostname", "wireguard_public_key", "wireguard_address", "created_at", "updated_at", "last_seen_at"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "user_id": { "type": "string", "format": "uuid" },
+        "network_id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string" },
+        "platform": { "enum": ["darwin", "windows", "linux", "ios", "android"] },
+        "hostname": { "type": "string" },
+        "wireguard_public_key": { "type": "string", "pattern": "^[A-Za-z0-9+/]{43}=$" },
+        "wireguard_address": { "type": "string", "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/32$" },
+        "created_at": { "$ref": "#/$defs/time" },
+        "updated_at": { "$ref": "#/$defs/time" },
+        "last_seen_at": { "oneOf": [{ "$ref": "#/$defs/time" }, { "type": "null" }] }
+      }
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "display_name", "cidr"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "display_name": { "type": "string", "minLength": 1 },
+        "cidr": { "type": "string", "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/([0-9]|[12][0-9]|3[0-2])$" }
+      }
+    },
+    "key": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key_id", "algorithm", "public_key", "status", "not_before"],
+      "properties": {
+        "key_id": { "$ref": "#/$defs/id" },
+        "algorithm": { "const": "Ed25519" },
+        "public_key": { "type": "string", "pattern": "^[A-Za-z0-9+/]{43}=$" },
+        "status": { "enum": ["current", "previous"] },
+        "not_before": { "$ref": "#/$defs/time" },
+        "not_after": { "$ref": "#/$defs/time" }
+      }
+    }
+  }
+}

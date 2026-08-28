@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra.xconnect.one/contracts/v1/static-client-import-receipt.schema.json",
+  "title": "XConnect-One static client import idempotency receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["import_id", "idempotency_key", "owner_user_id", "network_id", "baseline_sha256", "device_count", "created_at"],
+  "properties": {
+    "import_id": { "$ref": "#/$defs/id" },
+    "idempotency_key": { "type": "string", "pattern": "^sha256-[a-f0-9]{64}$" },
+    "owner_user_id": { "type": "string", "format": "uuid" },
+    "network_id": { "$ref": "#/$defs/id" },
+    "baseline_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "device_count": { "type": "integer", "minimum": 1, "maximum": 10000 },
+    "created_at": { "$ref": "#/$defs/time" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{2,127}$" },
+    "time": { "type": "string", "format": "date-time" }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "network_id": "network-private",
+  "device_id": "device-alpha",
+  "platform": "darwin",
+  "expires_in_seconds": 900,
+  "remaining_uses": 1
+}

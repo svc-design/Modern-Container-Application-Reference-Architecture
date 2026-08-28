@@ -1,26 +1,41 @@
-# XConnect-One v1 contracts
+# XConnect-One v1 consumer contracts
 
-This package freezes the infrastructure-facing Batch 01 contracts shared by
-XConnect-APP, the control plane, and Gateway Agent implementations.
+This package freezes infrastructure-owned **consumer mirrors** of contracts
+already implemented by Accounts, XConnect-APP, and the Playbooks Gateway Agent.
+It is not a new API source of truth: Accounts remains authoritative for the
+HTTP API and signing protocol, while producer and consumer repositories own
+their executable implementations.
 
-| Schema | Consumer | Purpose |
+| Contract group | Schemas / vectors | Producer → consumer |
 |---|---|---|
-| `product-plugin-manifest.schema.json` | XConnect-APP | Product discovery, host compatibility, and capability grants |
-| `signed-config.schema.json` | XConnect-One Client | Versioned client configuration without private key material |
-| `gateway-snapshot.schema.json` | Gateway Agent | Complete desired peer, relay, and policy state |
+| Product discovery | `product-plugin-manifest.schema.json` | XConnect-APP plugin host → built-in XConnect-One plugin |
+| Client projection | `signed-config.schema.json`, `signed-config-ed25519.json` | Accounts → XConnect-APP |
+| Signing keys | `signing-keys-response.schema.json` | Accounts → XConnect-APP |
+| One-time enrollment | `join-token-*`, `enrollment-*-ack` | Accounts → `xconnect join` |
+| Gateway projection | `gateway-snapshot.schema.json`, `gateway-snapshot-ed25519.json` | Accounts → Gateway Agent |
+| Gateway reports | `gateway-heartbeat`, `gateway-apply-result*` | Gateway Agent → Accounts |
+| Gateway credentials | `node-credential-create-*` | Accounts management boundary → Gateway bootstrap |
+| Static migration | `static-client-import*` | Playbooks migration tool → Accounts |
+| HTTP boundary | `control-plane-http-contracts.schema.json` | Accounts route/auth/cache contract → all consumers |
 
 ## v1 invariants
 
-- The only accepted proxy core is `xray`.
-- Client builds embed the repository-pinned `libXray`; Gateway and Relay nodes
-  use the pinned Xray-core package.
-- sing-box identifiers, dependencies, configurations, binaries, and fallback
-  paths are outside the v1 contract.
-- Signed documents never contain WireGuard private keys, refresh tokens, or
-  Vault tokens.
+- The only accepted proxy core is `xray`; sing-box is not a v1 runtime or fallback.
+- Signed documents never contain WireGuard private keys, refresh tokens, Vault
+  tokens, passwords, or raw deployment secrets.
 - A Gateway snapshot with no peers is rejected unless its safety block
   explicitly authorizes an empty peer set.
 - Configuration generation is monotonic and expired documents are rejected.
+- JSON documents are single-value and duplicate-member-free. Strict request
+  boundaries reject unknown fields and trailing JSON.
+- Join invites are one-time: create input accepts `remaining_uses` only as `0`
+  (default compatibility input) or `1`, and issued invites always report `1`.
+- Enrollment scope is exactly `overlay:config:read` and `overlay:config:ack`,
+  bound by Accounts to one user/network/device/public-key enrollment.
+- Gateway v1 is shadow-only: `applied_generation=0` and
+  `runtime_applied=false`; reports cannot imply WireGuard/nftables mutation.
+- Control-plane URLs are HTTPS. Secret-bearing join, Gateway, credential, and
+  static-import responses use `no-store` where recorded in the HTTP fixture.
 
 ## SignedConfig signing bytes
 
@@ -32,26 +47,70 @@ schema_version, config_id, network_id, device_id, generation,
 issued_at, expires_at, proxy_core, transport, wireguard
 ```
 
-Nested member order and timestamp requirements are frozen by the reusable
-`vectors/signed-config-ed25519.json` interoperability vector. Go, Dart, Swift,
-Kotlin, and Windows implementations must reproduce and verify that vector
-before accepting the v1 SignedConfig capability. The included seed is test
-material and must never be used as a deployment key.
+`vectors/signed-config-ed25519.json` is byte-for-byte identical across
+Accounts, this IAC mirror, and the XConnect-APP Go verifier. The seed is
+development test material and must never become a deployment key.
+
+## GatewaySnapshot signing bytes
+
+`vectors/gateway-snapshot-ed25519.json` copies the Playbooks Batch03 Gateway
+Agent golden payload and signature. The signature excludes `signature` and
+covers compact UTF-8 JSON in this order:
+
+```text
+schema_version, snapshot_id, node_id, generation,
+expected_previous_generation, issued_at, expires_at, proxy_core,
+safety, wireguard, relay, policy
+```
+
+The vector validates field order, Xray-only runtime, transition metadata,
+safety, relay references, policy digest, key id, and Ed25519 verification.
+
+## Secret fixture policy
+
+Normal goldens use `<redacted>` or `REDACTED_*` placeholders. The only raw
+token-shaped string is fake test material quarantined in
+`fixtures/invalid/join-token-exchange-raw-secret-redaction.json`; the suite
+requires that it remain the only such file. Never replace it with a credential
+from any environment.
+
+## HTTP and idempotency
+
+`fixtures/valid/control-plane-http-contracts.json` mirrors the implemented
+method, path, authentication boundary, media type, strict JSON, HTTPS, and cache
+behavior. It distinguishes Gateway node bearer from the management
+`X-Service-Token` boundary.
+
+Static imports use compact canonical JSON and:
+
+```text
+Idempotency-Key: sha256-<sha256 of exact canonical request bytes>
+```
+
+The v1 fixture is frozen to
+`sha256-911905502b4aa02c4c82b16e200f5f13caebd534898566b8b87384d972ed1fd2`.
 
 ## Validation
 
-Install the isolated development dependency and run the fixture suite:
+Install the isolated dependencies and run:
 
 ```bash
 python3 -m pip install -r vpn-overlay/contracts/requirements.txt
 vpn-overlay/contracts/scripts/validate.sh
 ```
 
-Every fixture must be registered in `tests/test_contracts.py`. Add both a
-valid fixture and a negative case when extending a security-sensitive field.
-The JSON Schema checks structure; the test suite also enforces temporal,
-generation, empty-peer, unique-device, and secret-field invariants.
+Every fixture must be registered in `tests/test_contracts.py`. The suite checks
+schemas, strict JSON, time/generation transitions, empty-peer safety, unique
+identities/keys/addresses, key windows, Gateway diff consistency, canonical
+static-import digests, idempotency, signing vectors, and secret rejection.
 
-The accounts control-plane repository is the canonical API and signing-protocol
-source. These infrastructure copies are integration mirrors and must remain
-byte-for-byte compatible with its schemas and interoperability vectors.
+To compare working copies of Accounts and XConnect-APP during a coordinated
+change, pass their existing vector paths:
+
+```bash
+XCONNECT_ACCOUNTS_SIGNED_CONFIG_VECTOR=/path/to/accounts/tests/fixtures/overlay/signed-config-ed25519-vector.json \
+XCONNECT_CLIENT_SIGNED_CONFIG_VECTOR=/path/to/xconnect-app/go_core/overlay/signedconfig/testdata/signed-config-ed25519-vector.json \
+vpn-overlay/contracts/scripts/validate.sh
+```
+
+See `COMPATIBILITY_MATRIX.md` for producer/consumer ownership and limitations.

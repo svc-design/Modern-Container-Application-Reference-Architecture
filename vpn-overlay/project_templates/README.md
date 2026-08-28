@@ -12,3 +12,8 @@
 | `PULL_REQUEST_TEMPLATE.md` | Overlay 相关 PR 的统一门禁 |
 
 复制模板后应删除不适用的提示文字，但不得省略安全影响、测试、发布和回滚部分。
+
+涉及 XConnect-One 控制面契约时，`TEST_CASE.md` 必须记录 producer/consumer
+commit、schema/vector、HTTP auth/cache 边界和脱敏 fixture 类型；PR checklist
+必须证明 SignedConfig/GatewaySnapshot 向量无漂移、静态导入 hash 幂等且未引入
+sing-box runtime。IAC 契约 PR 不得顺带修改 Terraform resource。

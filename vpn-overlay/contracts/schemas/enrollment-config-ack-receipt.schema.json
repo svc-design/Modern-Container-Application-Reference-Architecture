@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra.xconnect.one/contracts/v1/enrollment-config-ack-receipt.schema.json",
+  "title": "XConnect-One enrollment legacy config ACK receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["acked", "device_id", "network_id", "revision", "received_at"],
+  "properties": {
+    "acked": { "const": true },
+    "device_id": { "$ref": "#/$defs/id" },
+    "network_id": { "$ref": "#/$defs/id" },
+    "revision": { "type": "string", "minLength": 1 },
+    "received_at": { "$ref": "#/$defs/time" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$" },
+    "time": { "type": "string", "format": "date-time" }
+  }
+}

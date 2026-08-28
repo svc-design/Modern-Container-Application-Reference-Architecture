@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra.xconnect.one/contracts/v1/gateway-apply-result.schema.json",
+  "title": "XConnect-One Gateway Agent shadow apply-result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["node_id", "snapshot_id", "observed_generation", "applied_generation", "runtime_applied", "result", "diff"],
+  "properties": {
+    "node_id": { "$ref": "#/$defs/id" },
+    "snapshot_id": { "$ref": "#/$defs/id" },
+    "observed_generation": { "type": "integer", "minimum": 1 },
+    "applied_generation": { "const": 0 },
+    "runtime_applied": { "const": false },
+    "result": { "enum": ["shadow_validated", "shadow_validated_wg_unavailable", "shadow_rejected"] },
+    "diff": { "$ref": "#/$defs/diff" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{2,127}$" },
+    "diff": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "equal", "projected_peers", "current_peers", "missing_peers", "unexpected_peers", "route_mismatches"],
+      "properties": {
+        "status": { "enum": ["available", "unavailable"] },
+        "equal": { "type": "boolean" },
+        "projected_peers": { "type": "integer", "minimum": 0 },
+        "current_peers": { "type": "integer", "minimum": 0 },
+        "missing_peers": { "type": "integer", "minimum": 0 },
+        "unexpected_peers": { "type": "integer", "minimum": 0 },
+        "route_mismatches": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

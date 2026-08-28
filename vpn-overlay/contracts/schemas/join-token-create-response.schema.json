@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra.xconnect.one/contracts/v1/join-token-create-response.schema.json",
+  "title": "XConnect-One one-time join create response v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["join_token"],
+  "properties": {
+    "join_token": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "join_uri", "network_id", "device_id", "platform", "remaining_uses", "expires_at"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "join_uri": { "type": "string", "pattern": "^xconnect://join/[^/?#]+\\?controller=https%3A%2F%2F" },
+        "network_id": { "$ref": "#/$defs/id" },
+        "device_id": { "type": "string", "maxLength": 128 },
+        "platform": { "type": "string", "enum": ["", "darwin", "windows", "linux", "ios", "android"] },
+        "remaining_uses": { "const": 1 },
+        "expires_at": { "$ref": "#/$defs/time" }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{2,127}$" },
+    "time": { "type": "string", "format": "date-time" }
+  }
+}
