@@ -79,6 +79,7 @@ CASES = (
     ("enrollment-device-revoke-request.schema.json", "invalid/enrollment-device-revoke-request-scope.json", False),
     ("device-lifecycle-response.schema.json", "valid/device-lifecycle-response.json", True),
     ("device-lifecycle-response.schema.json", "valid/device-lifecycle-response-revoked.json", True),
+    ("device-lifecycle-response.schema.json", "valid/device-lifecycle-response-reconcile-pending.json", True),
     ("device-lifecycle-response.schema.json", "invalid/device-lifecycle-response-revoked-without-time.json", False),
     ("policy-reconcile-receipt.schema.json", "valid/policy-reconcile-receipt.json", True),
     ("policy-reconcile-receipt.schema.json", "invalid/policy-reconcile-receipt-inconsistent.json", False),
@@ -197,6 +198,8 @@ def semantic_errors(schema_name: str, document: dict, fixture_name: str = "") ->
             errors.append("revoked device state requires a timestamp and reason")
         if document.get("revoked") is True and not revoked:
             errors.append("revoked response must contain a revoked device")
+        if document.get("policy_reconcile_pending") is True and ("policy_generation" in document or "policy_digest" in document):
+            errors.append("pending reconcile must not claim a completed policy generation")
 
     if schema_name == "policy-reconcile-receipt.schema.json":
         if document.get("processed") != document.get("completed", 0) + document.get("failed", 0):
