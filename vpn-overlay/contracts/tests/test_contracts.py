@@ -178,6 +178,15 @@ def semantic_errors(schema_name: str, document: dict, fixture_name: str = "") ->
         lifetime = parse_time(document["expires_at"]) - parse_time(document["issued_at"])
         if lifetime <= timedelta(0) or lifetime > timedelta(minutes=15):
             errors.append("device session lifetime must be positive and at most 15 minutes")
+        keys = document.get("signing_keys", [])
+        key_ids = [item.get("key_id") for item in keys]
+        if len(key_ids) != len(set(key_ids)):
+            errors.append("device session signing key ids must be unique")
+        if sum(item.get("status") == "current" for item in keys) != 1:
+            errors.append("device session must contain exactly one current signing key")
+        for item in keys:
+            if item.get("not_after") and parse_time(item["not_after"]) <= parse_time(item["not_before"]):
+                errors.append("device session signing key not_after must follow not_before")
 
     if schema_name == "device-credential-rotate-response.schema.json":
         lifetime = parse_time(document["expires_at"]) - parse_time(document["issued_at"])
@@ -451,6 +460,7 @@ class ContractFixtureTests(unittest.TestCase):
         session = load_json(FIXTURES / "valid/device-session-mint-response.json")
         request = load_json(FIXTURES / "valid/device-session-mint-request.json")
         self.assertEqual(session["client_nonce"], request["client_nonce"])
+        self.assertEqual(sum(key["status"] == "current" for key in session["signing_keys"]), 1)
         overlong = deepcopy(session)
         overlong["expires_at"] = "2026-08-28T12:16:00Z"
         self.assertIn(

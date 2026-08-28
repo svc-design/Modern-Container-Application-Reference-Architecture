@@ -30,7 +30,7 @@
 | 03 | `codex/xconnect-batch-03-control-plane-contracts` | `83f0b58` | HTTP、注册和 Gateway 控制面合同 |
 | 04 | `codex/xconnect-batch-04-acl-runtime-contracts` | `f123c0f` | 动态 ACL canonical artifact 合同 |
 | 05 | `codex/xconnect-batch-05-lifecycle-apply-contracts` | `b531cf5` | 设备生命周期、reconcile、apply 状态机 |
-| 06 | `codex/xconnect-batch-06-device-session-contracts` | `d7a51c3` | `xdc_` 长期设备凭证、轮换、session 和 revoke 合同 |
+| 06 | `codex/xconnect-batch-06-device-session-contracts` | `2bba7c0` | `xdc_` 长期设备凭证、轮换、session/revoke 和签名密钥环合同 |
 | 07 | `codex/xconnect-batch-07-signed-policy-contracts` | 本记录提交前为 `a412069` | SignedConfig v2 策略引用和内容协商合同 |
 
 ### Accounts 控制面

@@ -46,6 +46,12 @@ returned device/network binding, fetches and verifies the signed config and any
 verified policy reference, applies transactionally, ACKs, and destroys the
 bearer. Failure preserves the last-known-good runtime and durable credential.
 
+The mint response also carries a public Ed25519 signing-key ring. It has unique
+key ids, exactly one `current` key, and valid key time windows. A client accepts
+a replacement ring only when it overlaps its join-trusted ring with the same
+key id and public key; an ordinary session can never silently replace that
+trust root. Private signing material is never returned.
+
 ## Rotation
 
 The client generates a new credential id and random secret, stores them as a
