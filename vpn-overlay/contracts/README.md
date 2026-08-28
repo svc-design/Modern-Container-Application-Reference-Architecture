@@ -116,7 +116,7 @@ The rotation verifier is SHA-256 over the UTF-8 bytes of the exact complete
 
 Normal goldens use `<redacted>` or `REDACTED_*` placeholders. Three fixed fake
 token-shaped strings are committed: the invalid join-secret redaction case,
-the all-`A` join credential, and the all-`B` rotation vector. The suite requires
+the all-`A` join credential, and the fixed canonical rotation vector. The suite requires
 that they remain only in their known files. Never replace them with credentials
 from any environment.
 
