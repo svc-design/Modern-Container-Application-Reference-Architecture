@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra.xconnect.one/contracts/v1/device-session-mint-response.schema.json",
+  "title": "XConnect-One short device session response v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["client_nonce", "enrollment_token", "token_type", "issued_at", "expires_at", "scope", "device_id", "network_id"],
+  "properties": {
+    "client_nonce": { "type": "string", "format": "uuid" },
+    "enrollment_token": { "type": "string", "writeOnly": true, "pattern": "^xenr_" },
+    "token_type": { "const": "Bearer" },
+    "issued_at": { "type": "string", "format": "date-time" },
+    "expires_at": { "type": "string", "format": "date-time" },
+    "scope": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "uniqueItems": true,
+      "items": { "enum": ["overlay:config:read", "overlay:config:ack"] },
+      "allOf": [
+        { "contains": { "const": "overlay:config:read" } },
+        { "contains": { "const": "overlay:config:ack" } }
+      ]
+    },
+    "device_id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{2,127}$" },
+    "network_id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{2,127}$" }
+  }
+}

@@ -12,6 +12,7 @@ their executable implementations.
 | Client projection | `signed-config.schema.json`, `signed-config-ed25519.json` | Accounts → XConnect-APP |
 | Signing keys | `signing-keys-response.schema.json` | Accounts → XConnect-APP |
 | One-time enrollment | `join-token-*`, `enrollment-*-ack` | Accounts → `xconnect join` |
+| Durable device session | `device-session-*`, `device-credential-*`, `device-bound-revoke-request` | Accounts → `xconnect sync/leave` |
 | Device lifecycle | `device-*-request`, `device-lifecycle-response` | Accounts → `xconnect` / account administration |
 | Gateway projection | `gateway-snapshot.schema.json`, `gateway-snapshot-ed25519.json` | Accounts → Gateway Agent |
 | Dynamic ACL source | `network-policy-v1alpha1.schema.json` | Accounts management API → ACL compiler |
@@ -39,6 +40,14 @@ their executable implementations.
 - Enrollment scope is exactly `overlay:config:read`, `overlay:config:ack`, and
   `overlay:device:revoke`, bound to one user/network/device/public-key
   enrollment. The bearer remains short-lived and is not a durable leave token.
+- Join also returns one device credential exactly once. Its scope is exactly
+  `overlay:session:mint`, `overlay:credential:rotate`, and
+  `overlay:device:revoke`; it cannot read configuration. A minted enrollment
+  bearer is at most 15 minutes and has only config read/ACK scope.
+- Device credential secrets are high-entropy `xdc_` values. Accounts stores
+  only their verifier digest. Rotation is client-generated: the client persists
+  the successor before submitting its id and SHA-256 verifier, so a lost HTTP
+  response cannot destroy the only usable credential.
 - Device key/state mutations use optimistic versions. Revocation is terminal;
   a bound enrollment revoke request is empty and cannot name another device.
 - A revoke that committed before policy recompilation failed is explicitly
@@ -80,12 +89,28 @@ safety, wireguard, relay, policy
 The vector validates field order, Xray-only runtime, transition metadata,
 safety, relay references, policy digest, key id, and Ed25519 verification.
 
+## Device authorization wire format
+
+The only accepted device authorization value is:
+
+```text
+Authorization: Device xdc_<32 lowercase hex id>.<43 base64url characters>
+```
+
+The secret segment is 32 random bytes encoded without padding. The response
+`credential_id` is `xdcid_` plus the exact embedded hex id. Bearer, Basic,
+query-string, cookie, and custom schemes are rejected. The frozen
+machine-readable form is `vectors/device-credential-wire.json`.
+
+The rotation verifier is SHA-256 over the UTF-8 bytes of the exact complete
+`xdc_<id>.<secret>` value—not the decoded secret, encoded segment, or id alone.
+
 ## Secret fixture policy
 
-Normal goldens use `<redacted>` or `REDACTED_*` placeholders. The only raw
-token-shaped string is fake test material quarantined in
-`fixtures/invalid/join-token-exchange-raw-secret-redaction.json`; the suite
-requires that it remain the only such file. Never replace it with a credential
+Normal goldens use `<redacted>` or `REDACTED_*` placeholders. Three fixed fake
+token-shaped strings are committed: the invalid join-secret redaction case,
+the all-`A` join credential, and the all-`B` rotation vector. The suite requires
+that they remain only in their known files. Never replace them with credentials
 from any environment.
 
 ## HTTP and idempotency
@@ -117,11 +142,15 @@ Every fixture must be registered in `tests/test_contracts.py`. The suite checks
 schemas, strict JSON, time/generation transitions, empty-peer safety, unique
 identities/keys/addresses, key windows, Gateway diff consistency, canonical
 static-import digests, idempotency, signing vectors, and secret rejection.
+The `device-credential-authorization.json` vector additionally freezes active,
+inactive, replaced, revoked, verifier-mismatch, and terminal-receipt behavior.
 
-The device-bound enrollment revoke endpoint covers only the short enrollment
-window. A hash-only, rotatable device refresh credential is a release blocker
-for durable `xconnect sync` and `xconnect leave`; extending or persisting the
-short-lived enrollment bearer is not an accepted substitute.
+The durable device credential is a control credential, never a tunnel secret.
+It must live in Keychain, Credential Manager, Android Keystore, or an atomic
+0600 Linux secret file. Flutter preferences, logs, diagnostics, shell history,
+and runtime metadata must not contain it. See
+`DEVICE_CREDENTIAL_LIFECYCLE.md` for the crash-safe join/sync/rotate/leave
+state machine.
 
 To compare working copies of Accounts and XConnect-APP during a coordinated
 change, pass their existing vector paths:

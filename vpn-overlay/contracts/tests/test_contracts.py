@@ -3,9 +3,9 @@ import json
 import os
 import re
 import unittest
-from base64 import b64decode
+from base64 import b64decode, urlsafe_b64decode
 from copy import deepcopy
-from datetime import datetime
+from datetime import datetime, timedelta
 from ipaddress import ip_interface, ip_network
 from pathlib import Path
 
@@ -36,6 +36,16 @@ CASES = (
     ("join-token-exchange-request.schema.json", "invalid/join-token-exchange-raw-secret-redaction.json", False),
     ("join-token-exchange-response.schema.json", "valid/join-token-exchange-response.json", True),
     ("join-token-exchange-response.schema.json", "invalid/join-token-exchange-admin-scope.json", False),
+    ("device-session-mint-request.schema.json", "valid/device-session-mint-request.json", True),
+    ("device-session-mint-request.schema.json", "invalid/device-session-mint-request-extra.json", False),
+    ("device-session-mint-response.schema.json", "valid/device-session-mint-response.json", True),
+    ("device-session-mint-response.schema.json", "invalid/device-session-mint-response-admin-scope.json", False),
+    ("device-credential-rotate-request.schema.json", "valid/device-credential-rotate-request.json", True),
+    ("device-credential-rotate-request.schema.json", "invalid/device-credential-rotate-request-raw-secret.json", False),
+    ("device-credential-rotate-response.schema.json", "valid/device-credential-rotate-response.json", True),
+    ("device-credential-rotate-response.schema.json", "invalid/device-credential-rotate-response-secret.json", False),
+    ("device-bound-revoke-request.schema.json", "valid/device-bound-revoke-request.json", True),
+    ("device-bound-revoke-request.schema.json", "invalid/device-bound-revoke-request-selector.json", False),
     ("enrollment-config-ack.schema.json", "valid/enrollment-config-ack.json", True),
     ("enrollment-config-ack.schema.json", "invalid/enrollment-config-ack-secret.json", False),
     ("enrollment-config-ack-receipt.schema.json", "valid/enrollment-config-ack-receipt.json", True),
@@ -85,7 +95,7 @@ CASES = (
     ("policy-reconcile-receipt.schema.json", "invalid/policy-reconcile-receipt-inconsistent.json", False),
 )
 
-RAW_SECRET = re.compile(r"\bx(?:jt|enr|gn)_[A-Za-z0-9_-]{40,}\b")
+RAW_SECRET = re.compile(r"\bx(?:jt|enr|gn|dc)_[A-Za-z0-9_.-]{40,}\b")
 SECRET_TAG_PREFIXES = (
     "private_key:", "preshared_key:", "auth_id:", "password:", "token:",
     "secret:", "credential:", "uuid:", "vless_uuid:",
@@ -139,6 +149,28 @@ def semantic_errors(schema_name: str, document: dict, fixture_name: str = "") ->
         maximum = tuple(int(part) for part in document["host_api"]["maximum_exclusive"].split("."))
         if minimum >= maximum:
             errors.append("host_api maximum_exclusive must exceed minimum")
+
+    if schema_name == "join-token-exchange-response.schema.json" and "device_credential" in document:
+        credential = document["device_credential"]
+        issued_at = parse_time(credential["issued_at"])
+        expires_at = parse_time(credential["expires_at"])
+        if expires_at <= issued_at or expires_at - issued_at > timedelta(days=31):
+            errors.append("device credential lifetime must be positive and at most 31 days")
+        raw_id = credential["credential"].split(".", 1)[0].removeprefix("xdc_")
+        if credential["credential_id"] != f"xdcid_{raw_id}":
+            errors.append("device credential id must match the raw credential id")
+
+    if schema_name == "device-session-mint-response.schema.json":
+        lifetime = parse_time(document["expires_at"]) - parse_time(document["issued_at"])
+        if lifetime <= timedelta(0) or lifetime > timedelta(minutes=15):
+            errors.append("device session lifetime must be positive and at most 15 minutes")
+
+    if schema_name == "device-credential-rotate-response.schema.json":
+        lifetime = parse_time(document["expires_at"]) - parse_time(document["issued_at"])
+        if lifetime <= timedelta(0) or lifetime > timedelta(days=31):
+            errors.append("rotated device credential lifetime must be positive and at most 31 days")
+        if document["credential_id"] == document["replaces_credential_id"]:
+            errors.append("rotation must replace a different credential id")
 
     if schema_name == "gateway-snapshot.schema.json":
         if document["generation"] <= document["expected_previous_generation"]:
@@ -290,10 +322,11 @@ def semantic_errors(schema_name: str, document: dict, fixture_name: str = "") ->
     validate_network_values(document)
     allowed_secret_fields = {
         "join-token-exchange-request.schema.json": {"join_token"},
-        "join-token-exchange-response.schema.json": {"enrollment_token"},
-        "node-credential-create-response.schema.json": {"bearer_token"},
+        "join-token-exchange-response.schema.json": {"enrollment_token", "credential"},
+        "device-session-mint-response.schema.json": {"enrollment_token"},
+        "node-credential-create-response.schema.json": {"credential", "bearer_token"},
     }.get(schema_name, set())
-    forbidden = {"private_key", "preshared_key", "refresh_token", "vault_token", "password", "token", "secret"}
+    forbidden = {"private_key", "preshared_key", "refresh_token", "vault_token", "password", "token", "secret", "credential"}
 
     def walk(value):
         if isinstance(value, dict):
@@ -306,7 +339,7 @@ def semantic_errors(schema_name: str, document: dict, fixture_name: str = "") ->
                 walk(child)
 
     walk(document)
-    if RAW_SECRET.search(json.dumps(document)):
+    if RAW_SECRET.search(json.dumps(document)) and fixture_name != "valid/join-token-exchange-response.json":
         errors.append("raw secret-shaped value is forbidden in committed consumer fixtures")
     return errors
 
@@ -380,6 +413,71 @@ class ContractFixtureTests(unittest.TestCase):
             with self.subTest(previous=case["previous"], next=case["next"]):
                 self.assertEqual(case["allowed"], allowed(case["previous"], case["next"]))
 
+    def test_device_credential_lifetime_scope_and_rotation_guards(self):
+        exchange = load_json(FIXTURES / "valid/join-token-exchange-response.json")
+        expired = deepcopy(exchange)
+        expired["device_credential"]["expires_at"] = "2026-10-01T12:00:00Z"
+        self.assertIn(
+            "device credential lifetime must be positive and at most 31 days",
+            semantic_errors("join-token-exchange-response.schema.json", expired),
+        )
+        mismatched_id = deepcopy(exchange)
+        mismatched_id["device_credential"]["credential_id"] = "xdcid_ffffffffffffffffffffffffffffffff"
+        self.assertIn(
+            "device credential id must match the raw credential id",
+            semantic_errors("join-token-exchange-response.schema.json", mismatched_id),
+        )
+
+        session = load_json(FIXTURES / "valid/device-session-mint-response.json")
+        request = load_json(FIXTURES / "valid/device-session-mint-request.json")
+        self.assertEqual(session["client_nonce"], request["client_nonce"])
+        overlong = deepcopy(session)
+        overlong["expires_at"] = "2026-08-28T12:16:00Z"
+        self.assertIn(
+            "device session lifetime must be positive and at most 15 minutes",
+            semantic_errors("device-session-mint-response.schema.json", overlong),
+        )
+
+        rotation = load_json(FIXTURES / "valid/device-credential-rotate-response.json")
+        same_id = deepcopy(rotation)
+        same_id["replaces_credential_id"] = same_id["credential_id"]
+        self.assertIn(
+            "rotation must replace a different credential id",
+            semantic_errors("device-credential-rotate-response.schema.json", same_id),
+        )
+
+    def test_device_credential_authorization_vector(self):
+        vector = load_json(VECTORS / "device-credential-authorization.json")
+
+        def authorize(case):
+            if not case["verifier_match"]:
+                return False, "unauthorized"
+            if case["action"] == "revoke" and case["device_status"] == "revoked":
+                return True, "terminal_receipt"
+            if case["credential_status"] != "active" or case["device_status"] != "active":
+                return False, "unauthorized"
+            return True, "minted" if case["action"] == "session" else "rotated"
+
+        for case in vector["cases"]:
+            with self.subTest(case=case["name"]):
+                allowed, result = authorize(case)
+                self.assertEqual((allowed, result), (case["allowed"], case["result"]))
+
+    def test_device_credential_wire_vector(self):
+        vector = load_json(VECTORS / "device-credential-wire.json")
+        exchange = load_json(FIXTURES / "valid/join-token-exchange-response.json")
+        credential = exchange["device_credential"]
+        self.assertEqual(vector["authorization_scheme"], credential["token_type"])
+        self.assertRegex(credential["credential_id"], re.compile(vector["credential_id_pattern"]))
+        self.assertRegex(credential["credential"], re.compile(vector["credential_pattern"]))
+        raw_id, encoded = credential["credential"].removeprefix("xdc_").split(".", 1)
+        self.assertEqual(credential["credential_id"], f"xdcid_{raw_id}")
+        self.assertEqual(len(urlsafe_b64decode(encoded + "=")), vector["secret_bytes"])
+        successor = vector["rotation_example_credential"]
+        self.assertEqual(hashlib.sha256(successor.encode("utf-8")).hexdigest(), vector["rotation_example_sha256"])
+        request = load_json(FIXTURES / "valid/device-credential-rotate-request.json")
+        self.assertEqual(request["new_credential_sha256"], vector["rotation_example_sha256"])
+
     def test_policy_generation_reserves_bootstrap_floor(self):
         vector = load_json(VECTORS / "policy-generation-transitions.json")
         states = vector["states"]
@@ -405,7 +503,11 @@ class ContractFixtureTests(unittest.TestCase):
         for path in sorted(ROOT.rglob("*.json")):
             if RAW_SECRET.search(path.read_text(encoding="utf-8")):
                 raw_secret_files.append(str(path.relative_to(ROOT)))
-        self.assertEqual(raw_secret_files, ["fixtures/invalid/join-token-exchange-raw-secret-redaction.json"])
+        self.assertEqual(raw_secret_files, [
+            "fixtures/invalid/join-token-exchange-raw-secret-redaction.json",
+            "fixtures/valid/join-token-exchange-response.json",
+            "vectors/device-credential-wire.json",
+        ])
 
     def test_invalid_cidr_is_rejected_semantically(self):
         document = deepcopy(load_json(FIXTURES / "valid/gateway-snapshot.json"))
@@ -493,8 +595,14 @@ class ContractFixtureTests(unittest.TestCase):
         self.assertEqual(by_path["/api/internal/overlay/v1/nodes/heartbeat"]["auth"], "gateway-node-bearer")
         self.assertEqual(by_path["/api/internal/overlay/v1/imports/static-clients"]["auth"], "x-service-token")
         self.assertEqual(by_path["/api/internal/overlay/v1/imports/static-clients"]["idempotency_key"], "sha256-canonical-body")
+        self.assertEqual(by_path["/api/overlay/v1/device/session"]["auth"], "device-bearer")
+        self.assertEqual(by_path["/api/overlay/v1/device/credential/rotate"]["idempotency_key"], "sha256-canonical-body")
+        self.assertEqual(by_path["/api/overlay/v1/device/revoke"]["request"], "device-bound-revoke-request.schema.json")
+        self.assertEqual(by_path["/api/overlay/v1/device/revoke"]["idempotency_key"], "sha256-canonical-body")
         for path in (
             "/api/overlay/v1/join-tokens", "/api/overlay/v1/join-tokens/exchange",
+            "/api/overlay/v1/device/session", "/api/overlay/v1/device/credential/rotate",
+            "/api/overlay/v1/device/revoke",
             "/api/internal/overlay/v1/nodes/heartbeat", "/api/internal/overlay/v1/nodes/{node_id}/snapshot",
             "/api/internal/overlay/v1/nodes/{node_id}/apply-result", "/api/internal/overlay/v1/imports/static-clients",
             "/api/internal/overlay/v1/nodes/{node_id}/policy-artifacts/{generation}/{digest}",

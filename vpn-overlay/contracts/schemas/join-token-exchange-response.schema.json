@@ -4,7 +4,7 @@
   "title": "XConnect-One enrollment exchange response v1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["enrollment_token", "token_type", "expires_at", "scope", "device", "network", "signing_keys"],
+  "required": ["enrollment_token", "token_type", "expires_at", "scope", "device_credential", "device", "network", "signing_keys"],
   "properties": {
     "enrollment_token": { "type": "string", "writeOnly": true, "pattern": "^xenr_" },
     "token_type": { "const": "Bearer" },
@@ -21,6 +21,7 @@
         { "contains": { "const": "overlay:device:revoke" } }
       ]
     },
+    "device_credential": { "$ref": "#/$defs/device_credential" },
     "device": { "$ref": "#/$defs/device" },
     "network": { "$ref": "#/$defs/network" },
     "signing_keys": { "type": "array", "items": { "$ref": "#/$defs/key" } }
@@ -28,6 +29,31 @@
   "$defs": {
     "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{2,127}$" },
     "time": { "type": "string", "format": "date-time" },
+    "device_credential": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["credential_id", "credential", "token_type", "issued_at", "expires_at", "scope"],
+      "properties": {
+        "credential_id": { "type": "string", "pattern": "^xdcid_[0-9a-f]{32}$" },
+        "credential": { "type": "string", "writeOnly": true, "pattern": "^xdc_[0-9a-f]{32}\\.[A-Za-z0-9_-]{43}$" },
+        "token_type": { "const": "Device" },
+        "issued_at": { "$ref": "#/$defs/time" },
+        "expires_at": { "$ref": "#/$defs/time" },
+        "scope": { "$ref": "#/$defs/device_scope" }
+      }
+    },
+    "device_scope": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": { "enum": ["overlay:session:mint", "overlay:credential:rotate", "overlay:device:revoke"] },
+      "allOf": [
+        { "contains": { "const": "overlay:session:mint" } },
+        { "contains": { "const": "overlay:credential:rotate" } },
+        { "contains": { "const": "overlay:device:revoke" } }
+      ]
+    },
     "device": {
       "type": "object",
       "additionalProperties": false,

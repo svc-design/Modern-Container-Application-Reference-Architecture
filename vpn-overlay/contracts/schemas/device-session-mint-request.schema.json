@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra.xconnect.one/contracts/v1/device-session-mint-request.schema.json",
+  "title": "XConnect-One device session mint request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["client_nonce"],
+  "properties": {
+    "client_nonce": { "type": "string", "format": "uuid" }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "client_nonce": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+  "enrollment_token": "xenr_<redacted>",
+  "token_type": "Bearer",
+  "issued_at": "2026-08-28T12:00:00Z",
+  "expires_at": "2026-08-28T12:10:00Z",
+  "scope": ["overlay:config:read", "overlay:config:ack", "overlay:admin"],
+  "device_id": "device-alpha",
+  "network_id": "network-private"
+}

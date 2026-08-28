@@ -11,7 +11,7 @@
     "https_required": { "const": true },
     "endpoints": {
       "type": "array",
-      "minItems": 12,
+      "minItems": 15,
       "uniqueItems": true,
       "items": {
         "type": "object",
@@ -20,7 +20,7 @@
         "properties": {
           "method": { "enum": ["GET", "POST", "PUT", "DELETE"] },
           "path": { "type": "string", "pattern": "^/api/(internal/)?overlay/v1/" },
-          "auth": { "enum": ["account-bearer", "one-time-join-secret", "enrollment-bearer", "gateway-node-bearer", "x-service-token"] },
+          "auth": { "enum": ["account-bearer", "one-time-join-secret", "enrollment-bearer", "device-bearer", "gateway-node-bearer", "x-service-token"] },
           "request": { "type": ["string", "null"] },
           "response": { "type": ["string", "null"] },
           "request_content_type": { "type": ["string", "null"] },

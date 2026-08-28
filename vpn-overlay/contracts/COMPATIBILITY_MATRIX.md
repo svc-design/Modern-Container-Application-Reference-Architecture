@@ -9,6 +9,7 @@ verification code.
 | SignedConfig projection/signature | Accounts projection | `signed-config.schema.json`, `signed-config-ed25519.json` | Accounts, IAC, and XConnect-APP vector SHA-256 is `5302888289f008df6389e1165ac4f79d8a4ad967b139ea2c889f49208ae0f0a7` |
 | Signing key publication | Accounts `/api/overlay/v1/signing-keys` | `signing-keys-response.schema.json` | Ed25519 public-only ring, unique IDs, exactly one current key |
 | One-time invite create/exchange | Accounts join handlers/OpenAPI | `join-token-*` | one issued use; read/ACK/self-revoke enrollment scope; no-store |
+| Durable device session | Accounts device credential handlers | `device-session-*`, `device-credential-*`, `device-bound-revoke-request`, authorization vector | hash-only verifier; device-bound auth; 15-minute config session; crash-safe client-generated rotation; route-scoped terminal receipt |
 | Device lifecycle | Accounts device lifecycle handlers | `device-*-request`, `device-lifecycle-response` | account CAS key/state mutation; terminal revoke; enrollment request cannot select another device |
 | Enrollment config ACK | Accounts enrollment wrapper + config ACK | `enrollment-config-ack.schema.json` | device/network binding and strict consumer document |
 | Enrollment SignedConfig ACK | Accounts projection ACK | `enrollment-signed-config-ack.schema.json` | generation path plus device/config binding; idempotent producer receipt |
@@ -35,7 +36,8 @@ verification code.
   before integration use.
 - Passing schemas proves wire compatibility, not live authorization, database
   persistence, network connectivity, or data-plane application.
-- Short-lived enrollment self-revoke is not the durable CLI lifecycle. Device
-  refresh credential issuance/rotation remains a release blocker.
+- Accounts and XConnect-APP must ship the device credential producer/consumer
+  together before durable sync/leave is enabled; older enrollment-only clients
+  fail closed on the newly required join response member.
 - Node credential revoke has no JSON response body; the HTTP matrix represents
   its 204 boundary rather than inventing a receipt.
