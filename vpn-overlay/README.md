@@ -1,18 +1,25 @@
-# VPN Overlay 文档
+# XConnect-One VPN Overlay
 
-本项目通过 **WireGuard + VLESS + gretap/VXLAN** 构建跨云、跨平台的大二层互联网络，兼顾穿透、防火墙规避、性能与扩展性。
+产品化实施以 L3 WireGuard + Xray/VLESS 为第一版主路径；Linux L2
+gretap/VXLAN 作为后续受控 Gateway 能力。
+
+- [产品化开发计划](PRODUCTIZATION_DEVELOPMENT_PLAN.md)
+- [实施更新记录](XCONNECT_ONE_IMPLEMENTATION_LOG.md)
+- [暂停与恢复 TODO](XCONNECT_ONE_TODO.md)
+
+本项目通过 **WireGuard + VLESS + gretap/VXLAN** 构建跨网络、跨平台的加密互联，兼顾可靠性、性能与扩展性。
 
 ---
 
 ## 一、组网概述：核心协议与封装层级
 
 ### 1. WireGuard (WG)
-- 类型：L3 VPN（UDP 点对点随身障碍线）
+- 类型：L3 VPN（UDP 点对点加密隧道）
 - 用途：形成低负载加密通道
 
 ### 2. VLESS + XTLS
 - 类型：TLS/gRPC 路由封装协议
-- 用途：作为 WireGuard 流量的带容中转
+- 用途：作为 WireGuard 流量的可靠中继
 
 ### 3. gretap over WireGuard
 - 类型：L2 over L3 over UDP
@@ -49,7 +56,7 @@
       └─ br0 (虚拟大局域网)
           └─ wg0 (VPN加密接口)
               └─ VLESS 客户端 (XTLS/TCP/GRPC)
-                  └─ GFW
+                  └─ Public/Enterprise Network
                       └─ VLESS 服务端 (公网)
                           └─ WireGuard Hub
 

@@ -4,6 +4,11 @@
 日期：2026-08-27
 范围：产品化 CLI、多平台运行时、动态 ACL、控制面投影、Gateway 动态配置、测试与文档体系
 
+实施状态与恢复顺序：
+
+- [XConnect-One 实施更新记录](XCONNECT_ONE_IMPLEMENTATION_LOG.md)
+- [XConnect-One TODO](XCONNECT_ONE_TODO.md)
+
 ## 1. 目标与边界
 
 ### 1.1 产品目标
@@ -430,7 +435,7 @@ Policy source
 
 ### 8.3 执行位置
 
-- Gateway 是第一版强制执行点，防止恶意客户端绕过本地策略。
+- Gateway 是第一版权威执行点；即使客户端失陷，网络侧策略仍独立生效。
 - 客户端同时执行出站策略，用于快速拒绝和清晰错误提示，但不能作为唯一防线。
 - Linux Gateway 使用 nftables atomic ruleset/set swap。
 - Apple/Android 客户端在 Packet Tunnel 数据路径应用 compiled rules。
@@ -611,7 +616,7 @@ POST   /api/overlay/v1/policies/{revision}/activate
 | 网络测试 | Linux network namespace、Docker、tc/netem | WG/VLESS、路由、ACL、丢包和恢复 |
 | 平台测试 | macOS/iOS/Android/Windows/Linux runner | 系统 VPN 生命周期和权限 |
 | E2E | 两个 Gateway + 真实控制面 staging | `join` 到私网服务的完整闭环 |
-| 安全测试 | gosec、gitleaks、fuzz、DAST | 密钥、鉴权、输入和策略绕过 |
+| 安全测试 | gosec、gitleaks、fuzz、DAST | 密钥、鉴权、输入和策略执行完整性 |
 | 稳定性 | soak、网络切换、进程重启 | 长连接、内存、恢复和配置更新 |
 
 ### 11.2 CLI Join Cases
@@ -659,7 +664,7 @@ POST   /api/overlay/v1/policies/{revision}/activate
 | ACL-009 | 管理流量保护 | 业务策略不会切断 control-plane keepalive |
 | ACL-010 | `policy explain` | 返回最终动作和匹配 rule ID |
 | ACL-011 | 大规模策略 | 10k 设备/1k 规则在目标时间内编译和应用 |
-| ACL-012 | IPv6 | 与 IPv4 等价执行，无绕过路径 |
+| ACL-012 | IPv6 | 与 IPv4 保持等价执行语义 |
 
 ### 11.5 传输和网络 Cases
 
@@ -1009,7 +1014,7 @@ Pull Request checklist：
 - API、schema、数据迁移和兼容性已定义。
 - 客户端与 Gateway 使用相同版本化契约。
 - 单元、contract、集成和要求的平台测试通过。
-- ACL 和恶意客户端绕过路径已评估。
+- ACL 和失陷客户端的执行边界已评估。
 - 日志无秘密且包含可关联诊断信息。
 - 指标、dashboard 或明确的运维检查存在。
 - 灰度、feature flag 和回滚路径验证过。
@@ -1041,7 +1046,7 @@ Pull Request checklist：
 | XConnect 当前以通用 Xray Secure Tunnel 为主，未闭环 WG-over-VLESS | 使用独立 Overlay profile，不破坏现有模式；feature flag 灰度 |
 | VLESS/TCP 承载 UDP 的延迟/队头阻塞 | 保留 transport SPI；首期量化 SLO，后续增加直连 UDP/QUIC transport |
 | 动态配置错误清空 Gateway peers | 完整签名 snapshot、last-known-good、空集保护、shadow diff |
-| ACL 只在客户端执行可被绕过 | Gateway 强制执行；客户端策略仅作补充 |
+| ACL 只在客户端执行，缺少权威网络执行点 | Gateway 强制执行；客户端策略仅作补充 |
 | 五平台行为分叉 | shared use case + Runtime SPI + contract/golden；平台层保持薄 |
 | iOS Packet Tunnel 内存限制 | 延续现有真机 soak 和内存采样，控制配置/规则规模 |
 | 共享 Xray UUID 无法细粒度撤销 | 作为迁移债务；引入 per-device/short-lived transport credential |
@@ -1049,4 +1054,4 @@ Pull Request checklist：
 
 ---
 
-本计划的核心原则是：保留已经证明可用的数据面，把产品化工作集中到共享 Join use case、版本化契约、动态 Gateway 投影和不可绕过的策略执行。Ansible 继续做它擅长的节点部署，XConnect App 继续做它已经具备的五平台系统 VPN，accounts 控制面成为唯一动态事实来源。
+本计划的核心原则是：保留已经证明可用的数据面，把产品化工作集中到共享 Join use case、版本化契约、动态 Gateway 投影和权威策略执行。Ansible 继续做它擅长的节点部署，XConnect App 继续做它已经具备的五平台系统 VPN，accounts 控制面成为唯一动态事实来源。

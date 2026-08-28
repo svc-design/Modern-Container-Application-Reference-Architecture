@@ -3,7 +3,7 @@ import json
 import os
 import re
 import unittest
-from base64 import b64decode, urlsafe_b64decode
+from base64 import b64decode, urlsafe_b64decode, urlsafe_b64encode
 from copy import deepcopy
 from datetime import datetime, timedelta
 from ipaddress import ip_interface, ip_network
@@ -165,9 +165,14 @@ def semantic_errors(schema_name: str, document: dict, fixture_name: str = "") ->
         expires_at = parse_time(credential["expires_at"])
         if expires_at <= issued_at or expires_at - issued_at > timedelta(days=31):
             errors.append("device credential lifetime must be positive and at most 31 days")
-        raw_id = credential["credential"].split(".", 1)[0].removeprefix("xdc_")
-        if credential["credential_id"] != f"xdcid_{raw_id}":
-            errors.append("device credential id must match the raw credential id")
+        wire = re.fullmatch(r"xdc_([0-9a-f]{32})\.([A-Za-z0-9_-]{43})", credential["credential"])
+        if wire:
+            raw_id, encoded = wire.groups()
+            if credential["credential_id"] != f"xdcid_{raw_id}":
+                errors.append("device credential id must match the raw credential id")
+            decoded = urlsafe_b64decode(encoded + "=")
+            if urlsafe_b64encode(decoded).decode("ascii").rstrip("=") != encoded:
+                errors.append("device credential secret must use canonical base64url encoding")
 
     if schema_name == "device-session-mint-response.schema.json":
         lifetime = parse_time(document["expires_at"]) - parse_time(document["issued_at"])
@@ -436,6 +441,12 @@ class ContractFixtureTests(unittest.TestCase):
             "device credential id must match the raw credential id",
             semantic_errors("join-token-exchange-response.schema.json", mismatched_id),
         )
+        noncanonical = deepcopy(exchange)
+        noncanonical["device_credential"]["credential"] = "xdc_0123456789abcdef0123456789abcdef.AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB"
+        self.assertIn(
+            "device credential secret must use canonical base64url encoding",
+            semantic_errors("join-token-exchange-response.schema.json", noncanonical),
+        )
 
         session = load_json(FIXTURES / "valid/device-session-mint-response.json")
         request = load_json(FIXTURES / "valid/device-session-mint-request.json")
@@ -477,6 +488,8 @@ class ContractFixtureTests(unittest.TestCase):
         exchange = load_json(FIXTURES / "valid/join-token-exchange-response.json")
         credential = exchange["device_credential"]
         self.assertEqual(vector["authorization_scheme"], credential["token_type"])
+        self.assertEqual(vector["canonical_emission"], "Device")
+        self.assertEqual(vector["scheme_comparison"], "ascii-case-insensitive-per-http")
         self.assertRegex(credential["credential_id"], re.compile(vector["credential_id_pattern"]))
         self.assertRegex(credential["credential"], re.compile(vector["credential_pattern"]))
         raw_id, encoded = credential["credential"].removeprefix("xdc_").split(".", 1)
