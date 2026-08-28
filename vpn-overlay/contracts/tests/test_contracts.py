@@ -506,6 +506,8 @@ class ContractFixtureTests(unittest.TestCase):
         self.assertEqual(credential["credential_id"], f"xdcid_{raw_id}")
         self.assertEqual(len(urlsafe_b64decode(encoded + "=")), vector["secret_bytes"])
         successor = vector["rotation_example_credential"]
+        successor_secret = successor.removeprefix("xdc_").split(".", 1)[1]
+        self.assertEqual(urlsafe_b64encode(urlsafe_b64decode(successor_secret + "=")).decode("ascii").rstrip("="), successor_secret)
         self.assertEqual(hashlib.sha256(successor.encode("utf-8")).hexdigest(), vector["rotation_example_sha256"])
         request = load_json(FIXTURES / "valid/device-credential-rotate-request.json")
         self.assertEqual(request["new_credential_sha256"], vector["rotation_example_sha256"])
