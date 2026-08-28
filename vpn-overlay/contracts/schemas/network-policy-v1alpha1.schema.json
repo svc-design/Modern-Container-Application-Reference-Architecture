@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://accounts.svc.plus/schemas/overlay/v1alpha1/network-policy.schema.json",
+  "title": "XConnect-One NetworkPolicy v1alpha1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {"const": "overlay.xconnect.svc.plus/v1alpha1"},
+    "kind": {"const": "NetworkPolicy"},
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[A-Za-z0-9_.-]{1,128}$"}
+      }
+    },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["defaultAction"],
+      "properties": {
+        "defaultAction": {"const": "deny"},
+        "groups": {
+          "type": "object",
+          "propertyNames": {"pattern": "^[A-Za-z0-9_.-]{1,128}$"},
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["users"],
+            "properties": {
+              "users": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}
+            }
+          }
+        },
+        "tagOwners": {
+          "type": "object",
+          "propertyNames": {"pattern": "^tag:[A-Za-z0-9_.-]{1,120}$"},
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"$ref": "#/$defs/tagOwner"}
+          }
+        },
+        "services": {
+          "type": "object",
+          "propertyNames": {"pattern": "^[A-Za-z0-9_.-]{1,128}$"},
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["destinations", "protocols", "ports"],
+            "properties": {
+              "destinations": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/subject"}},
+              "protocols": {"$ref": "#/$defs/protocols"},
+              "ports": {"$ref": "#/$defs/ports"}
+            }
+          }
+        },
+        "rules": {"type": "array", "items": {"$ref": "#/$defs/rule"}}
+      }
+    }
+  },
+  "$defs": {
+    "subject": {"type": "string", "pattern": "^(user|group|tag|device|service):\\S+$"},
+    "tagOwner": {"type": "string", "pattern": "^(user|group):\\S+$"},
+    "protocols": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["tcp", "udp", "icmp"]}},
+    "ports": {"type": "array", "uniqueItems": true, "items": {"type": "integer", "minimum": 1, "maximum": 65535}},
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "action", "sources", "destinations"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9_.-]{1,128}$"},
+        "action": {"enum": ["accept", "deny"]},
+        "sources": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/subject"}},
+        "destinations": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/subject"}},
+        "protocols": {"$ref": "#/$defs/protocols"},
+        "ports": {"$ref": "#/$defs/ports"}
+      }
+    }
+  }
+}

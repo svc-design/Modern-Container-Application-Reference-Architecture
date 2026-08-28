@@ -16,6 +16,8 @@ verification code.
 | Gateway apply-result | Gateway Agent → Accounts | `gateway-apply-result*.schema.json` | node bearer; runtime applied false; retry receipt exposes duplicate |
 | Node credential lifecycle | Accounts management handlers | `node-credential-create-*.schema.json` plus HTTP matrix | create/revoke uses `X-Service-Token`; bearer is one-time/no-store; revoke is 204 |
 | Static client import | Playbooks Batch04 importer → Accounts | `static-client-import*.schema.json` | owner UUID, canonical body hash, `X-Service-Token`, deterministic receipt |
+| NetworkPolicy v1alpha1 | Accounts management API → ACL compiler | `network-policy-v1alpha1.schema.json` | strict source, default deny, user/group tag owners, no secret fields |
+| Enforcement artifact | Accounts ACL compiler → Playbooks Gateway Agent | `policy-enforcement-artifact.schema.json` + SHA-256 golden | device-only runtime IR, deny-first, exact protected flows, digest-bound fetch |
 
 ## Platform/runtime declaration
 

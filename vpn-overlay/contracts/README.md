@@ -13,6 +13,8 @@ their executable implementations.
 | Signing keys | `signing-keys-response.schema.json` | Accounts → XConnect-APP |
 | One-time enrollment | `join-token-*`, `enrollment-*-ack` | Accounts → `xconnect join` |
 | Gateway projection | `gateway-snapshot.schema.json`, `gateway-snapshot-ed25519.json` | Accounts → Gateway Agent |
+| Dynamic ACL source | `network-policy-v1alpha1.schema.json` | Accounts management API → ACL compiler |
+| ACL enforcement | `policy-enforcement-artifact.schema.json`, policy SHA-256 golden | Accounts compiler → Gateway Agent |
 | Gateway reports | `gateway-heartbeat`, `gateway-apply-result*` | Gateway Agent → Accounts |
 | Gateway credentials | `node-credential-create-*` | Accounts management boundary → Gateway bootstrap |
 | Static migration | `static-client-import*` | Playbooks migration tool → Accounts |
@@ -28,6 +30,9 @@ their executable implementations.
 - Configuration generation is monotonic and expired documents are rejected.
 - JSON documents are single-value and duplicate-member-free. Strict request
   boundaries reject unknown fields and trailing JSON.
+- NetworkPolicy is default-deny. The Gateway artifact contains only expanded
+  device identifiers; users, email addresses, groups, tags, and tag owners stay
+  at the management boundary.
 - Join invites are one-time: create input accepts `remaining_uses` only as `0`
   (default compatibility input) or `1`, and issued invites always report `1`.
 - Enrollment scope is exactly `overlay:config:read` and `overlay:config:ack`,
@@ -110,6 +115,16 @@ change, pass their existing vector paths:
 ```bash
 XCONNECT_ACCOUNTS_SIGNED_CONFIG_VECTOR=/path/to/accounts/tests/fixtures/overlay/signed-config-ed25519-vector.json \
 XCONNECT_CLIENT_SIGNED_CONFIG_VECTOR=/path/to/xconnect-app/go_core/overlay/signedconfig/testdata/signed-config-ed25519-vector.json \
+vpn-overlay/contracts/scripts/validate.sh
+```
+
+The executable ACL artifact is also byte-for-byte frozen across Accounts, IAC,
+and Playbooks. Pass both producer/consumer copies when validating coordinated
+branches:
+
+```bash
+XCONNECT_ACCOUNTS_POLICY_ARTIFACT=/path/to/accounts/tests/fixtures/overlay/network-policy-enforcement.golden.json \
+XCONNECT_PLAYBOOKS_POLICY_ARTIFACT=/path/to/playbooks/tools/xconnect-gateway-agent/internal/gateway/testdata/network-policy-enforcement.golden.json \
 vpn-overlay/contracts/scripts/validate.sh
 ```
 

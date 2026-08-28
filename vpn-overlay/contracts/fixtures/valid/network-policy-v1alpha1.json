@@ -1,0 +1,25 @@
+{
+  "apiVersion": "overlay.xconnect.svc.plus/v1alpha1",
+  "kind": "NetworkPolicy",
+  "metadata": {"name": "private-api"},
+  "spec": {
+    "defaultAction": "deny",
+    "groups": {"developers": {"users": ["alice@example.com"]}},
+    "tagOwners": {"tag:gateway": ["group:developers"]},
+    "services": {
+      "api": {
+        "destinations": ["tag:gateway"],
+        "protocols": ["tcp"],
+        "ports": [8787]
+      }
+    },
+    "rules": [
+      {
+        "id": "allow-api",
+        "action": "accept",
+        "sources": ["group:developers"],
+        "destinations": ["service:api"]
+      }
+    ]
+  }
+}

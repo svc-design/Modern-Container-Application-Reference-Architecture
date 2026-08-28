@@ -13,6 +13,14 @@
     "vector": "gateway-snapshot-ed25519.json",
     "signing_field_order": ["schema_version", "snapshot_id", "node_id", "generation", "expected_previous_generation", "issued_at", "expires_at", "proxy_core", "safety", "wireguard", "relay", "policy"]
   },
+  "policy_enforcement": {
+    "canonical_sha256": "58941760a9ab4568d2e72a6f34a2cede891d8e678346da8e886d86263e5b780c",
+    "mirrors": [
+      "accounts:tests/fixtures/overlay/network-policy-enforcement.golden.json",
+      "iac:vpn-overlay/contracts/fixtures/valid/policy-enforcement-artifact.json",
+      "playbooks:tools/xconnect-gateway-agent/internal/gateway/testdata/network-policy-enforcement.golden.json"
+    ]
+  },
   "static_client_import": {
     "canonical_body_sha256": "911905502b4aa02c4c82b16e200f5f13caebd534898566b8b87384d972ed1fd2",
     "idempotency_key": "sha256-911905502b4aa02c4c82b16e200f5f13caebd534898566b8b87384d972ed1fd2"

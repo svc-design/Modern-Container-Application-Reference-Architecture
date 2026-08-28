@@ -60,6 +60,10 @@ CASES = (
     ("static-client-import-receipt.schema.json", "invalid/static-client-import-receipt-bad-idempotency.json", False),
     ("control-plane-http-contracts.schema.json", "valid/control-plane-http-contracts.json", True),
     ("control-plane-http-contracts.schema.json", "invalid/control-plane-http-contracts-insecure.json", False),
+    ("network-policy-v1alpha1.schema.json", "valid/network-policy-v1alpha1.json", True),
+    ("network-policy-v1alpha1.schema.json", "invalid/network-policy-secret-field.json", False),
+    ("policy-enforcement-artifact.schema.json", "valid/policy-enforcement-artifact.json", True),
+    ("policy-enforcement-artifact.schema.json", "invalid/policy-enforcement-artifact-pii.json", False),
 )
 
 RAW_SECRET = re.compile(r"\bx(?:jt|enr|gn)_[A-Za-z0-9_-]{40,}\b")
@@ -183,6 +187,34 @@ def semantic_errors(schema_name: str, document: dict, fixture_name: str = "") ->
                 referenced = endpoint.get(member)
                 if referenced is not None and not (SCHEMAS / referenced).is_file():
                     errors.append(f"HTTP contract references missing schema: {referenced}")
+
+    if schema_name == "policy-enforcement-artifact.schema.json":
+        required_flows = [
+            "control:controller-session",
+            "control:gateway-apply-result",
+            "control:gateway-heartbeat",
+            "control:gateway-policy-artifact",
+            "control:gateway-snapshot",
+        ]
+        if document.get("protected_flows") != required_flows:
+            errors.append("protected control flows must be complete and canonical")
+        rules = document.get("rules", [])
+        canonical_order = sorted(rules, key=lambda rule: (rule.get("action") != "deny", rule.get("id", "")))
+        if rules != canonical_order:
+            errors.append("enforcement rules must use canonical deny-first order")
+        if document.get("revision") == 0 and rules:
+            errors.append("bootstrap policy revision zero must be empty")
+        for rule in rules:
+            for member in ("source_devices", "destination_devices", "protocols", "ports"):
+                values = rule.get(member, [])
+                if values != sorted(values):
+                    errors.append(f"policy rule {member} must be sorted")
+            protocols = rule.get("protocols", [])
+            ports = rule.get("ports", [])
+            if protocols == ["icmp"] and ports:
+                errors.append("ICMP-only policy rules must not contain ports")
+            if protocols != ["icmp"] and not ports:
+                errors.append("TCP/UDP policy rules require ports")
 
     def validate_network_values(value):
         if isinstance(value, dict):
@@ -353,6 +385,22 @@ class ContractFixtureTests(unittest.TestCase):
         self.assertFalse(list(Draft202012Validator(schema, format_checker=FormatChecker()).iter_errors(document)))
         self.assertFalse(semantic_errors("gateway-snapshot.schema.json", document))
 
+    def test_policy_enforcement_interoperability_golden(self):
+        fixture = FIXTURES / "valid/policy-enforcement-artifact.json"
+        expected = load_json(VECTORS / "compatibility-matrix.json")["policy_enforcement"]["canonical_sha256"]
+        canonical = json.dumps(load_json(fixture), separators=(",", ":"), ensure_ascii=False).encode()
+        self.assertEqual(hashlib.sha256(canonical).hexdigest(), expected)
+        for variable in (
+            "XCONNECT_ACCOUNTS_POLICY_ARTIFACT",
+            "XCONNECT_PLAYBOOKS_POLICY_ARTIFACT",
+        ):
+            candidate = os.environ.get(variable)
+            if candidate:
+                with self.subTest(mirror=variable):
+                    self.assertEqual(Path(candidate).read_bytes(), fixture.read_bytes())
+                    mirrored = json.dumps(load_json(Path(candidate)), separators=(",", ":"), ensure_ascii=False).encode()
+                    self.assertEqual(hashlib.sha256(mirrored).hexdigest(), expected)
+
     def test_signed_config_vector_compatibility_hash(self):
         matrix = load_json(VECTORS / "compatibility-matrix.json")
         expected = matrix["signed_config"]["sha256"]
@@ -374,8 +422,12 @@ class ContractFixtureTests(unittest.TestCase):
             "/api/overlay/v1/join-tokens", "/api/overlay/v1/join-tokens/exchange",
             "/api/internal/overlay/v1/nodes/heartbeat", "/api/internal/overlay/v1/nodes/{node_id}/snapshot",
             "/api/internal/overlay/v1/nodes/{node_id}/apply-result", "/api/internal/overlay/v1/imports/static-clients",
+            "/api/internal/overlay/v1/nodes/{node_id}/policy-artifacts/{generation}/{digest}",
         ):
             self.assertIn("no-store", by_path[path]["cache_control"])
+        policy = by_path["/api/internal/overlay/v1/nodes/{node_id}/policy-artifacts/{generation}/{digest}"]
+        self.assertEqual(policy["auth"], "gateway-node-bearer")
+        self.assertEqual(policy["response"], "policy-enforcement-artifact.schema.json")
 
 
 if __name__ == "__main__":
