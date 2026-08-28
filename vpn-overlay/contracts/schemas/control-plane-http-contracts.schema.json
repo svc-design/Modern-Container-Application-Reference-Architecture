@@ -25,6 +25,8 @@
           "response": { "type": ["string", "null"] },
           "request_content_type": { "type": ["string", "null"] },
           "response_content_type": { "type": ["string", "null"] },
+          "accept": { "type": ["string", "null"] },
+          "vary": { "enum": ["none", "Accept"] },
           "cache_control": { "enum": ["no-store", "private, no-store", "private, max-age=300", "not-applicable"] },
           "idempotency_key": { "enum": ["none", "sha256-canonical-body"] },
           "strict_json": { "type": "boolean" }

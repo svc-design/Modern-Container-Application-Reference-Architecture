@@ -24,6 +24,9 @@ CASES = (
     ("product-plugin-manifest.schema.json", "invalid/product-plugin-manifest-sing-box.json", False),
     ("signed-config.schema.json", "valid/signed-config.json", True),
     ("signed-config.schema.json", "invalid/signed-config-expired.json", False),
+    ("signed-config-v2.schema.json", "valid/signed-config-v2.json", True),
+    ("signed-config-v2.schema.json", "invalid/signed-config-v2-policy-origin.json", False),
+    ("signed-config-v2.schema.json", "invalid/signed-config-v2-policy-binding.json", False),
     ("gateway-snapshot.schema.json", "valid/gateway-snapshot.json", True),
     ("gateway-snapshot.schema.json", "invalid/gateway-snapshot-empty-peers.json", False),
     ("signing-keys-response.schema.json", "valid/signing-keys-response.json", True),
@@ -150,6 +153,12 @@ def semantic_errors(schema_name: str, document: dict, fixture_name: str = "") ->
         if minimum >= maximum:
             errors.append("host_api maximum_exclusive must exceed minimum")
 
+    if schema_name == "signed-config-v2.schema.json" and "policy" in document:
+        policy = document["policy"]
+        expected_path = f'/api/overlay/v1/enrollment/policy-artifacts/{policy["generation"]}/{policy["digest"]}'
+        if policy["path"] != expected_path:
+            errors.append("signed policy path must match generation and digest")
+
     if schema_name == "join-token-exchange-response.schema.json" and "device_credential" in document:
         credential = document["device_credential"]
         issued_at = parse_time(credential["issued_at"])
@@ -262,9 +271,9 @@ def semantic_errors(schema_name: str, document: dict, fixture_name: str = "") ->
 
     if schema_name == "control-plane-http-contracts.schema.json" and document.get("https_required"):
         endpoints = document.get("endpoints", [])
-        identities = [(item.get("method"), item.get("path")) for item in endpoints]
+        identities = [(item.get("method"), item.get("path"), item.get("accept")) for item in endpoints]
         if len(identities) != len(set(identities)):
-            errors.append("HTTP endpoint method/path pairs must be unique")
+            errors.append("HTTP endpoint method/path/accept tuples must be unique")
         for endpoint in endpoints:
             for member in ("request", "response"):
                 referenced = endpoint.get(member)
@@ -549,6 +558,18 @@ class ContractFixtureTests(unittest.TestCase):
             "issued_at", "expires_at", "proxy_core", "transport", "wireguard",
         ])
 
+    def test_signed_config_v2_ed25519_interoperability_vector(self):
+        expected_order = [
+            "schema_version", "config_id", "network_id", "device_id", "generation",
+            "issued_at", "expires_at", "proxy_core", "transport", "wireguard", "policy",
+        ]
+        self._verify_vector("signed-config-v2-ed25519.json", expected_order)
+        vector = load_json(VECTORS / "signed-config-v2-ed25519.json")
+        fixture = load_json(FIXTURES / "valid/signed-config-v2.json")
+        self.assertEqual(fixture["signature"]["value"], vector["signature_base64"])
+        payload = strict_json_bytes(vector["signing_payload_utf8"].encode())
+        self.assertEqual(payload["policy"]["digest"], load_json(VECTORS / "compatibility-matrix.json")["policy_enforcement"]["canonical_sha256"])
+
     def test_gateway_snapshot_ed25519_interoperability_vector(self):
         expected_order = [
             "schema_version", "snapshot_id", "node_id", "generation", "expected_previous_generation",
@@ -588,6 +609,17 @@ class ContractFixtureTests(unittest.TestCase):
                 with self.subTest(mirror=variable):
                     self.assertEqual(hashlib.sha256(Path(candidate).read_bytes()).hexdigest(), expected)
 
+    def test_signed_config_v2_vector_compatibility_hash(self):
+        matrix = load_json(VECTORS / "compatibility-matrix.json")
+        expected = matrix["signed_config_v2"]["sha256"]
+        vector = VECTORS / "signed-config-v2-ed25519.json"
+        self.assertEqual(hashlib.sha256(vector.read_bytes()).hexdigest(), expected)
+        for variable in ("XCONNECT_ACCOUNTS_SIGNED_CONFIG_V2_VECTOR", "XCONNECT_CLIENT_SIGNED_CONFIG_V2_VECTOR"):
+            candidate = os.environ.get(variable)
+            if candidate:
+                with self.subTest(mirror=variable):
+                    self.assertEqual(hashlib.sha256(Path(candidate).read_bytes()).hexdigest(), expected)
+
     def test_http_security_boundary(self):
         document = load_json(FIXTURES / "valid/control-plane-http-contracts.json")
         by_path = {item["path"]: item for item in document["endpoints"]}
@@ -603,6 +635,7 @@ class ContractFixtureTests(unittest.TestCase):
             "/api/overlay/v1/join-tokens", "/api/overlay/v1/join-tokens/exchange",
             "/api/overlay/v1/device/session", "/api/overlay/v1/device/credential/rotate",
             "/api/overlay/v1/device/revoke",
+            "/api/overlay/v1/enrollment/policy-artifacts/{generation}/{digest}",
             "/api/internal/overlay/v1/nodes/heartbeat", "/api/internal/overlay/v1/nodes/{node_id}/snapshot",
             "/api/internal/overlay/v1/nodes/{node_id}/apply-result", "/api/internal/overlay/v1/imports/static-clients",
             "/api/internal/overlay/v1/nodes/{node_id}/policy-artifacts/{generation}/{digest}",
@@ -611,6 +644,18 @@ class ContractFixtureTests(unittest.TestCase):
         policy = by_path["/api/internal/overlay/v1/nodes/{node_id}/policy-artifacts/{generation}/{digest}"]
         self.assertEqual(policy["auth"], "gateway-node-bearer")
         self.assertEqual(policy["response"], "policy-enforcement-artifact.schema.json")
+        signed_config_representations = [
+            item for item in document["endpoints"]
+            if item["path"] == "/api/overlay/v1/enrollment/signed-config"
+        ]
+        self.assertEqual(len(signed_config_representations), 2)
+        by_accept = {item.get("accept"): item for item in signed_config_representations}
+        self.assertEqual(by_accept[None]["response"], "signed-config.schema.json")
+        self.assertEqual(by_accept["application/vnd.xconnect.signed-config.v2+json"]["response"], "signed-config-v2.schema.json")
+        self.assertTrue(all(item.get("vary") == "Accept" for item in signed_config_representations))
+        client_policy = by_path["/api/overlay/v1/enrollment/policy-artifacts/{generation}/{digest}"]
+        self.assertEqual(client_policy["auth"], "enrollment-bearer")
+        self.assertEqual(client_policy["cache_control"], "private, no-store")
 
 
 if __name__ == "__main__":

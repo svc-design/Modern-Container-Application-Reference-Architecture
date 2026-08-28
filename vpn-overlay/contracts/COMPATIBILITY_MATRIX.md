@@ -7,6 +7,7 @@ verification code.
 | Boundary | Canonical implementation | Infra mirror | Compatibility gate |
 |---|---|---|---|
 | SignedConfig projection/signature | Accounts projection | `signed-config.schema.json`, `signed-config-ed25519.json` | Accounts, IAC, and XConnect-APP vector SHA-256 is `5302888289f008df6389e1165ac4f79d8a4ad967b139ea2c889f49208ae0f0a7` |
+| SignedConfig v2 policy reference | Coordinated contract; Accounts/XConnect-APP producers pending | `signed-config-v2.schema.json`, `signed-config-v2-ed25519.json` | explicit Accept negotiation; v1 default preserved; signed same-origin generation/digest/path; vector SHA-256 `18ca0ead8e764e3cebc1dca4821221aa92124c474e9095676bcd43a258165416` |
 | Signing key publication | Accounts `/api/overlay/v1/signing-keys` | `signing-keys-response.schema.json` | Ed25519 public-only ring, unique IDs, exactly one current key |
 | One-time invite create/exchange | Accounts join handlers/OpenAPI | `join-token-*` | one issued use; read/ACK/self-revoke enrollment scope; no-store |
 | Durable device session | Accounts device credential handlers | `device-session-*`, `device-credential-*`, `device-bound-revoke-request`, authorization vector | hash-only verifier; device-bound auth; 15-minute config session; crash-safe client-generated rotation; route-scoped terminal receipt |
@@ -34,6 +35,8 @@ verification code.
 
 - Accounts internal Gateway/static-import endpoints must be merged and deployed
   before integration use.
+- SignedConfig v2 must be implemented and pass the mirrored vector in Accounts
+  and XConnect-APP before clients advertise its Accept media type.
 - Passing schemas proves wire compatibility, not live authorization, database
   persistence, network connectivity, or data-plane application.
 - Accounts and XConnect-APP must ship the device credential producer/consumer

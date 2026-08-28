@@ -8,6 +8,14 @@
       "XConnect-APP:go_core/overlay/signedconfig/testdata/signed-config-ed25519-vector.json"
     ]
   },
+  "signed_config_v2": {
+    "sha256": "18ca0ead8e764e3cebc1dca4821221aa92124c474e9095676bcd43a258165416",
+    "mirrors": [
+      "accounts:tests/fixtures/overlay/signed-config-v2-ed25519-vector.json",
+      "iac:vpn-overlay/contracts/vectors/signed-config-v2-ed25519.json",
+      "XConnect-APP:go_core/overlay/signedconfig/testdata/signed-config-v2-ed25519-vector.json"
+    ]
+  },
   "gateway_snapshot": {
     "consumer": "playbooks:tools/xconnect-gateway-agent",
     "vector": "gateway-snapshot-ed25519.json",

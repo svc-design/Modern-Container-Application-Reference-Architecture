@@ -1,15 +1,16 @@
 # XConnect-One v1 consumer contracts
 
-This package freezes infrastructure-owned **consumer mirrors** of contracts
-already implemented by Accounts, XConnect-APP, and the Playbooks Gateway Agent.
-It is not a new API source of truth: Accounts remains authoritative for the
+This package freezes infrastructure-owned **consumer mirrors** and coordinated
+evolution contracts for Accounts, XConnect-APP, and the Playbooks Gateway
+Agent. It is not an API source of truth: Accounts remains authoritative for the
 HTTP API and signing protocol, while producer and consumer repositories own
-their executable implementations.
+their executable implementations. A compatibility row explicitly says when a
+contract-first addition is not yet implemented by both sides.
 
 | Contract group | Schemas / vectors | Producer → consumer |
 |---|---|---|
 | Product discovery | `product-plugin-manifest.schema.json` | XConnect-APP plugin host → built-in XConnect-One plugin |
-| Client projection | `signed-config.schema.json`, `signed-config-ed25519.json` | Accounts → XConnect-APP |
+| Client projection | SignedConfig v1/v2 schemas and Ed25519 vectors | Accounts → XConnect-APP |
 | Signing keys | `signing-keys-response.schema.json` | Accounts → XConnect-APP |
 | One-time enrollment | `join-token-*`, `enrollment-*-ack` | Accounts → `xconnect join` |
 | Durable device session | `device-session-*`, `device-credential-*`, `device-bound-revoke-request` | Accounts → `xconnect sync/leave` |
@@ -73,6 +74,25 @@ issued_at, expires_at, proxy_core, transport, wireguard
 `vectors/signed-config-ed25519.json` is byte-for-byte identical across
 Accounts, this IAC mirror, and the XConnect-APP Go verifier. The seed is
 development test material and must never become a deployment key.
+
+SignedConfig v2 is opt-in content negotiation. A client sends:
+
+```text
+Accept: application/vnd.xconnect.signed-config.v2+json
+```
+
+The no-header/default representation remains strict v1. Both responses are
+`no-store` and `Vary: Accept`. V2 appends a signed `policy` member; its signing
+order is:
+
+```text
+schema_version, config_id, network_id, device_id, generation,
+issued_at, expires_at, proxy_core, transport, wireguard, policy
+```
+
+The signed policy path is same-origin and derived exactly from generation and
+digest. Clients reject absolute URLs, redirects to another origin, media-type
+mismatch, stale generation, and digest mismatch before accepting the artifact.
 
 ## GatewaySnapshot signing bytes
 
