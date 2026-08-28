@@ -1,4 +1,9 @@
-# XConnect-One TODO
+# XConnect-One TODO（兼容入口）
+
+此文件保留旧链接兼容。当前跨仓 TODO 已迁移至
+[`docs/xconnect-one/TODO.md`](docs/xconnect-one/TODO.md)，后续请以该 docs 目录版本为准。
+
+以下内容是历史批次快照，不再作为当前执行清单。
 
 状态日期：2026-08-28  
 执行状态：Batch08/Batch07/Gateway Batch06 已完成并推送；以下为下一轮阻断项

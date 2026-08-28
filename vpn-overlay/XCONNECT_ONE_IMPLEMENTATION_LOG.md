@@ -1,4 +1,10 @@
-# XConnect-One 实施更新记录
+# XConnect-One 实施更新记录（兼容入口）
+
+此文件保留旧链接兼容。当前跨仓更新记录已迁移至
+[`docs/xconnect-one/IMPLEMENTATION_LOG.md`](docs/xconnect-one/IMPLEMENTATION_LOG.md)，
+后续请以该 docs 目录版本为准。
+
+以下内容是历史批次快照，不再作为当前状态来源。
 
 状态日期：2026-08-28  
 当前状态：按用户要求暂停新增编码，保留可恢复工作现场  
