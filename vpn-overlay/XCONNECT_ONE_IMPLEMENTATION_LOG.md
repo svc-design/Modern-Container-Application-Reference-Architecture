@@ -30,8 +30,8 @@
 | 03 | `codex/xconnect-batch-03-control-plane-contracts` | `83f0b58` | HTTP、注册和 Gateway 控制面合同 |
 | 04 | `codex/xconnect-batch-04-acl-runtime-contracts` | `f123c0f` | 动态 ACL canonical artifact 合同 |
 | 05 | `codex/xconnect-batch-05-lifecycle-apply-contracts` | `b531cf5` | 设备生命周期、reconcile、apply 状态机 |
-| 06 | `codex/xconnect-batch-06-device-session-contracts` | `2bba7c0` | `xdc_` 长期设备凭证、轮换、session/revoke 和签名密钥环合同 |
-| 07 | `codex/xconnect-batch-07-signed-policy-contracts` | 本记录提交前为 `a412069` | SignedConfig v2 策略引用和内容协商合同 |
+| 06 | `codex/xconnect-batch-06-device-session-contracts` | `4817336` | `xdc_` 长期设备凭证、轮换、session/revoke、签名密钥环和规范 rotation vector 合同 |
+| 07 | `codex/xconnect-batch-07-signed-policy-contracts` | `0a6afab` | SignedConfig v2 策略引用、内容协商和设备 session key-ring 合同 |
 
 ### Accounts 控制面
 
@@ -44,6 +44,7 @@
 | 05 | `codex/xconnect-batch-05-gateway-projection` | `5c4a6ed` | GatewaySnapshot 投影 |
 | 06 | `codex/xconnect-batch-06-acl-compiler` | `30c288e` | 确定性动态 ACL 编译器 |
 | 07 | `codex/xconnect-batch-07-device-lifecycle` | `d7e2258` | 生命周期、Gateway apply、reconcile 和永久 WireGuard key tombstone |
+| 08 | `codex/xconnect-batch-08-device-session` | `14a79e7` | 耐久设备凭据、短期 session、轮换、撤销、OpenAPI 和迁移 |
 
 Batch07 的安全补丁永久保留 `(network_id, wireguard_public_key)` 历史占用，
 阻止已撤销密钥、轮换旧密钥、同设备回滚和并发抢占。Memory/PostgreSQL 的
@@ -61,6 +62,7 @@ register、join、静态导入、Upsert 和 rotate 均在事务内 claim。
 | 04B | `codex/xconnect-batch-04-invite-join` | `02fd25a` | 一次性邀请 Join |
 | 05 | `codex/xconnect-batch-05-mobile-enrollment` | `3b899bc` | 移动端注册和受保护宿主边界 |
 | 06 | `codex/xconnect-batch-06-cli-lifecycle-policy` | `f762fd3` | CLI 生命周期、邀请、policy consumer、崩溃恢复 |
+| 07 | `codex/xconnect-batch-07-device-session` | `7718ad3` | 受保护设备凭据、session sync、轮换/leave 恢复与五平台存储边界 |
 
 Batch06 的普通 `leave` 在长期设备凭证未落地前保持 fail-closed，不会把本地清理
 误报成远端撤销。`leave --local-only` 是显式恢复操作。
@@ -74,40 +76,35 @@ Batch06 的普通 `leave` 在长期设备凭证未落地前保持 fail-closed，
 | 03 | `codex/xconnect-batch-03-gateway-agent-shadow` | `2c97306` | Gateway Agent shadow |
 | 04 | `codex/xconnect-batch-04-static-import-shadow` | `c5bab23` | 静态清单导入和 shadow 对照 |
 | 05 | `codex/xconnect-batch-05-gateway-apply` | `e7d2c7d` | 事务 apply、LKG、回滚、旧服务安全接管 |
+| 06 | `codex/xconnect-batch-06-rollout-gates` | `98c45b2` | accounts-only 签名切换授权、readiness 门禁和 shadow 回退 |
 
 Batch05 已覆盖旧 `wg-xwm`/`xray-wg-tproxy` 状态捕获、端口接管、失败恢复、
 受保护的 WireGuard/relay/TLS 文件注入、专用用户预检和三阶段失败注入。
 
-## 3. 暂停时的未提交工作现场
+## 3. 本轮收口状态
 
-以下内容未声明完成、未推送、未创建 PR。恢复前不要删除对应 worktree，也不要把
-它们当作可部署版本。
-
-| 仓库/批次 | Worktree | 基线 SHA | 暂停现场 |
-|---|---|---|---|
-| Accounts Batch08 | `/private/tmp/xconnect-accounts-batch08` | `d7e2258` | device credential migration、Memory store 和 join/lifecycle 初稿，dirty |
-| Client Batch07 | `/private/tmp/xconnect-batch07.EdJnjX` | `f762fd3` | device control-plane、credential package、join/state 初稿，dirty |
-| Gateway Batch06 | `/private/tmp/xconnect-playbooks-batch06.4Gbsdt` | `e7d2c7d` | cutover readiness 工具、角色/agent 配置和测试初稿，dirty |
-
-这些现场在收到暂停指令时被中止，没有执行自动提交。恢复时先检查 diff、完成测试，
-再决定拆分提交；禁止直接推送半成品接口。
+此前暂停的 Accounts Batch08、Client Batch07 和 Gateway Batch06 已完成、推送并核对
+远端 SHA；三个 worktree 均干净，未创建 PR，未修改静态 `group_vars`。它们是可审查
+候选，不是 production rollout 许可。
 
 ## 4. 已通过的主要验证
 
 - IAC Batch06：20 个合同测试通过；Batch07：22 个合同测试通过。
-- Accounts Batch07：目标测试、race、vet、OpenAPI/YAML/JSON 解析和 diff-check 通过。
-  无范围 `go test ./...` 仅被本机缺少 `wg` 的旧 overlayctl E2E 阻断。
-- Client Batch06：相关 Go test/race/vet、Flutter analyze、151 个 Flutter 测试、
-  Linux/macOS/Windows amd64/arm64 CLI 交叉编译和跨仓库 golden gate 通过。
-- Gateway Batch05：Go test/race/vet、角色与 Agent 校验、Ansible 2.15 测试、
-  Xray 26.3.27 server/client/base `run -test` 和 Linux 交叉编译通过。
+- Accounts Batch08：除依赖本机 `wg` 的既有 overlayctl E2E 外，全仓 Go 测试通过；
+  `go test -race ./internal/store ./api`、`go vet ./...`、OpenAPI/YAML/JSON 和合同测试通过。
+  PostgreSQL 覆盖为 sqlmock 事务/锁/回放与迁移结构验证，未声称真实数据库烟测。
+- Client Batch07：相关 Go test/race/vet、Flutter analyze、152 个 Flutter 测试、
+  XConnect-One runtime gate、Linux/macOS/Windows CLI 编译和 Android/iOS credential package build 通过。
+  仓库根全量 Go 测试依赖缺失的 sibling `libXray` checkout。
+- Gateway Batch06：Go test/race/vet、fuzz smoke、签名/篡改门禁、角色/Agent/脚本、
+  六套 Ansible 测试、ansible-lint、schema/workflow parse 及 Linux amd64/arm64 构建通过。
 
 ## 5. 尚未声明完成的能力
 
 - 尚无真实 Accounts + Gateway + 五平台客户端的 live E2E 证据。
-- Accounts Batch08 和 Client Batch07 的长期设备凭证闭环仍是 WIP。
 - SignedConfig v2 目前只有 IAC 合同，Accounts producer 和 Client consumer 尚未实现。
-- Gateway Batch06 accounts-only cutover readiness 尚未完成。
+- Gateway 的 accounts-only readiness consumer 已实现，但 Accounts 尚未签发对应的
+  Controller-signed authorization producer/endpoint；这阻断 production cutover。
 - macOS/iOS、Windows、Android、Linux 的真实发布构建、签名、安装、升级和故障恢复
   尚未形成统一发布证据。
 - 静态 `group_vars` 客户端列表没有删除，也不应在门禁完成前删除。
@@ -115,5 +112,5 @@ Batch05 已覆盖旧 `wg-xwm`/`xray-wg-tproxy` 状态捕获、端口接管、失
 
 ## 6. 恢复入口
 
-恢复编码时按 `XCONNECT_ONE_TODO.md` 的 P0 顺序继续。第一步必须核对上述三个 dirty
-worktree、当前分支和基线 SHA；不要从原始脏工作区重新开始，也不要覆盖用户已有改动。
+继续编码时按 `XCONNECT_ONE_TODO.md` 的 P0 顺序实施；先核对远端特性分支、合同版本和
+生产阻断项，不要从原始脏工作区重新开始，也不要覆盖用户已有改动。

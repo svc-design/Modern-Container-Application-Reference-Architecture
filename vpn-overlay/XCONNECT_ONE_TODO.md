@@ -1,41 +1,42 @@
 # XConnect-One TODO
 
 状态日期：2026-08-28  
-执行状态：暂停；以下项目未授权自动继续
+执行状态：Batch08/Batch07/Gateway Batch06 已完成并推送；以下为下一轮阻断项
 
-## P0：恢复和长期设备凭证闭环
+## P0：长期设备凭据验证收口
 
-- [ ] 逐一检查三个暂停 worktree 的 diff，确认没有并发残留进程或未完成生成物。
-- [ ] Accounts Batch08 完成 device credential PostgreSQL + Memory 实现：
-  - [ ] Join 原子签发一次 `xdc_<32hex>.<43 base64url>`，只返回一次原文。
-  - [ ] 数据库存 SHA-256（完整 UTF-8 token）和 tombstone，不存原文。
-  - [ ] `Authorization: Device`、canonical base64url、ID binding、constant-time compare。
-  - [ ] session nonce 回显、15 分钟以内 xenr、仅 config read/ACK scope。
-  - [ ] 客户端生成 successor 的原子轮换和丢响应恢复。
-  - [ ] device-bound revoke 幂等回执、历史 verifier 仅限终态回执路由。
-  - [ ] 设备 inactive/revoked、过期、错误 scheme、错误 verifier 全部 fail-closed。
-  - [ ] migration、并发、重放、日志脱敏、OpenAPI 和 HTTP cache 测试。
-- [ ] Client Batch07 完成长期凭证消费：
-  - [ ] Join 在 apply/ACK 前将 xdc 写入受保护存储，xenr 只存内存/短 checkpoint。
-  - [ ] `xconnect sync` 执行 mint → fetch/verify → transactional apply → ACK → erase xenr。
-  - [ ] `xconnect leave` 收到远端终态回执后才清理本地；local-only 不声称远端成功。
-  - [ ] rotation 先持久化 pending successor，再提交摘要；丢响应时探测新旧凭证。
-  - [ ] macOS Keychain、Windows Credential Manager/DPAPI、Linux 0700/0600 原子文件。
-  - [ ] iOS/Android 只能通过 protected host bridge 使用 Keychain/Keystore。
-  - [ ] 日志、diagnose、Flutter preferences、普通 state 文件不得出现 raw xdc/xenr。
-- [ ] Accounts/Client/IAC wire vector、scope、nonce、expiry、idempotency 和错误码完全一致。
-- [ ] 只有 scoped test、race、vet、Flutter tests 和跨仓库 vector gate 全绿后才提交/推送 WIP。
+- [x] Accounts Batch08 完成 device credential PostgreSQL + Memory 实现：
+  - [x] Join 原子签发一次 `xdc_<32hex>.<43 base64url>`，只返回一次原文。
+  - [x] 数据库存 SHA-256（完整 UTF-8 token）和 tombstone，不存原文。
+  - [x] `Authorization: Device`、canonical base64url、ID binding、constant-time compare。
+  - [x] session nonce 回显、15 分钟以内 xenr、仅 config read/ACK scope。
+  - [x] 客户端生成 successor 的原子轮换和丢响应恢复。
+  - [x] device-bound revoke 幂等回执、历史 verifier 仅限终态回执路由。
+  - [x] 设备 inactive/revoked、过期、错误 scheme、错误 verifier 全部 fail-closed。
+  - [x] migration、并发、重放、日志脱敏、OpenAPI 和 HTTP cache 测试。
+- [x] Client Batch07 完成长期凭证消费：
+  - [x] Join 在 apply/ACK 前将 xdc 写入受保护存储，xenr 只存内存/短 checkpoint。
+  - [x] `xconnect sync` 执行 mint → fetch/verify → transactional apply → ACK → erase xenr。
+  - [x] `xconnect leave` 收到远端终态回执后才清理本地；local-only 不声称远端成功。
+  - [x] rotation 先持久化 pending successor，再提交摘要；丢响应时探测新旧凭证。
+  - [x] macOS Keychain、Windows Credential Manager/DPAPI、Linux 0700/0600 原子文件。
+  - [x] iOS/Android 只能通过 protected host bridge 使用 Keychain/Keystore。
+  - [x] 日志、diagnose、Flutter preferences、普通 state 文件不得出现 raw xdc/xenr。
+- [x] Accounts/Client/IAC wire vector、scope、nonce、expiry、idempotency 和错误码完全一致。
+- [x] scoped test、race、vet、Flutter tests 和跨仓库 vector gate 已通过后提交/推送。
+- [ ] 建立临时 PostgreSQL 并执行 migration、事务竞争、撤销 receipt 重放的真实数据库烟测。
 
 ## P0：Gateway accounts-only 切换门禁
 
-- [ ] 完成 Gateway Batch06 `xconnect-cutover-readiness`。
-- [ ] readiness 同时验证 import receipt baseline、设备/地址/公钥集合、snapshot 签名、
+- [x] 完成 Gateway Batch06 `xconnect-cutover-readiness`。
+- [x] readiness 同时验证 import receipt baseline、设备/地址/公钥集合、snapshot 签名、
   policy digest、controller apply 授权、observed=applied、runtime readback equal。
-- [ ] 连续健康样本达到配置阈值，且没有 pending reconcile/runtime fault/quarantine。
-- [ ] 任一证据缺失均拒绝 accounts-only；默认保持 shadow。
-- [ ] accounts-only 后动态 peer 只来自 Accounts 投影，角色不再从 group_vars 渲染 peer。
-- [ ] 保留显式回 shadow/LKG 操作，但不得自动复活撤销或轮换前密钥。
-- [ ] 完成 mock HTTPS 控制面、签名 snapshot/policy、apply-result 和 Linux namespace CI。
+- [x] 连续健康样本达到配置阈值，且没有 pending reconcile/runtime fault/quarantine。
+- [x] 任一证据缺失均拒绝 accounts-only；默认保持 shadow。
+- [x] accounts-only 后动态 peer 只来自 Accounts 投影，角色不再从 group_vars 渲染 peer。
+- [x] 保留显式回 shadow/LKG 操作，但不得自动复活撤销或轮换前密钥。
+- [x] 完成 mock HTTPS 控制面、签名 snapshot/policy、apply-result 和 Linux namespace CI。
+- [ ] Accounts 实现并发布 Controller-signed cutover authorization producer/endpoint，供 Gateway 以根保护公钥验证；未完成前禁止 production accounts-only 切换。
 
 ## P1：SignedConfig v2 和客户端策略
 
