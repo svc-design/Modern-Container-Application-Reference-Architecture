@@ -10,8 +10,10 @@ tokens. It never authorizes account administration or direct config reads.
 The raw authorization value is exactly
 `xdc_<32-lowercase-hex-id>.<43-base64url-characters>` and is sent only as
 `Authorization: Device <value>`. The secret segment decodes to 32 random bytes,
-and `credential_id` is `xdcid_` plus the same hex id. The database stores the
-id, device/network/user
+must be canonical base64url without padding, and re-encodes byte-for-byte to
+the same segment. Clients emit `Device`; HTTP scheme comparison is
+ASCII-case-insensitive. `credential_id` is `xdcid_` plus the same hex id. The
+database stores the id, device/network/user
 binding, SHA-256 verifier, scope, expiry, status, and replacement relation. It
 does not store the raw secret. Comparisons are constant-time after lookup by
 id. Logs and audit events contain the credential id only.

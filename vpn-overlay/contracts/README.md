@@ -97,10 +97,13 @@ The only accepted device authorization value is:
 Authorization: Device xdc_<32 lowercase hex id>.<43 base64url characters>
 ```
 
-The secret segment is 32 random bytes encoded without padding. The response
-`credential_id` is `xdcid_` plus the exact embedded hex id. Bearer, Basic,
-query-string, cookie, and custom schemes are rejected. The frozen
-machine-readable form is `vectors/device-credential-wire.json`.
+The secret segment is 32 random bytes in canonical base64url without padding;
+decode then re-encode must reproduce the exact segment. The response
+`credential_id` is `xdcid_` plus the exact embedded hex id. Clients emit the
+canonical `Device` scheme; servers compare that scheme ASCII-case-insensitively
+as HTTP requires. Bearer, Basic, query-string, cookie, and other schemes are
+rejected. The frozen machine-readable form is
+`vectors/device-credential-wire.json`.
 
 The rotation verifier is SHA-256 over the UTF-8 bytes of the exact complete
 `xdc_<id>.<secret>` value—not the decoded secret, encoded segment, or id alone.
