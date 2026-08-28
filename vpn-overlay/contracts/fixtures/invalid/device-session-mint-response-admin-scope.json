@@ -6,5 +6,6 @@
   "expires_at": "2026-08-28T12:10:00Z",
   "scope": ["overlay:config:read", "overlay:config:ack", "overlay:admin"],
   "device_id": "device-alpha",
-  "network_id": "network-private"
+  "network_id": "network-private",
+  "signing_keys": [{"key_id":"signing_key_01","algorithm":"Ed25519","public_key":"A6EHv/POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg=","status":"current","not_before":"2026-08-28T00:00:00Z"}]
 }

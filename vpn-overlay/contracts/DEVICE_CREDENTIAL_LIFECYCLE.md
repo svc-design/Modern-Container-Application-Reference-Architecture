@@ -42,7 +42,9 @@ transaction.
 whose only scopes are `overlay:config:read` and `overlay:config:ack`. The bearer
 expires in at most 15 minutes. The response must echo the request UUID nonce;
 the client rejects a mismatch before accepting the bearer. It then verifies the
-returned device/network binding, fetches and verifies the signed config and any
+returned device/network binding and public signing-key ring. The new key ring
+must contain a still-trusted key and exactly one current key; otherwise the
+client retains the previous ring. It then fetches and verifies the signed config and any
 verified policy reference, applies transactionally, ACKs, and destroys the
 bearer. Failure preserves the last-known-good runtime and durable credential.
 

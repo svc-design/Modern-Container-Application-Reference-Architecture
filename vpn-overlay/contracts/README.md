@@ -44,6 +44,10 @@ their executable implementations.
   `overlay:session:mint`, `overlay:credential:rotate`, and
   `overlay:device:revoke`; it cannot read configuration. A minted enrollment
   bearer is at most 15 minutes and has only config read/ACK scope.
+- A device session response includes a public Ed25519 signing-key ring. A
+  client accepts a replacement ring only after validating its key windows and
+  overlap with the ring already anchored by Join; the response never contains a
+  signing private key.
 - Device credential secrets are high-entropy `xdc_` values. Accounts stores
   only their verifier digest. Rotation is client-generated: the client persists
   the successor before submitting its id and SHA-256 verifier, so a lost HTTP
