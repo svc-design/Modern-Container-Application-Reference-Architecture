@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra.xconnect.one/contracts/v1/policy-reconcile-receipt.schema.json",
+  "title": "XConnect-One policy reconcile batch receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["processed", "completed", "failed"],
+  "properties": {
+    "processed": { "type": "integer", "minimum": 0 },
+    "completed": { "type": "integer", "minimum": 0 },
+    "failed": { "type": "integer", "minimum": 0 }
+  }
+}

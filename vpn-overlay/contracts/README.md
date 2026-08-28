@@ -41,6 +41,9 @@ their executable implementations.
   enrollment. The bearer remains short-lived and is not a durable leave token.
 - Device key/state mutations use optimistic versions. Revocation is terminal;
   a bound enrollment revoke request is empty and cannot name another device.
+- A revoke that committed before policy recompilation failed is explicitly
+  returned as pending and persisted to a service-token reconcile queue; its
+  receipt must satisfy `processed = completed + failed`.
 - Gateway nodes are explicitly authorized as either `shadow` or `apply` by the
   control plane. Shadow reports cannot imply mutation. Apply success requires
   an exact observed/applied generation and equal runtime readback; failures

@@ -80,6 +80,8 @@ CASES = (
     ("device-lifecycle-response.schema.json", "valid/device-lifecycle-response.json", True),
     ("device-lifecycle-response.schema.json", "valid/device-lifecycle-response-revoked.json", True),
     ("device-lifecycle-response.schema.json", "invalid/device-lifecycle-response-revoked-without-time.json", False),
+    ("policy-reconcile-receipt.schema.json", "valid/policy-reconcile-receipt.json", True),
+    ("policy-reconcile-receipt.schema.json", "invalid/policy-reconcile-receipt-inconsistent.json", False),
 )
 
 RAW_SECRET = re.compile(r"\bx(?:jt|enr|gn)_[A-Za-z0-9_-]{40,}\b")
@@ -195,6 +197,10 @@ def semantic_errors(schema_name: str, document: dict, fixture_name: str = "") ->
             errors.append("revoked device state requires a timestamp and reason")
         if document.get("revoked") is True and not revoked:
             errors.append("revoked response must contain a revoked device")
+
+    if schema_name == "policy-reconcile-receipt.schema.json":
+        if document.get("processed") != document.get("completed", 0) + document.get("failed", 0):
+            errors.append("reconcile receipt counters are inconsistent")
 
     if schema_name == "static-client-import.schema.json":
         devices = document.get("devices", [])
