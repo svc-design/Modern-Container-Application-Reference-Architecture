@@ -1,7 +1,9 @@
 # XConnect-One 跨仓实施更新记录
 
-状态日期：2026-08-28  
-长期集成分支：`codex/xconnect-overlay-productization`  
+状态日期：2026-08-28
+
+长期集成分支：`codex/xconnect-overlay-productization`
+
 记录范围：合同、Accounts 控制面、XConnect-APP/CLI、Playbooks Gateway
 
 ## 产品与安全基线
