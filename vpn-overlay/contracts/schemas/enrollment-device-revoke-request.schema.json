@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra.xconnect.one/contracts/v1/enrollment-device-revoke-request.schema.json",
+  "title": "XConnect-One enrollment-bound device revoke request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "maxProperties": 0
+}

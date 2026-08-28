@@ -12,6 +12,7 @@ their executable implementations.
 | Client projection | `signed-config.schema.json`, `signed-config-ed25519.json` | Accounts → XConnect-APP |
 | Signing keys | `signing-keys-response.schema.json` | Accounts → XConnect-APP |
 | One-time enrollment | `join-token-*`, `enrollment-*-ack` | Accounts → `xconnect join` |
+| Device lifecycle | `device-*-request`, `device-lifecycle-response` | Accounts → `xconnect` / account administration |
 | Gateway projection | `gateway-snapshot.schema.json`, `gateway-snapshot-ed25519.json` | Accounts → Gateway Agent |
 | Dynamic ACL source | `network-policy-v1alpha1.schema.json` | Accounts management API → ACL compiler |
 | ACL enforcement | `policy-enforcement-artifact.schema.json`, policy SHA-256 golden | Accounts compiler → Gateway Agent |
@@ -35,10 +36,15 @@ their executable implementations.
   at the management boundary.
 - Join invites are one-time: create input accepts `remaining_uses` only as `0`
   (default compatibility input) or `1`, and issued invites always report `1`.
-- Enrollment scope is exactly `overlay:config:read` and `overlay:config:ack`,
-  bound by Accounts to one user/network/device/public-key enrollment.
-- Gateway v1 is shadow-only: `applied_generation=0` and
-  `runtime_applied=false`; reports cannot imply WireGuard/nftables mutation.
+- Enrollment scope is exactly `overlay:config:read`, `overlay:config:ack`, and
+  `overlay:device:revoke`, bound to one user/network/device/public-key
+  enrollment. The bearer remains short-lived and is not a durable leave token.
+- Device key/state mutations use optimistic versions. Revocation is terminal;
+  a bound enrollment revoke request is empty and cannot name another device.
+- Gateway nodes are explicitly authorized as either `shadow` or `apply` by the
+  control plane. Shadow reports cannot imply mutation. Apply success requires
+  an exact observed/applied generation and equal runtime readback; failures
+  preserve an older checkpoint. A rollback failure is not auto-upgradable.
 - Control-plane URLs are HTTPS. Secret-bearing join, Gateway, credential, and
   static-import responses use `no-store` where recorded in the HTTP fixture.
 
@@ -108,6 +114,11 @@ Every fixture must be registered in `tests/test_contracts.py`. The suite checks
 schemas, strict JSON, time/generation transitions, empty-peer safety, unique
 identities/keys/addresses, key windows, Gateway diff consistency, canonical
 static-import digests, idempotency, signing vectors, and secret rejection.
+
+The device-bound enrollment revoke endpoint covers only the short enrollment
+window. A hash-only, rotatable device refresh credential is a release blocker
+for durable `xconnect sync` and `xconnect leave`; extending or persisting the
+short-lived enrollment bearer is not an accepted substitute.
 
 To compare working copies of Accounts and XConnect-APP during a coordinated
 change, pass their existing vector paths:

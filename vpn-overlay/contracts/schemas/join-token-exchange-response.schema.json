@@ -11,13 +11,14 @@
     "expires_at": { "$ref": "#/$defs/time" },
     "scope": {
       "type": "array",
-      "minItems": 2,
-      "maxItems": 2,
+      "minItems": 3,
+      "maxItems": 3,
       "uniqueItems": true,
-      "items": { "enum": ["overlay:config:read", "overlay:config:ack"] },
+      "items": { "enum": ["overlay:config:read", "overlay:config:ack", "overlay:device:revoke"] },
       "allOf": [
         { "contains": { "const": "overlay:config:read" } },
-        { "contains": { "const": "overlay:config:ack" } }
+        { "contains": { "const": "overlay:config:ack" } },
+        { "contains": { "const": "overlay:device:revoke" } }
       ]
     },
     "device": { "$ref": "#/$defs/device" },

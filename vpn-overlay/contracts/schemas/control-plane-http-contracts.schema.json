@@ -18,7 +18,7 @@
         "additionalProperties": false,
         "required": ["method", "path", "auth", "request", "response", "request_content_type", "response_content_type", "cache_control", "idempotency_key", "strict_json"],
         "properties": {
-          "method": { "enum": ["GET", "POST", "DELETE"] },
+          "method": { "enum": ["GET", "POST", "PUT", "DELETE"] },
           "path": { "type": "string", "pattern": "^/api/(internal/)?overlay/v1/" },
           "auth": { "enum": ["account-bearer", "one-time-join-secret", "enrollment-bearer", "gateway-node-bearer", "x-service-token"] },
           "request": { "type": ["string", "null"] },

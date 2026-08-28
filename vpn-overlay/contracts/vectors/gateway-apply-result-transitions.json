@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "transitions": [
+    {"previous": null, "next": "apply_rejected", "allowed": true},
+    {"previous": null, "next": "apply_failed_rolled_back", "allowed": true},
+    {"previous": null, "next": "apply_failed_rollback_failed", "allowed": true},
+    {"previous": null, "next": "applied", "allowed": true},
+    {"previous": "apply_rejected", "next": "applied", "allowed": true},
+    {"previous": "apply_failed_rolled_back", "next": "applied", "allowed": true},
+    {"previous": "apply_failed_rollback_failed", "next": "applied", "allowed": false},
+    {"previous": "applied", "next": "apply_failed_rolled_back", "allowed": false},
+    {"previous": "applied", "next": "applied", "allowed": true}
+  ]
+}

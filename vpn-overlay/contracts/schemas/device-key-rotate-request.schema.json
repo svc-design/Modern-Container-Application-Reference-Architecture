@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra.xconnect.one/contracts/v1/device-key-rotate-request.schema.json",
+  "title": "XConnect-One device public-key rotation request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["network_id", "wireguard_public_key", "expected_key_version"],
+  "properties": {
+    "network_id": { "$ref": "#/$defs/id" },
+    "owner_user_id": { "type": "string", "format": "uuid" },
+    "wireguard_public_key": { "type": "string", "pattern": "^[A-Za-z0-9+/]{43}=$" },
+    "expected_key_version": { "type": "integer", "minimum": 1 }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{2,127}$" }
+  }
+}

@@ -45,9 +45,14 @@ CASES = (
     ("enrollment-signed-config-ack-receipt.schema.json", "valid/enrollment-signed-config-ack-receipt.json", True),
     ("enrollment-signed-config-ack-receipt.schema.json", "invalid/enrollment-signed-config-ack-receipt-zero-generation.json", False),
     ("gateway-heartbeat.schema.json", "valid/gateway-heartbeat.json", True),
+    ("gateway-heartbeat.schema.json", "valid/gateway-heartbeat-apply.json", True),
     ("gateway-heartbeat.schema.json", "invalid/gateway-heartbeat-runtime-apply.json", False),
+    ("gateway-heartbeat.schema.json", "invalid/gateway-heartbeat-apply-ahead.json", False),
     ("gateway-apply-result.schema.json", "valid/gateway-apply-result.json", True),
+    ("gateway-apply-result.schema.json", "valid/gateway-apply-result-applied.json", True),
+    ("gateway-apply-result.schema.json", "valid/gateway-apply-result-rolled-back.json", True),
     ("gateway-apply-result.schema.json", "invalid/gateway-apply-result-runtime-write.json", False),
+    ("gateway-apply-result.schema.json", "invalid/gateway-apply-result-applied-generation-mismatch.json", False),
     ("gateway-apply-result-receipt.schema.json", "valid/gateway-apply-result-receipt.json", True),
     ("gateway-apply-result-receipt.schema.json", "invalid/gateway-apply-result-receipt-extra.json", False),
     ("node-credential-create-request.schema.json", "valid/node-credential-create-request.json", True),
@@ -64,6 +69,17 @@ CASES = (
     ("network-policy-v1alpha1.schema.json", "invalid/network-policy-secret-field.json", False),
     ("policy-enforcement-artifact.schema.json", "valid/policy-enforcement-artifact.json", True),
     ("policy-enforcement-artifact.schema.json", "invalid/policy-enforcement-artifact-pii.json", False),
+    ("device-key-rotate-request.schema.json", "valid/device-key-rotate-request.json", True),
+    ("device-key-rotate-request.schema.json", "invalid/device-key-rotate-request-private-key.json", False),
+    ("device-state-request.schema.json", "valid/device-state-request.json", True),
+    ("device-state-request.schema.json", "invalid/device-state-request-zero-version.json", False),
+    ("device-revoke-request.schema.json", "valid/device-revoke-request.json", True),
+    ("device-revoke-request.schema.json", "invalid/device-revoke-request-owner-email.json", False),
+    ("enrollment-device-revoke-request.schema.json", "valid/enrollment-device-revoke-request.json", True),
+    ("enrollment-device-revoke-request.schema.json", "invalid/enrollment-device-revoke-request-scope.json", False),
+    ("device-lifecycle-response.schema.json", "valid/device-lifecycle-response.json", True),
+    ("device-lifecycle-response.schema.json", "valid/device-lifecycle-response-revoked.json", True),
+    ("device-lifecycle-response.schema.json", "invalid/device-lifecycle-response-revoked-without-time.json", False),
 )
 
 RAW_SECRET = re.compile(r"\bx(?:jt|enr|gn)_[A-Za-z0-9_-]{40,}\b")
@@ -153,6 +169,32 @@ def semantic_errors(schema_name: str, document: dict, fixture_name: str = "") ->
             equal = not any(diff.get(key) for key in ("missing_peers", "unexpected_peers", "route_mismatches"))
             if common_projected != common_current or diff.get("route_mismatches", 0) > common_projected or diff.get("equal") != equal:
                 errors.append("Gateway diff counters are inconsistent")
+        result = document.get("result")
+        observed = document.get("observed_generation", 0)
+        applied = document.get("applied_generation", 0)
+        if applied > observed:
+            errors.append("applied generation cannot exceed observed generation")
+        if result == "applied":
+            if applied != observed or not document.get("runtime_applied") or diff.get("status") != "available" or not diff.get("equal"):
+                errors.append("applied result requires exact generation and equal runtime readback")
+        elif result in ("apply_rejected", "apply_failed_rolled_back", "apply_failed_rollback_failed"):
+            if applied >= observed or document.get("runtime_applied"):
+                errors.append("apply failure must preserve an older applied checkpoint")
+        elif result in ("shadow_validated", "shadow_validated_wg_unavailable", "shadow_rejected"):
+            if applied != 0 or document.get("runtime_applied"):
+                errors.append("shadow result cannot report runtime mutation")
+
+    if schema_name == "gateway-heartbeat.schema.json":
+        if document.get("applied_generation", 0) > document.get("observed_generation", 0):
+            errors.append("heartbeat applied generation cannot exceed observed generation")
+
+    if schema_name == "device-lifecycle-response.schema.json":
+        device = document.get("device", {})
+        revoked = device.get("status") == "revoked"
+        if revoked != bool(device.get("revoked_at")) or revoked != bool(device.get("revoked_reason")):
+            errors.append("revoked device state requires a timestamp and reason")
+        if document.get("revoked") is True and not revoked:
+            errors.append("revoked response must contain a revoked device")
 
     if schema_name == "static-client-import.schema.json":
         devices = document.get("devices", [])
@@ -292,7 +334,7 @@ class ContractFixtureTests(unittest.TestCase):
             with self.subTest(schema=schema_name):
                 self.assertTrue(list(validator.iter_errors(document)))
 
-    def test_one_time_and_shadow_guard_property_smoke(self):
+    def test_one_time_and_gateway_mode_guard_property_smoke(self):
         join_schema = load_json(SCHEMAS / "join-token-create-request.schema.json")
         join_validator = Draft202012Validator(join_schema)
         for remaining_uses in range(-8, 9):
@@ -301,15 +343,39 @@ class ContractFixtureTests(unittest.TestCase):
 
         heartbeat_schema = load_json(SCHEMAS / "gateway-heartbeat.schema.json")
         heartbeat = load_json(FIXTURES / "valid/gateway-heartbeat.json")
-        for field, unsafe_value in (
-            ("mode", "apply"),
-            ("proxy_core", "sing-box"),
-            ("applied_generation", 1),
-        ):
+        for field, unsafe_value in (("proxy_core", "sing-box"), ("applied_generation", 1)):
             candidate = deepcopy(heartbeat)
             candidate[field] = unsafe_value
             with self.subTest(field=field):
                 self.assertTrue(list(Draft202012Validator(heartbeat_schema).iter_errors(candidate)))
+
+        apply_heartbeat = load_json(FIXTURES / "valid/gateway-heartbeat-apply.json")
+        for applied in range(38, 46):
+            candidate = deepcopy(apply_heartbeat)
+            candidate["applied_generation"] = applied
+            valid = not list(Draft202012Validator(heartbeat_schema).iter_errors(candidate))
+            valid = valid and not semantic_errors("gateway-heartbeat.schema.json", candidate)
+            self.assertEqual(valid, applied <= candidate["observed_generation"])
+
+    def test_gateway_apply_result_state_machine(self):
+        vector = load_json(VECTORS / "gateway-apply-result-transitions.json")
+
+        def allowed(previous, next_result):
+            if previous is None:
+                return True
+            if previous == next_result:
+                return True
+            return previous in ("apply_rejected", "apply_failed_rolled_back") and next_result == "applied"
+
+        for case in vector["transitions"]:
+            with self.subTest(previous=case["previous"], next=case["next"]):
+                self.assertEqual(case["allowed"], allowed(case["previous"], case["next"]))
+
+    def test_policy_generation_reserves_bootstrap_floor(self):
+        vector = load_json(VECTORS / "policy-generation-transitions.json")
+        states = vector["states"]
+        self.assertEqual(states[0], {"name": "bootstrap-default-deny", "generation": 1})
+        self.assertEqual([state["generation"] for state in states], list(range(1, len(states) + 1)))
 
     def test_all_contract_json_is_strict(self):
         for path in sorted(ROOT.rglob("*.json")):

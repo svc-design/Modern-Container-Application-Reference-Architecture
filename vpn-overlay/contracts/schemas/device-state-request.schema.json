@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infra.xconnect.one/contracts/v1/device-state-request.schema.json",
+  "title": "XConnect-One device state request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["network_id", "status", "expected_state_version"],
+  "properties": {
+    "network_id": { "$ref": "#/$defs/id" },
+    "owner_user_id": { "type": "string", "format": "uuid" },
+    "status": { "enum": ["active", "inactive", "revoked"] },
+    "expected_state_version": { "type": "integer", "minimum": 1 },
+    "reason": { "type": "string", "maxLength": 512 }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{2,127}$" }
+  }
+}

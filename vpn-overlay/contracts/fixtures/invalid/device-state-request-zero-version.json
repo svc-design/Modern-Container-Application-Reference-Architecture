@@ -1,0 +1,5 @@
+{
+  "network_id": "network-golden",
+  "status": "revoked",
+  "expected_state_version": 0
+}

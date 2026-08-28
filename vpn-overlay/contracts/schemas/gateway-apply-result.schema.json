@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://infra.xconnect.one/contracts/v1/gateway-apply-result.schema.json",
-  "title": "XConnect-One Gateway Agent shadow apply-result v1",
+  "title": "XConnect-One Gateway Agent apply-result v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["node_id", "snapshot_id", "observed_generation", "applied_generation", "runtime_applied", "result", "diff"],
@@ -9,11 +9,32 @@
     "node_id": { "$ref": "#/$defs/id" },
     "snapshot_id": { "$ref": "#/$defs/id" },
     "observed_generation": { "type": "integer", "minimum": 1 },
-    "applied_generation": { "const": 0 },
-    "runtime_applied": { "const": false },
-    "result": { "enum": ["shadow_validated", "shadow_validated_wg_unavailable", "shadow_rejected"] },
+    "applied_generation": { "type": "integer", "minimum": 0 },
+    "runtime_applied": { "type": "boolean" },
+    "result": { "enum": ["shadow_validated", "shadow_validated_wg_unavailable", "shadow_rejected", "applied", "apply_rejected", "apply_failed_rolled_back", "apply_failed_rollback_failed"] },
     "diff": { "$ref": "#/$defs/diff" }
   },
+  "oneOf": [
+    {
+      "properties": {
+        "applied_generation": { "const": 0 },
+        "runtime_applied": { "const": false },
+        "result": { "enum": ["shadow_validated", "shadow_validated_wg_unavailable", "shadow_rejected"] }
+      }
+    },
+    {
+      "properties": {
+        "runtime_applied": { "const": true },
+        "result": { "const": "applied" }
+      }
+    },
+    {
+      "properties": {
+        "runtime_applied": { "const": false },
+        "result": { "enum": ["apply_rejected", "apply_failed_rolled_back", "apply_failed_rollback_failed"] }
+      }
+    }
+  ],
   "$defs": {
     "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{2,127}$" },
     "diff": {

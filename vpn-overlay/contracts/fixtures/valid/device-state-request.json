@@ -1,0 +1,6 @@
+{
+  "network_id": "network-golden",
+  "status": "inactive",
+  "expected_state_version": 2,
+  "reason": "maintenance"
+}

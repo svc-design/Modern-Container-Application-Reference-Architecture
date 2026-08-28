@@ -1,0 +1,6 @@
+{
+  "network_id": "network-golden",
+  "wireguard_public_key": "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI=",
+  "expected_key_version": 1,
+  "private_key": "REDACTED_PRIVATE_KEY"
+}

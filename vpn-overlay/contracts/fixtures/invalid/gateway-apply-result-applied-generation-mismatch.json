@@ -1,0 +1,17 @@
+{
+  "node_id": "gw_test_01",
+  "snapshot_id": "snap_vector_42",
+  "observed_generation": 42,
+  "applied_generation": 41,
+  "runtime_applied": true,
+  "result": "applied",
+  "diff": {
+    "status": "available",
+    "equal": true,
+    "projected_peers": 1,
+    "current_peers": 1,
+    "missing_peers": 0,
+    "unexpected_peers": 0,
+    "route_mismatches": 0
+  }
+}

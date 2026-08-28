@@ -1,18 +1,24 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://infra.xconnect.one/contracts/v1/gateway-heartbeat.schema.json",
-  "title": "XConnect-One Gateway Agent shadow heartbeat v1",
+  "title": "XConnect-One Gateway Agent heartbeat v1",
   "type": "object",
   "additionalProperties": false,
   "required": ["node_id", "agent_version", "mode", "proxy_core", "observed_generation", "applied_generation"],
   "properties": {
     "node_id": { "$ref": "#/$defs/id" },
     "agent_version": { "type": "string", "minLength": 1, "maxLength": 128 },
-    "mode": { "const": "shadow" },
+    "mode": { "enum": ["shadow", "apply"] },
     "proxy_core": { "const": "xray" },
     "observed_generation": { "type": "integer", "minimum": 0 },
-    "applied_generation": { "const": 0 }
+    "applied_generation": { "type": "integer", "minimum": 0 }
   },
+  "allOf": [
+    {
+      "if": { "properties": { "mode": { "const": "shadow" } }, "required": ["mode"] },
+      "then": { "properties": { "applied_generation": { "const": 0 } } }
+    }
+  ],
   "$defs": {
     "id": { "type": "string", "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{2,127}$" }
   }

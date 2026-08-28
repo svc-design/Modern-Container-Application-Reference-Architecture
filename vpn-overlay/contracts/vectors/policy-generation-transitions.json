@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "states": [
+    {"name": "bootstrap-default-deny", "generation": 1},
+    {"name": "first-active-policy", "generation": 2},
+    {"name": "inventory-recompile", "generation": 3}
+  ]
+}
