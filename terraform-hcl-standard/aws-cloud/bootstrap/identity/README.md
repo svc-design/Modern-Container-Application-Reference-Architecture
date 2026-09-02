@@ -5,7 +5,7 @@
 ## 资源概览
 
 - `aws_iam_openid_connect_provider.github_actions`：GitHub Actions 公共 OIDC Provider（`https://token.actions.githubusercontent.com`）。
-- `aws_iam_role.github_actions_deploy_role`：供 GitHub Actions 通过 OIDC 假设的角色，限制到仓库 `cloud-neutral-toolkit/Modern-Container-Application-Reference-Architecture` 的 `main` 分支。
+- `aws_iam_role.github_actions_deploy_role`：供 GitHub Actions 通过 OIDC 假设的角色。信任的仓库、分支和 tag 只从 GitOps 声明读取，不在 Terraform 模块中硬编码。
 - `aws_iam_role_policy_attachment.github_actions_deploy_role_admin`：示例使用 AWS 托管策略 `AdministratorAccess`（实际项目请收敛至 S3 state / DynamoDB lock 所需的最小权限）。
 
 ## Terraform 输出
@@ -34,3 +34,18 @@ permissions:
 ```
 
 可根据需要在后续步骤执行 Terraform CLI，使用 OIDC 方式取代长期 AK/SK。若 OIDC 服务异常，可切回输出的 `iam_role_arn` 与 `terraform_user_name` 路径。
+
+## GitOps 信任策略
+
+在 bootstrap YAML 中声明 GitOps 文件路径（相对路径以 bootstrap YAML 所在目录解析），或在
+执行时设置 `GITHUB_ACTIONS_OIDC_CONFIG_PATH`：
+
+```yaml
+github_actions_oidc:
+  config_path: ../resources/svc.plus/prod/aws/github-actions-oidc.json
+```
+
+该 JSON 声明必须包含 GitHub OIDC Provider URL、`sts.amazonaws.com` audience、AWS role 名称和
+允许的 `sub` 列表。生产声明允许 `ai-workspace-infra/platform-ops-toolkit` 的 `main` 与
+`v*` tag，因此手工 main 部署和每日发布 tag 都能取得同一受控角色。缺少或不合法的声明会使
+Terraform plan/apply 失败，避免回退到宽泛或陈旧的信任策略。
