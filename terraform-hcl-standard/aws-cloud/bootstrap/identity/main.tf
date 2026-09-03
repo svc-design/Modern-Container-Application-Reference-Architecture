@@ -71,8 +71,8 @@ resource "aws_iam_role" "github_actions_deploy_role" {
     precondition {
       condition = alltrue([
         for subject in local.github_actions_subjects : startswith(subject, "repo:ai-workspace-infra/platform-ops-toolkit:")
-      ]) && contains(local.github_actions_subjects, "repo:ai-workspace-infra/platform-ops-toolkit:ref:refs/heads/main") && contains(local.github_actions_subjects, "repo:ai-workspace-infra/platform-ops-toolkit:ref:refs/tags/v*")
-      error_message = "GitOps OIDC subjects must be restricted to platform-ops-toolkit and include main plus v* tags."
+      ]) && contains(local.github_actions_subjects, "repo:ai-workspace-infra/platform-ops-toolkit:ref:refs/heads/main") && contains(local.github_actions_subjects, "repo:ai-workspace-infra/platform-ops-toolkit:ref:refs/tags/v*") && contains(local.github_actions_subjects, "repo:ai-workspace-infra/platform-ops-toolkit:environment:production")
+      error_message = "GitOps OIDC subjects must be restricted to platform-ops-toolkit and include main, v* tags, and the production environment subject."
     }
   }
 }
