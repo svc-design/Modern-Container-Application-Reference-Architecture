@@ -1,7 +1,7 @@
 locals {
   bootstrap_config_path = abspath(var.bootstrap_config_path)
   config_root           = dirname(dirname(dirname(local.bootstrap_config_path)))
-  bootstrap = yamldecode(file(local.bootstrap_config_path))
+  bootstrap             = yamldecode(file(local.bootstrap_config_path))
 
   github_actions_oidc_config_path_input = coalesce(
     var.github_actions_oidc_config_path,
@@ -12,8 +12,11 @@ locals {
     ? local.github_actions_oidc_config_path_input
     : "${dirname(local.bootstrap_config_path)}/${local.github_actions_oidc_config_path_input}"
   )
-  github_actions_oidc_config = local.github_actions_oidc_config_path == null ? {} : yamldecode(file(local.github_actions_oidc_config_path))
-  github_actions_oidc_spec   = try(local.github_actions_oidc_config.spec, {})
+  # null is type-compatible with the decoded GitOps object. Using {} here
+  # makes Terraform try to unify an empty object with the declaration's full
+  # schema and fails before lifecycle preconditions can report a useful error.
+  github_actions_oidc_config  = local.github_actions_oidc_config_path == null ? null : yamldecode(file(local.github_actions_oidc_config_path))
+  github_actions_oidc_spec    = try(local.github_actions_oidc_config.spec, {})
   github_actions_provider_url = try(local.github_actions_oidc_spec.provider_url, null)
   github_actions_audience     = try(local.github_actions_oidc_spec.audience, null)
   github_actions_subjects     = try(tolist(local.github_actions_oidc_spec.subjects), [])
