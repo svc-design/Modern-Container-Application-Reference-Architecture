@@ -26,6 +26,13 @@ resource "aws_key_pair" "{{ key.name | tf_id }}" {
 {% endfor -%}
 {% for host in hosts -%}
 {%- set hid = host.name | tf_id -%}
+{%- set ami_id = host.get('ami_id') -%}
+{%- set ami_expression = '"' ~ ami_id ~ '"' if ami_id else 'data.aws_ami.debian_' ~ hid ~ '.id' -%}
+{% if ami_id -%}
+# This host is intentionally pinned to an immutable AMI.  Production hosts
+# with deletion protection must not be replaced merely because an upstream
+# "most recent" image query starts returning a newer image.
+{% else -%}
 # ami filter for Debian 12 ARM64
 data "aws_ami" "debian_{{ hid }}" {
   most_recent = true
@@ -41,6 +48,7 @@ data "aws_ami" "debian_{{ hid }}" {
     values = ["hvm"]
   }
 }
+{% endif %}
 
 resource "aws_security_group" "sg_{{ hid }}" {
   name_prefix = "{{ host.name }}-sg"
@@ -91,7 +99,7 @@ module "compute_{{ hid }}" {
   
   instance = {
     type = "{{ host.plan | default('t4g.small') }}"
-    ami  = data.aws_ami.debian_{{ hid }}.id
+    ami  = {{ ami_expression }}
   }
 
   subnet_id = data.aws_subnets.default.ids[0]
@@ -113,10 +121,12 @@ output "cmdb_runtime" {
   value = {
 {% for host in hosts -%}
 {%- set hid = host.name | tf_id %}
+{%- set ami_id = host.get('ami_id') -%}
+{%- set ami_expression = '"' ~ ami_id ~ '"' if ami_id else 'data.aws_ami.debian_' ~ hid ~ '.id' -%}
     "{{ host.name }}" = {
       ip          = module.compute_{{ hid }}.public_ip
       instance_id = module.compute_{{ hid }}.instance_id
-      os_id       = data.aws_ami.debian_{{ hid }}.id
+      os_id       = {{ ami_expression }}
     }
 {% endfor -%}
   }
