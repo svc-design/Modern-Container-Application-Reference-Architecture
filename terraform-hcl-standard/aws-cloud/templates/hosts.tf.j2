@@ -67,6 +67,15 @@ resource "aws_security_group" "sg_{{ hid }}" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+{% for rule in host.get('security_group_ingress', []) %}
+  ingress {
+    from_port   = {{ rule.port }}
+    to_port     = {{ rule.port }}
+    protocol    = "{{ rule.protocol }}"
+    cidr_blocks = ["{{ rule.cidr }}"]
+  }
+{% endfor %}
+
   egress {
     from_port   = 0
     to_port     = 0
