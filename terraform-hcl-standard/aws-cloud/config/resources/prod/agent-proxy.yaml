@@ -28,6 +28,12 @@ hosts:
     ansible_user: admin
     groups: [agent_proxy, debian]
     tags: [debian]
+    # Agent Proxy's public transport endpoint. Keep this declaration beside
+    # the host so the generated security group and the CMDB stay in sync.
+    security_group_ingress:
+      - port: 1443
+        protocol: tcp
+        cidr: 0.0.0.0/0
     host_vars:
       role: primary
       service_domains:
