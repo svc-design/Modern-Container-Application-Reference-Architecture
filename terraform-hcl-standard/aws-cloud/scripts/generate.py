@@ -68,7 +68,7 @@ def _jinja():
 # 资源声明里的主机名与服务域名都由 TARGET_DOMAIN_BASE 拼接。Jinja 默认的
 # Undefined 会把缺失变量渲染成空串, 于是 console-nat.{{...}} 变成 "console-nat."
 # —— 一个看起来像成功、实际错误的主机名。这里显式要求它必须存在。
-REQUIRED_TEMPLATE_ENV = ("TARGET_DOMAIN_BASE",)
+REQUIRED_TEMPLATE_ENV = ("TARGET_DOMAIN_BASE", "SSH_PUBLIC_DEPLOY_KEY")
 
 
 def _assert_required_env(content, path):
