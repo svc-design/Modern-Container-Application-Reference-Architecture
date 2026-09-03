@@ -114,6 +114,8 @@ resource "aws_iam_role" "terraform_deploy_role" {
 }
 
 data "aws_iam_policy_document" "terraform_deploy_inline" {
+  count = local.create_role ? 1 : 0
+
   override_policy_documents = [
     templatefile(
       "${path.module}/policies/terraform-deploy-inline-policy.json",
@@ -133,7 +135,7 @@ resource "aws_iam_role_policy" "terraform_deploy_role_policy" {
 
   name   = "${local.role_name}-bootstrap-minimal"
   role   = aws_iam_role.terraform_deploy_role[0].id
-  policy = data.aws_iam_policy_document.terraform_deploy_inline.json
+  policy = data.aws_iam_policy_document.terraform_deploy_inline[0].json
 }
 
 resource "aws_iam_role_policy_attachment" "terraform_deploy_role_managed" {

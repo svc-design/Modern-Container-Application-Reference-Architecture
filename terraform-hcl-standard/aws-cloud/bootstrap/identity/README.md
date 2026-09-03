@@ -49,3 +49,22 @@ github_actions_oidc:
 允许的 `sub` 列表。生产声明允许 `ai-workspace-infra/platform-ops-toolkit` 的 `main` 与
 `v*` tag，因此手工 main 部署和每日发布 tag 都能取得同一受控角色。缺少或不合法的声明会使
 Terraform plan/apply 失败，避免回退到宽泛或陈旧的信任策略。
+
+## 生产 state 导入
+
+生产采用 `config/bootstrap/prod.yaml`。该配置将信任策略引用到 sibling GitOps checkout
+中的 `resources/svc.plus/prod/aws/github-actions-oidc.json`，并声明唯一的非敏感 state key：
+
+```text
+platform-ops-toolkit/prod/aws-cloud/bootstrap/identity/terraform.tfstate
+```
+
+`provider.tf` 的 S3 backend 故意不包含 endpoint、bucket 或 access key。生产 bootstrap
+workflow 从 Vault `kv/data/CICD/prod/iac_state` 在 `terraform init` 时注入这些敏感参数，再仅导入：
+
+- `aws_iam_openid_connect_provider.github_actions`
+- `aws_iam_role.github_actions_deploy_role`
+- `aws_iam_role_policy_attachment.github_actions_deploy_role_admin`
+
+该 production bootstrap 配置设置 `create_role: false` 和 `create_user: false`，避免在 OIDC
+adoption 中创建历史 Terraform 用户或角色。
