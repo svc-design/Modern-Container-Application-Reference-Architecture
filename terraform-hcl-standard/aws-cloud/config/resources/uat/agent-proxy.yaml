@@ -23,7 +23,10 @@ hosts:
     deletion_protection: false
     backups: false
     enable_ipv6: true
-    ansible_user: root
+    # The Debian 12 ARM64 AMI accepts the EC2 deployment key as `admin`.
+    # Keep this aligned with the production T4g node so the generated CMDB
+    # never makes the deployment runner retry a prohibited root login.
+    ansible_user: admin
     groups: [agent_proxy, debian]
     tags: [debian]
     host_vars:
