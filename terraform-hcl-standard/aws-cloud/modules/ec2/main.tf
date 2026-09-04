@@ -33,15 +33,12 @@ resource "aws_instance" "this" {
 
   key_name = var.keypair_name
 
-  # The instance may be stopped, but termination must be explicitly unblocked.
+  # Production resources set this from GitOps. AWS then rejects any terminate
+  # request until the protection is explicitly removed in a reviewed change.
+  # UAT Spot nodes intentionally leave it false so their one-hour lifecycle
+  # and immutable daily replacements can complete.
   disable_api_termination = var.deletion_protection
   disable_api_stop        = false
-
-  lifecycle {
-    # Terraform requires prevent_destroy to be a literal, not a variable.
-    # All instances created by this shared module are therefore protected.
-    prevent_destroy = true
-  }
 
   tags = merge(var.tags, {
     Name = "${var.name_prefix}-instance"
