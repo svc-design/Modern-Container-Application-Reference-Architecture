@@ -1,7 +1,10 @@
 resource "aws_instance" "this" {
-  ami                                  = var.instance.ami
-  instance_type                        = var.instance.type
-  instance_initiated_shutdown_behavior = var.max_runtime_minutes > 0 ? "terminate" : "stop"
+  ami           = var.instance.ami
+  instance_type = var.instance.type
+  # EC2 rejects ModifyInstanceAttribute for Spot requests. The Spot request
+  # itself already declares terminate-on-interruption, while on-demand hosts
+  # retain the explicit shutdown policy used by production.
+  instance_initiated_shutdown_behavior = var.spot_instance ? null : (var.max_runtime_minutes > 0 ? "terminate" : "stop")
 
   dynamic "instance_market_options" {
     for_each = var.spot_instance ? [true] : []
