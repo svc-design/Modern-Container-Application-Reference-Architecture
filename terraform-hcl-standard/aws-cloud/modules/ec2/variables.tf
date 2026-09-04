@@ -39,7 +39,7 @@ variable "elastic_ip" {
 
 variable "deletion_protection" {
   type        = bool
-  description = "Prevent Terraform and EC2 API termination"
+  description = "Enable AWS EC2 API termination protection; production changes must explicitly disable it through GitOps before termination"
   default     = false
 }
 
