@@ -16,8 +16,8 @@ hosts:
     # production node when AWS publishes a newer AMI.
     os_name: "Debian 12 ARM64 (bookworm)"
     ami_id: "ami-023861868341f6ac7"
-    # 2 vCPU / 2 GiB, AWS Graviton (T4g), on-demand.
-    plan: {{ env.get('AGENT_PROXY_PLAN_API', 't4g.small') }}
+    # 2 vCPU / 1 GiB, AWS Graviton (T4g), on-demand.
+    plan: {{ env.get('AGENT_PROXY_PLAN_API', 't4g.micro') }}
     billing_mode: on_demand
     elastic_ip: true
     # Reserved Instances are an account-level billing discount; when enabled
