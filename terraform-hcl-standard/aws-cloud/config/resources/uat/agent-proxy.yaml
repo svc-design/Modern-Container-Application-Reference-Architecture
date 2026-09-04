@@ -9,10 +9,14 @@ ssh_keys:
 
 hosts:
   - name: agent-proxy-node-uat
-    os_name: "Debian 13 x64 (trixie)"
-    # Keep the lightweight Agent Proxy default at 1C1G (t4g.micro). Callers
-    # may override it with AGENT_PROXY_PLAN_API when a larger node is needed.
-    plan: {{ env.get('AGENT_PROXY_PLAN_API', 't4g.micro') }}
+    os_name: "Debian 12 ARM64 (bookworm)"
+    # AWS T4g.small is 2 vCPU / 2 GiB. UAT is an ephemeral one-hour Spot
+    # validation node, never a long-lived Vultr default.
+    plan: {{ env.get('AGENT_PROXY_PLAN_API', 't4g.small') }}
+    spot_instance: true
+    max_runtime_minutes: 60
+    elastic_ip: false
+    deletion_protection: false
     backups: false
     enable_ipv6: true
     ansible_user: root
