@@ -107,6 +107,8 @@ module "compute_{{ hid }}" {
   keypair_name = aws_key_pair.{{ ssh_keys[0].name | tf_id }}.key_name
   elastic_ip = {{ host.get('elastic_ip', false) | tojson }}
   deletion_protection = {{ host.get('deletion_protection', false) | tojson }}
+  spot_instance = {{ host.get('spot_instance', false) | tojson }}
+  max_runtime_minutes = {{ host.get('max_runtime_minutes', 0) }}
   
   tags = merge(
     { for t in concat([var.name_prefix], {{ host.get('tags', []) | tojson }}) : "Tag_${t}" => "true" if t != "" },

@@ -1,6 +1,27 @@
 resource "aws_instance" "this" {
-  ami           = var.instance.ami
-  instance_type = var.instance.type
+  ami                                  = var.instance.ami
+  instance_type                        = var.instance.type
+  instance_initiated_shutdown_behavior = var.max_runtime_minutes > 0 ? "terminate" : "stop"
+
+  dynamic "instance_market_options" {
+    for_each = var.spot_instance ? [true] : []
+    content {
+      market_type = "spot"
+
+      spot_options {
+        spot_instance_type             = "one-time"
+        instance_interruption_behavior = "terminate"
+      }
+    }
+  }
+
+  # UAT Spot nodes are intentionally ephemeral. The shutdown is initiated on
+  # the instance so AWS applies the terminate behavior above without requiring
+  # a long-running CI job or separately privileged scheduler.
+  user_data = var.max_runtime_minutes > 0 ? format(
+    "#!/bin/sh\nset -eu\n(\n  sleep %d\n  /sbin/shutdown -h now\n) >/var/log/instance-runtime-limit.log 2>&1 &\n",
+    var.max_runtime_minutes * 60,
+  ) : null
 
   # 明确由 env 层传入，无任何自动推断
   subnet_id = var.subnet_id
