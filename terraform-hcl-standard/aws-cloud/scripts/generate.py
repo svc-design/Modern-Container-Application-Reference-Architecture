@@ -47,6 +47,7 @@ COPY_INTO_WORKDIR = ["provider.tf", "variables.tf", "cloud-init.yaml"]
 # 逐主机可选字段的缺省值（集中定义，避免散落的硬编码字面量）。
 DEFAULT_PLAN = "vc2-4c-8gb"
 DEFAULT_ANSIBLE_USER = "root"
+VALID_AWS_PROVIDER_ALIASES = {"default", "us"}
 
 
 def _tf_id(value):
@@ -109,10 +110,30 @@ def cmd_render(args):
     ssh_keys = data.get("ssh_keys", []) or []
     hosts = data.get("hosts", []) or []
 
+    invalid_aliases = sorted(
+        {
+            str(host.get("aws_provider", "default"))
+            for host in hosts
+            if str(host.get("aws_provider", "default")) not in VALID_AWS_PROVIDER_ALIASES
+        }
+    )
+    if invalid_aliases:
+        raise SystemExit(
+            "Unsupported aws_provider alias(es): "
+            + ", ".join(invalid_aliases)
+            + ". Supported aliases: default, us."
+        )
+
     rendered = (
         _jinja()
         .get_template("hosts.tf.j2")
-        .render(ssh_keys=ssh_keys, hosts=hosts, true=True, false=False)
+        .render(
+            ssh_keys=ssh_keys,
+            hosts=hosts,
+            max_host_name_len=max((len(str(host["name"])) for host in hosts), default=0),
+            true=True,
+            false=False,
+        )
     )
     with open(os.path.join(workdir, "generated_hosts.tf"), "w", encoding="utf-8") as fh:
         fh.write(rendered)
@@ -132,6 +153,8 @@ def cmd_render(args):
 
     tfvars = {
         "region": glob.get("region", "nrt"),
+        "aws_region": glob.get("aws_region", "ap-northeast-1"),
+        "aws_us_region": glob.get("aws_us_region", "us-east-1"),
         "name_prefix": glob.get("name_prefix", "ai-workspace"),
         "user_data_file": glob.get("user_data_file", "cloud-init.yaml"),
     }
@@ -156,6 +179,7 @@ def cmd_inventory(args):
     glob = data.get("global", {}) or {}
     hosts = data.get("hosts", []) or []
     default_region = glob.get("region", "nrt")
+    default_aws_region = glob.get("aws_region", "ap-northeast-1")
 
     try:
         runtime = _terraform_output(workdir, "cmdb_runtime")
@@ -174,7 +198,9 @@ def cmd_inventory(args):
         host_vars = dict(host.get("host_vars", {}) or {})
         host_vars.setdefault("os_name", host.get("os_name", ""))
         host_vars.setdefault("plan", host.get("plan", DEFAULT_PLAN))
-        host_vars.setdefault("region", host.get("region") or default_region)
+        host_vars.setdefault(
+            "region", host.get("aws_region") or host.get("region") or default_aws_region
+        )
 
         # inventory_hostname = service_domains 的首个 FQDN（动态取自资源声明 yaml）；
         # 无 service_domains 时回退到 name。CMDB / inventory / 分组均以此为键。
@@ -190,7 +216,7 @@ def cmd_inventory(args):
             "os_id": rt.get("os_id"),
             "os_name": host.get("os_name", ""),
             "plan": host.get("plan", DEFAULT_PLAN),
-            "region": host.get("region") or default_region,
+            "region": host.get("aws_region") or host.get("region") or default_aws_region,
             "ansible_user": host.get("ansible_user", DEFAULT_ANSIBLE_USER),
             "groups": host.get("groups", []) or [],
             "tags": host.get("tags", []) or [],

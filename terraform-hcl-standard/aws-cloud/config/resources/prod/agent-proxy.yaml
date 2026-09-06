@@ -1,5 +1,7 @@
 global:
   region: nrt
+  aws_region: ap-northeast-1
+  aws_us_region: us-east-1
   name_prefix: agent-proxy-prod
   user_data_file: cloud-init.yaml
 
@@ -42,3 +44,30 @@ hosts:
       role: primary
       service_domains:
         - agent-proxy-selfhost-prod.{{ env['TARGET_DOMAIN_BASE'] }}
+
+  - name: agent-proxy-node-prod-us
+    # US production edge is intentionally ephemeral: ARM64 T4g Spot, two
+    # vCPU/two GiB, and a local one-hour shutdown timer. It does not receive an
+    # EIP; its regional hostname is the stable service identity.
+    aws_provider: us
+    aws_region: us-east-1
+    os_name: "Debian 12 ARM64 (bookworm)"
+    plan: {{ env.get('AGENT_PROXY_US_PLAN_API', 't4g.small') }}
+    billing_mode: spot
+    spot_instance: true
+    max_runtime_minutes: 60
+    elastic_ip: false
+    deletion_protection: false
+    backups: false
+    enable_ipv6: true
+    ansible_user: admin
+    groups: [agent_proxy, debian]
+    tags: [debian, prod, us, spot]
+    security_group_ingress:
+      - port: 1443
+        protocol: tcp
+        cidr: 0.0.0.0/0
+    host_vars:
+      role: regional
+      service_domains:
+        - agent-proxy-us.{{ env['TARGET_DOMAIN_BASE'] }}
