@@ -22,6 +22,7 @@ resource "aws_key_pair" "{{ key.name | tf_id }}" {
 {% set provider_ref = 'aws.' ~ provider_alias if provider_alias != 'default' else 'aws' %}
 {% set base_key_id = ssh_keys[0].name | tf_id %}
 {% set host_key_id = 'key_' ~ hid ~ '_' ~ base_key_id %}
+{% set short_name = host.get('short_hostname', host.name) %}
 {% set ami_id = host.get('ami_id') %}
 {% set ami_expression = '"' ~ ami_id ~ '"' if ami_id else 'data.aws_ami.debian_' ~ hid ~ '.id' %}
 {% if provider_alias != 'default' %}
@@ -116,7 +117,9 @@ module "compute_{{ hid }}" {
     aws = {{ provider_ref }}
   }
 
-  name_prefix = var.name_prefix != "" ? "${var.name_prefix}-{{ host.name }}" : "{{ host.name }}"
+  # Keep the AWS console Name tag concise; the Terraform module/resource
+  # address still uses `hid` and therefore remains state-compatible.
+  name_prefix = var.name_prefix != "" ? "${var.name_prefix}-{{ short_name }}" : "{{ short_name }}"
 
   instance = {
     type = "{{ host.plan | default('t4g.small') }}"

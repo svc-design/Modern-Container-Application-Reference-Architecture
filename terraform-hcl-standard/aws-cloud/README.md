@@ -154,6 +154,21 @@ publishes both hosts to the CMDB. The deployment workflow uses each CMDB host
 key as `AGENT_PROXY_DOMAIN`, so Caddy and Xray do not share a hard-coded
 hostname across regional nodes.
 
+### Short node identity
+
+Each Agent Proxy declaration also carries a compact operator-facing identity:
+
+| Node | `node_id` / `short_hostname` | `node_label` | Region | Billing |
+| --- | --- | --- | --- | --- |
+| Tokyo primary | `ap-prod-tky` | `tky-on-demand` | `ap-northeast-1` | on-demand |
+| US edge | `ap-prod-us` | `us-spot` | `us-east-1` | Spot, 60 min |
+
+`display_name` is emitted to CMDB as the concise form (for example,
+`ap-prod-us (us-spot)`). These fields are also exposed through Ansible
+hostvars. The public service FQDNs remain unchanged so existing subscriptions
+and DNS records are not invalidated; the compact names are for AWS console,
+CMDB, dashboards, and operator lists.
+
 ## Security Notes
 
 Never store AWS credentials in Terraform variables

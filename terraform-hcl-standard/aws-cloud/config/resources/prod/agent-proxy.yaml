@@ -13,6 +13,16 @@ ssh_keys:
 
 hosts:
   - name: agent-proxy-node-prod
+    # Stable short identity for CMDB, dashboards, and operator-facing lists.
+    # Keep the Terraform resource name above unchanged so state addresses do
+    # not move just because the display identity is improved.
+    node_id: ap-prod-tky
+    short_hostname: ap-prod-tky
+    display_name: "ap-prod-tky (tky-on-demand)"
+    cloud_provider: aws
+    cloud_region: ap-northeast-1
+    location: tky
+    node_label: tky-on-demand
     # This is the active Graviton image, not a generic x64 image.  Keep it
     # pinned so a routine application rollout cannot replace the protected
     # production node when AWS publishes a newer AMI.
@@ -46,6 +56,15 @@ hosts:
         - agent-proxy-selfhost-prod.{{ env['TARGET_DOMAIN_BASE'] }}
 
   - name: agent-proxy-node-prod-us
+    # Short identity separates the regional Spot node from the Tokyo primary
+    # without changing its stable public service domain.
+    node_id: ap-prod-us
+    short_hostname: ap-prod-us
+    display_name: "ap-prod-us (us-spot)"
+    cloud_provider: aws
+    cloud_region: us-east-1
+    location: us
+    node_label: us-spot
     # US production edge is intentionally ephemeral: ARM64 T4g Spot, two
     # vCPU/two GiB, and a local one-hour shutdown timer. It does not receive an
     # EIP; its regional hostname is the stable service identity.
