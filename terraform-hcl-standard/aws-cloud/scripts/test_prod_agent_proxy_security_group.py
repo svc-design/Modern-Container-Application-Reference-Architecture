@@ -41,6 +41,8 @@ assert us_host["spot_instance"] is True
 assert us_host["max_runtime_minutes"] == 60
 assert us_host["elastic_ip"] is False
 assert "agent-proxy-us.svc.plus" in us_host["host_vars"]["service_domains"]
+assert 'resource "aws_key_pair" "ai_workspace_admin"' in rendered
+assert 'resource "aws_key_pair" "key_agent_proxy_node_prod_us_ai_workspace_admin"' in rendered
 assert "provider = aws.us" in rendered
 assert "spot_instance       = true" in rendered
 assert "max_runtime_minutes = 60" in rendered
