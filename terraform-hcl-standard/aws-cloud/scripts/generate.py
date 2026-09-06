@@ -47,6 +47,19 @@ COPY_INTO_WORKDIR = ["provider.tf", "variables.tf", "cloud-init.yaml"]
 # 逐主机可选字段的缺省值（集中定义，避免散落的硬编码字面量）。
 DEFAULT_PLAN = "vc2-4c-8gb"
 DEFAULT_ANSIBLE_USER = "root"
+
+# Operator-facing identity is deliberately separate from the Terraform
+# resource name and public FQDN.  Resource names remain state-compatible while
+# CMDB/inventory consumers get short, unambiguous node labels.
+NODE_METADATA_DEFAULTS = {
+    "node_id": "",
+    "short_hostname": "",
+    "display_name": "",
+    "cloud_provider": "aws",
+    "cloud_region": "",
+    "location": "",
+    "node_label": "",
+}
 VALID_AWS_PROVIDER_ALIASES = {"default", "us"}
 
 
@@ -201,6 +214,23 @@ def cmd_inventory(args):
         host_vars.setdefault(
             "region", host.get("aws_region") or host.get("region") or default_aws_region
         )
+        for key, default in NODE_METADATA_DEFAULTS.items():
+            value = host.get(key, default)
+            if key == "node_id" and not value:
+                value = name
+            if key == "short_hostname" and not value:
+                value = host_vars["node_id"]
+            if key == "display_name" and not value:
+                value = host_vars["short_hostname"]
+            if key == "cloud_region" and not value:
+                value = host.get("aws_region") or default_aws_region
+            # These fields are canonical resource metadata.  Assign rather
+            # than setdefault so an old host_vars entry cannot shadow the
+            # current node declaration.
+            host_vars[key] = value
+        host_vars["billing_mode"] = host.get("billing_mode", "on_demand")
+        host_vars["spot_instance"] = host.get("spot_instance", False)
+        host_vars["max_runtime_minutes"] = host.get("max_runtime_minutes", 0)
 
         # inventory_hostname = service_domains 的首个 FQDN（动态取自资源声明 yaml）；
         # 无 service_domains 时回退到 name。CMDB / inventory / 分组均以此为键。
@@ -217,6 +247,16 @@ def cmd_inventory(args):
             "os_name": host.get("os_name", ""),
             "plan": host.get("plan", DEFAULT_PLAN),
             "region": host.get("aws_region") or host.get("region") or default_aws_region,
+            "node_id": host_vars["node_id"],
+            "short_hostname": host_vars["short_hostname"],
+            "display_name": host_vars["display_name"],
+            "cloud_provider": host_vars["cloud_provider"],
+            "cloud_region": host_vars["cloud_region"],
+            "location": host_vars["location"],
+            "node_label": host_vars["node_label"],
+            "billing_mode": host_vars["billing_mode"],
+            "spot_instance": host_vars["spot_instance"],
+            "max_runtime_minutes": host_vars["max_runtime_minutes"],
             "ansible_user": host.get("ansible_user", DEFAULT_ANSIBLE_USER),
             "groups": host.get("groups", []) or [],
             "tags": host.get("tags", []) or [],

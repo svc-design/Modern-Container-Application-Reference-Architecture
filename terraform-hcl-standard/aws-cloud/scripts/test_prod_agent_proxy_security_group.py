@@ -20,6 +20,13 @@ from jinja2 import Template
 
 data = yaml.safe_load(Template(config.read_text()).render(env=os.environ))
 host = next(item for item in data["hosts"] if item["name"] == "agent-proxy-node-prod")
+assert host["node_id"] == "ap-prod-tky"
+assert host["short_hostname"] == "ap-prod-tky"
+assert host["display_name"] == "ap-prod-tky (tky-on-demand)"
+assert host["cloud_provider"] == "aws"
+assert host["cloud_region"] == "ap-northeast-1"
+assert host["location"] == "tky"
+assert host["node_label"] == "tky-on-demand"
 rules = host.get("security_group_ingress", [])
 assert {(
     rule["port"], rule["protocol"], rule["cidr"]
@@ -33,8 +40,16 @@ assert 'from_port   = 1443' in rendered
 assert 'to_port     = 1443' in rendered
 assert 'protocol    = "tcp"' in rendered
 assert 'cidr_blocks = ["0.0.0.0/0"]' in rendered
+assert 'name_prefix = var.name_prefix != "" ? "${var.name_prefix}-ap-prod-tky"' in rendered
 
 us_host = next(item for item in data["hosts"] if item["name"] == "agent-proxy-node-prod-us")
+assert us_host["node_id"] == "ap-prod-us"
+assert us_host["short_hostname"] == "ap-prod-us"
+assert us_host["display_name"] == "ap-prod-us (us-spot)"
+assert us_host["cloud_provider"] == "aws"
+assert us_host["cloud_region"] == "us-east-1"
+assert us_host["location"] == "us"
+assert us_host["node_label"] == "us-spot"
 assert us_host["aws_provider"] == "us"
 assert us_host["aws_region"] == "us-east-1"
 assert us_host["spot_instance"] is True
@@ -46,5 +61,6 @@ assert 'resource "aws_key_pair" "key_agent_proxy_node_prod_us_ai_workspace_admin
 assert "provider = aws.us" in rendered
 assert "spot_instance       = true" in rendered
 assert "max_runtime_minutes = 60" in rendered
+assert 'name_prefix = var.name_prefix != "" ? "${var.name_prefix}-ap-prod-us"' in rendered
 
 print("test_prod_agent_proxy_security_group: PASS")

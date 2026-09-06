@@ -13,10 +13,18 @@ ssh_keys:
 
 hosts:
   - name: agent-proxy-node-uat
+    node_id: ap-uat-tky
+    short_hostname: ap-uat-tky
+    display_name: "ap-uat-tky (tky-spot)"
+    cloud_provider: aws
+    cloud_region: ap-northeast-1
+    location: tky
+    node_label: tky-spot
     os_name: "Debian 12 ARM64 (bookworm)"
     # AWS T4g.small is 2 vCPU / 2 GiB. UAT is an ephemeral one-hour Spot
     # validation node, never a long-lived Vultr default.
     plan: {{ env.get('AGENT_PROXY_PLAN_API', 't4g.small') }}
+    billing_mode: spot
     spot_instance: true
     max_runtime_minutes: 60
     elastic_ip: false
