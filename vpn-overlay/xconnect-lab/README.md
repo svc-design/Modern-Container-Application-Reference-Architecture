@@ -1,5 +1,11 @@
 # XConnect disposable cross-cloud lab
 
+The Vultr instance is a self-hosted XConnect Zero/Gateway host. It runs the
+Gateway Agent, WireGuard, Xray, packet forwarding and ACL backend. Do not
+migrate these workloads to Cloud Run, Cloudflare Workers, or another
+serverless/edge-function runtime: they do not provide the required durable
+network namespace, UDP/TUN capability, or policy-enforcement boundary.
+
 This dedicated Terraform root extends `vpn-overlay` with one AWS x86_64 Spot client
 and one Vultr Ubuntu gateway. The existing WireGuard/VLESS overlay architecture is
 reused; the sample site keys and configs elsewhere in this tree are not deployed.
