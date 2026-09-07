@@ -143,16 +143,18 @@ terraform init -migrate-state
 
 The production Agent Proxy declaration keeps the stable Tokyo node on the
 default `aws` provider and declares the ephemeral US node with the explicit
-`aws.us` provider alias. The US host is `t4g.small` (2 vCPU / 2 GiB), a
-one-time Spot request, and has a 60-minute self-termination timer. It has no
-EIP; its stable service identity is `agent-proxy-us.<zone>`.
+`aws.us` provider alias. Both hosts use `t4g.micro` (2 vCPU / 1 GiB); Tokyo is
+on-demand and continuously running with its existing EIP, while US is a
+one-time Spot request with a 60-minute self-termination timer and no EIP.
 
 The regional topology is declared in
 `config/resources/prod/agent-proxy.yaml`. `generate.py` renders one explicit
 provider-scoped data/resource/module set per host, then `generate.py inventory`
 publishes both hosts to the CMDB. The deployment workflow uses each CMDB host
 key as `AGENT_PROXY_DOMAIN`, so Caddy and Xray do not share a hard-coded
-hostname across regional nodes.
+hostname across regional nodes. The public names are
+`agent-proxy-selfhost-prod-jp.<zone>` and `agent-proxy-selfhost-prod-us.<zone>`;
+the Tokyo resource and its existing EIP remain unchanged.
 
 ### Short node identity
 
