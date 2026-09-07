@@ -1,45 +1,44 @@
 # XConnect disposable cross-cloud lab
 
-The Vultr instance is a self-hosted XConnect Zero/Gateway host. It runs the
-Gateway Agent, WireGuard, Xray, packet forwarding and ACL backend. Do not
-migrate these workloads to Cloud Run, Cloudflare Workers, or another
-serverless/edge-function runtime: they do not provide the required durable
-network namespace, UDP/TUN capability, or policy-enforcement boundary.
+This root creates a disposable, self-hosted Linux data-plane lab with two
+symmetrical nodes:
 
-This dedicated Terraform root extends `vpn-overlay` with one AWS x86_64 Spot client
-and one Vultr Ubuntu gateway. The existing WireGuard/VLESS overlay architecture is
-reused; the sample site keys and configs elsewhere in this tree are not deployed.
-There are no containers and no dependency on existing Accounts overlay APIs.
+| Node | Role | Runtime baseline |
+|---|---|---|
+| XConnect-Gateway | `relay/service` (`role=relay`) | Independent Linux node, external WireGuard + external Xray, forwarding and relay health |
+| XConnect-One | `controlled-client` | Independent Linux node, external WireGuard + external Xray, CLI-driven sync/config/start/join |
 
-The reviewed GitOps `topology/sit/xconnect-lab.json` is the nonsecret declaration.
-The consuming `platform-ops-toolkit/.github/workflows/xconnect-cloud-lab.yml`
-resolves the declared Ubuntu image from provider catalogs, supplies variables,
-configures software, tests the data plane, and destroys the run's resources.
-Software scripts intentionally live in the pipeline repository, not Terraform.
+The default `gateway_provider` is `aws-spot`. Both Gateway and One are AWS
+EC2 one-time Spot instances in the same disposable VPC, with private-path
+access between them and SSH limited to the runner /32. The Gateway has TLS
+443 for the Xray transport and TCP 8443 for the temporary lab API harness;
+public WireGuard UDP 51820 is not opened. Terraform outputs both public SSH
+addresses and the Gateway private transport address, plus the TLS/Zero URLs
+and node roles.
 
-All resources are new: VPC/subnet/internet gateway/routes/security group/keypair,
-one one-time Spot instance, Vultr SSH key/firewall/rules, and one Vultr instance.
-No existing VPC, instance, SSH key, or state is imported or modified. There are no
-HCL loops or provisioners. Runtime public addresses and IDs are the only outputs.
-Private provider state (including Vultr's initial password) stays in the Vault
-configured remote backend and is never uploaded as an Actions artifact.
+Vultr remains an explicit `gateway_provider = "vultr"` opt-in only. That path
+uses a Vultr Gateway and still uses an AWS Spot One client; it is not the
+default and requires `VULTR_API_KEY`. The default AWS path does not read or
+require that variable.
 
-Backend key: `sit/xconnect-lab/xcl-RUN_ID-ATTEMPT/terraform.tfstate`. The workflow
-serializes lab runs and cleanup; no shared SIT environment state is consumed.
-AWS resources carry `ManagedBy`, `LabRun`, `ExpiresAt`, and `Environment` tags.
-Vultr instances carry the run identity and expiry tags. Expiry tags express a
-90-minute TTL. Before apply, the pipeline stores a durable nonsecret expiry lease
-beside the state. A 15-minute scheduled reaper dispatches scoped cleanup for expired
-leases, including after runner loss. Normal failure/success cleanup uses `always()`.
-Schedules can be delayed or disabled by GitHub; the explicit `cleanup` mode remains
-available with the original identity and pinned refs. Keep remote state available
-until cleanup has been verified. Tags alone are not a provider-side billing cutoff.
+XConnect Zero is the product control plane: formal Accounts APIs (devices,
+networks, policy and signed config) plus the Portal admin UI. Both roles
+consume their configuration from that Zero source; the Gateway consumes the
+relay/service projection and One consumes the controlled-client projection.
+The co-located `xconnect-zero-lab` process is an experimental API-compatible
+lab controller used only for cloud joint debugging and disposable enrollment.
+It is not the formal Accounts API, Portal, or a production configuration
+source.
 
-Ingress: AWS SSH from the current runner /32 only; Vultr SSH from that runner,
-TLS 443 and Zero 8443 from the fresh AWS client /32 only. Public UDP 51820 and
-HTTP 8080 are closed. The test verifies WG carried over VLESS TLS/XUDP, with HTTP
-bound only to the private WG address. No L2 VXLAN/gretap test is claimed.
+The consuming workflow in
+`platform-ops-toolkit/.github/workflows/xconnect-cloud-lab.yml` builds the
+real CLI, external Xray, and lab controller, then bootstraps both nodes over
+SSH. Verification checks Gateway role/bootstrap, WireGuard and Xray service
+health, TLS/API health, a recent handshake on both nodes, private ping and
+HTTP through the relay, CLI sync, and negative reachability after tunnel down.
+No Cloud Run or Cloudflare Worker is a Gateway deployment target.
 
-Required Terraform variables are listed in `main.tf`. Provider credentials arrive
-through OIDC/environment, never GitOps or tfvars. All input values are supplied by
-the consumer; this root carries no environment-specific cloud sizing defaults.
+There are no containers or Terraform provisioners. Runtime addresses and
+resource IDs are outputs; provider state remains in the configured remote
+backend. The dedicated backend key is
+`sit/xconnect-lab/xcl-RUN_ID-ATTEMPT/terraform.tfstate`.
