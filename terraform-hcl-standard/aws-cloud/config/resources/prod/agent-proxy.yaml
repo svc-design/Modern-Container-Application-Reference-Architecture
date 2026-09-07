@@ -28,7 +28,7 @@ hosts:
     # production node when AWS publishes a newer AMI.
     os_name: "Debian 12 ARM64 (bookworm)"
     ami_id: "ami-023861868341f6ac7"
-    # 2 vCPU / 1 GiB, AWS Graviton (T4g), on-demand.
+    # 2 vCPU / 1 GiB, AWS Graviton (T4g), on-demand and continuously running.
     plan: {{ env.get('AGENT_PROXY_PLAN_API', 't4g.micro') }}
     billing_mode: on_demand
     elastic_ip: true
@@ -53,7 +53,7 @@ hosts:
     host_vars:
       role: primary
       service_domains:
-        - agent-proxy-selfhost-prod.{{ env['TARGET_DOMAIN_BASE'] }}
+        - agent-proxy-selfhost-prod-jp.{{ env['TARGET_DOMAIN_BASE'] }}
 
   - name: agent-proxy-node-prod-us
     # Short identity separates the regional Spot node from the Tokyo primary
@@ -66,12 +66,12 @@ hosts:
     location: us
     node_label: us-spot
     # US production edge is intentionally ephemeral: ARM64 T4g Spot, two
-    # vCPU/two GiB, and a local one-hour shutdown timer. It does not receive an
+    # vCPU/one GiB, and a local one-hour shutdown timer. It does not receive an
     # EIP; its regional hostname is the stable service identity.
     aws_provider: us
     aws_region: us-east-1
     os_name: "Debian 12 ARM64 (bookworm)"
-    plan: {{ env.get('AGENT_PROXY_US_PLAN_API', 't4g.small') }}
+    plan: {{ env.get('AGENT_PROXY_US_PLAN_API', 't4g.micro') }}
     billing_mode: spot
     spot_instance: true
     max_runtime_minutes: 60
@@ -89,4 +89,4 @@ hosts:
     host_vars:
       role: regional
       service_domains:
-        - agent-proxy-us.{{ env['TARGET_DOMAIN_BASE'] }}
+        - agent-proxy-selfhost-prod-us.{{ env['TARGET_DOMAIN_BASE'] }}

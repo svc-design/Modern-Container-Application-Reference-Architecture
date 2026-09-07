@@ -27,6 +27,7 @@ assert host["cloud_provider"] == "aws"
 assert host["cloud_region"] == "ap-northeast-1"
 assert host["location"] == "tky"
 assert host["node_label"] == "tky-on-demand"
+assert host["plan"] == "t4g.micro"
 rules = host.get("security_group_ingress", [])
 assert {(
     rule["port"], rule["protocol"], rule["cidr"]
@@ -50,12 +51,13 @@ assert us_host["cloud_provider"] == "aws"
 assert us_host["cloud_region"] == "us-east-1"
 assert us_host["location"] == "us"
 assert us_host["node_label"] == "us-spot"
+assert us_host["plan"] == "t4g.micro"
 assert us_host["aws_provider"] == "us"
 assert us_host["aws_region"] == "us-east-1"
 assert us_host["spot_instance"] is True
 assert us_host["max_runtime_minutes"] == 60
 assert us_host["elastic_ip"] is False
-assert "agent-proxy-us.svc.plus" in us_host["host_vars"]["service_domains"]
+assert "agent-proxy-selfhost-prod-us.svc.plus" in us_host["host_vars"]["service_domains"]
 assert 'resource "aws_key_pair" "ai_workspace_admin"' in rendered
 assert 'resource "aws_key_pair" "key_agent_proxy_node_prod_us_ai_workspace_admin"' in rendered
 assert "provider = aws.us" in rendered
