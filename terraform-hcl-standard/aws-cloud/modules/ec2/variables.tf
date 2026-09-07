@@ -13,7 +13,8 @@ variable "instance" {
 
 variable "subnet_id" {
   type        = string
-  description = "Subnet ID where EC2 instance will be launched"
+  default     = null
+  description = "Optional subnet ID; null lets AWS select an AZ in the default VPC"
 }
 
 variable "sg_id" {

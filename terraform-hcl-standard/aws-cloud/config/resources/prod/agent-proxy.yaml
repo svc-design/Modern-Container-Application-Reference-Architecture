@@ -1,7 +1,9 @@
 global:
   region: nrt
   aws_region: ap-northeast-1
-  aws_us_region: us-east-1
+  # US Spot edge: Oregon is preferred for Asia-facing traffic. Keep this
+  # configurable so capacity policy can move without changing node identity.
+  aws_us_region: us-west-2
   name_prefix: agent-proxy-prod
   user_data_file: cloud-init.yaml
 
@@ -26,7 +28,7 @@ hosts:
     # This is the active Graviton image, not a generic x64 image.  Keep it
     # pinned so a routine application rollout cannot replace the protected
     # production node when AWS publishes a newer AMI.
-    os_name: "Debian 12 ARM64 (bookworm)"
+    os_name: "Debian 12 ARM64 (bookworm, pinned production image)"
     ami_id: "ami-023861868341f6ac7"
     # 2 vCPU / 1 GiB, AWS Graviton (T4g), on-demand and continuously running.
     plan: {{ env.get('AGENT_PROXY_PLAN_API', 't4g.micro') }}
@@ -62,15 +64,17 @@ hosts:
     short_hostname: ap-prod-us
     display_name: "ap-prod-us (us-spot)"
     cloud_provider: aws
-    cloud_region: us-east-1
+    cloud_region: us-west-2
     location: us
     node_label: us-spot
     # US production edge is intentionally ephemeral: ARM64 T4g Spot, two
     # vCPU/one GiB, and a local one-hour shutdown timer. It does not receive an
     # EIP; its regional hostname is the stable service identity.
     aws_provider: us
-    aws_region: us-east-1
-    os_name: "Debian 12 ARM64 (bookworm)"
+    aws_region: us-west-2
+    # New regional instances prefer Debian 13 ARM64 and fall back to Debian 12
+    # through the generated AMI filter when Debian 13 is unavailable.
+    os_name: "Debian 13 ARM64 (preferred; Debian 12 fallback)"
     plan: {{ env.get('AGENT_PROXY_US_PLAN_API', 't4g.micro') }}
     billing_mode: spot
     spot_instance: true

@@ -45,12 +45,27 @@ data "aws_subnets" "default_{{ hid }}" {
   }
 }
 
+{% if host.get('availability_zone') %}
+data "aws_subnet" "selected_{{ hid }}" {
+  provider = {{ provider_ref }}
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default_{{ hid }}.id]
+  }
+  filter {
+    name   = "availability-zone"
+    values = ["{{ host.get('availability_zone') }}"]
+  }
+}
+{% endif %}
+
 {% if ami_id -%}
 # This host is intentionally pinned to an immutable AMI.  Production hosts
 # with deletion protection must not be replaced merely because an upstream
 # "most recent" image query starts returning a newer image.
 {% else -%}
-# ami filter for Debian 12 ARM64
+# Prefer the newest Debian 13 ARM64 image; retain Debian 12 ARM64 as a
+# compatibility candidate while regions finish publishing Debian 13 images.
 data "aws_ami" "debian_{{ hid }}" {
   provider    = {{ provider_ref }}
   most_recent = true
@@ -58,7 +73,7 @@ data "aws_ami" "debian_{{ hid }}" {
 
   filter {
     name   = "name"
-    values = ["debian-12-arm64-*"]
+    values = ["debian-13-arm64-*", "debian-12-arm64-*"]
   }
 
   filter {
@@ -126,7 +141,14 @@ module "compute_{{ hid }}" {
     ami  = {{ ami_expression }}
   }
 
-  subnet_id           = data.aws_subnets.default_{{ hid }}.ids[0]
+{% if host.get('availability_zone') %}
+  subnet_id           = data.aws_subnet.selected_{{ hid }}.id
+{% else %}
+  # No subnet/AZ is forced by default. AWS chooses an available AZ in the
+  # default VPC, avoiding capacity failure caused by pinning to the first
+  # subnet returned by the API.
+  subnet_id           = null
+{% endif %}
   sg_id               = aws_security_group.sg_{{ hid }}.id
   keypair_name        = aws_key_pair.{{ host_key_id if provider_alias != 'default' else base_key_id }}.key_name
   elastic_ip          = {{ host.get('elastic_ip', false) | tojson }}
