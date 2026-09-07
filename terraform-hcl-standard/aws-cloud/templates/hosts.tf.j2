@@ -64,7 +64,8 @@ data "aws_subnet" "selected_{{ hid }}" {
 # with deletion protection must not be replaced merely because an upstream
 # "most recent" image query starts returning a newer image.
 {% else -%}
-# ami filter for Debian 12 ARM64
+# Prefer the newest Debian 13 ARM64 image; retain Debian 12 ARM64 as a
+# compatibility candidate while regions finish publishing Debian 13 images.
 data "aws_ami" "debian_{{ hid }}" {
   provider    = {{ provider_ref }}
   most_recent = true
@@ -72,7 +73,7 @@ data "aws_ami" "debian_{{ hid }}" {
 
   filter {
     name   = "name"
-    values = ["debian-12-arm64-*"]
+    values = ["debian-13-arm64-*", "debian-12-arm64-*"]
   }
 
   filter {

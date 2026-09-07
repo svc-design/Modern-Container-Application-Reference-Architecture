@@ -66,6 +66,7 @@ assert "provider = aws.us" in rendered
 assert "spot_instance       = true" in rendered
 assert "max_runtime_minutes = 60" in rendered
 assert "subnet_id           = null" in rendered
+assert 'values = ["debian-13-arm64-*", "debian-12-arm64-*"]' in rendered
 assert 'name_prefix = var.name_prefix != "" ? "${var.name_prefix}-ap-prod-us"' in rendered
 
 print("test_prod_agent_proxy_security_group: PASS")
