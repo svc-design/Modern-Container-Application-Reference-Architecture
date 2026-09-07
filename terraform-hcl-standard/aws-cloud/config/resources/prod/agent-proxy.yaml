@@ -1,7 +1,9 @@
 global:
   region: nrt
   aws_region: ap-northeast-1
-  aws_us_region: us-east-1
+  # US Spot edge: Oregon is preferred for Asia-facing traffic. Keep this
+  # configurable so capacity policy can move without changing node identity.
+  aws_us_region: us-west-2
   name_prefix: agent-proxy-prod
   user_data_file: cloud-init.yaml
 
@@ -62,14 +64,14 @@ hosts:
     short_hostname: ap-prod-us
     display_name: "ap-prod-us (us-spot)"
     cloud_provider: aws
-    cloud_region: us-east-1
+    cloud_region: us-west-2
     location: us
     node_label: us-spot
     # US production edge is intentionally ephemeral: ARM64 T4g Spot, two
     # vCPU/one GiB, and a local one-hour shutdown timer. It does not receive an
     # EIP; its regional hostname is the stable service identity.
     aws_provider: us
-    aws_region: us-east-1
+    aws_region: us-west-2
     os_name: "Debian 12 ARM64 (bookworm)"
     plan: {{ env.get('AGENT_PROXY_US_PLAN_API', 't4g.micro') }}
     billing_mode: spot
