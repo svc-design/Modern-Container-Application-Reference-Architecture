@@ -1,8 +1,7 @@
 terraform {
   required_version = ">= 1.9.5, < 2.0.0"
   required_providers {
-    aws   = { source = "hashicorp/aws", version = "~> 5.0" }
-    vultr = { source = "vultr/vultr", version = "~> 2.0" }
+    aws = { source = "hashicorp/aws", version = "~> 5.0" }
   }
   backend "s3" {}
 }
@@ -27,32 +26,30 @@ variable "runner_cidr" {
 
 variable "ssh_public_key" { type = string }
 variable "aws_region" { type = string }
-variable "aws_instance_type" { type = string }
+variable "aws_client_instance_type" {
+  type = string
+  validation {
+    condition     = var.aws_client_instance_type == "t4g.micro"
+    error_message = "The UAT controlled-client must be t4g.micro (2 vCPU / 1 GiB)."
+  }
+}
+
+variable "aws_gateway_instance_type" {
+  type = string
+  validation {
+    condition     = var.aws_gateway_instance_type == "t4g.small"
+    error_message = "The UAT Gateway must be t4g.small (2 vCPU / 2 GiB)."
+  }
+}
 variable "aws_ami" { type = string }
-variable "vpc_cidr" { type = string }
 
 variable "gateway_provider" {
   type    = string
   default = "aws-spot"
   validation {
-    condition     = contains(["aws-spot", "vultr"], var.gateway_provider)
-    error_message = "gateway_provider must be aws-spot or the explicitly selected optional vultr backend."
+    condition     = var.gateway_provider == "aws-spot"
+    error_message = "The UAT validation module only accepts aws-spot."
   }
-}
-
-variable "vultr_region" {
-  type    = string
-  default = ""
-}
-
-variable "vultr_plan" {
-  type    = string
-  default = ""
-}
-
-variable "vultr_os_id" {
-  type    = number
-  default = 0
 }
 
 variable "zero_accounts_api_url" {
@@ -74,44 +71,31 @@ variable "zero_portal_url" {
 provider "aws" {
   region = var.aws_region
   default_tags {
-    tags = { ManagedBy = "xconnect-lab", LabRun = var.run_id, ExpiresAt = var.expires_at, Environment = "sit" }
+    tags = { ManagedBy = "xconnect-lab", LabRun = var.run_id, ExpiresAt = var.expires_at, Environment = "uat" }
   }
 }
 
-# This provider is intentionally inert for the default aws-spot path. The
-# workflow only loads VULTR_API_KEY when gateway_provider=vultr.
-provider "vultr" {}
+# The UAT environment owns its network. This lab only attaches two disposable
+# Spot nodes and their scoped security groups to the account's existing default
+# VPC/subnet; it never creates a parallel VPC, subnet, route or internet gateway.
+data "aws_vpc" "uat" { default = true }
 
-resource "aws_vpc" "lab" {
-  cidr_block           = var.vpc_cidr
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-}
-
-resource "aws_subnet" "lab" {
-  vpc_id                  = aws_vpc.lab.id
-  cidr_block              = var.vpc_cidr
-  map_public_ip_on_launch = true
-}
-
-resource "aws_internet_gateway" "lab" { vpc_id = aws_vpc.lab.id }
-
-resource "aws_route_table" "lab" {
-  vpc_id = aws_vpc.lab.id
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.lab.id
+data "aws_subnets" "uat" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.uat.id]
+  }
+  filter {
+    name   = "default-for-az"
+    values = ["true"]
   }
 }
 
-resource "aws_route_table_association" "lab" {
-  subnet_id      = aws_subnet.lab.id
-  route_table_id = aws_route_table.lab.id
-}
+locals { uat_subnet_id = sort(data.aws_subnets.uat.ids)[0] }
 
 resource "aws_security_group" "client" {
   name   = "${var.run_id}-client"
-  vpc_id = aws_vpc.lab.id
+  vpc_id = data.aws_vpc.uat.id
   ingress {
     from_port   = 22
     to_port     = 22
@@ -128,7 +112,7 @@ resource "aws_security_group" "client" {
 
 resource "aws_security_group" "gateway" {
   name   = "${var.run_id}-gateway"
-  vpc_id = aws_vpc.lab.id
+  vpc_id = data.aws_vpc.uat.id
   ingress {
     from_port   = 22
     to_port     = 22
@@ -157,22 +141,16 @@ resource "aws_security_group" "gateway" {
   }
 }
 
-resource "aws_key_pair" "lab" {
-  key_name   = var.run_id
-  public_key = var.ssh_public_key
-}
-
 resource "aws_instance" "gateway" {
-  count                       = var.gateway_provider == "aws-spot" ? 1 : 0
   ami                         = var.aws_ami
-  instance_type               = var.aws_instance_type
-  subnet_id                   = aws_subnet.lab.id
+  instance_type               = var.aws_gateway_instance_type
+  subnet_id                   = local.uat_subnet_id
   vpc_security_group_ids      = [aws_security_group.gateway.id]
-  key_name                    = aws_key_pair.lab.key_name
   associate_public_ip_address = true
   user_data = templatefile("${path.module}/bootstrap.sh", {
-    role   = "relay"
-    run_id = var.run_id
+    role           = "relay"
+    run_id         = var.run_id
+    ssh_public_key = var.ssh_public_key
   })
   instance_market_options {
     market_type = "spot"
@@ -187,20 +165,19 @@ resource "aws_instance" "gateway" {
     encrypted             = true
     delete_on_termination = true
   }
-  tags       = { Name = "${var.run_id}-gateway", XConnectRole = "relay" }
-  depends_on = [aws_route_table_association.lab]
+  tags = { Name = "${var.run_id}-gateway", XConnectRole = "relay" }
 }
 
 resource "aws_instance" "client" {
   ami                         = var.aws_ami
-  instance_type               = var.aws_instance_type
-  subnet_id                   = aws_subnet.lab.id
+  instance_type               = var.aws_client_instance_type
+  subnet_id                   = local.uat_subnet_id
   vpc_security_group_ids      = [aws_security_group.client.id]
-  key_name                    = aws_key_pair.lab.key_name
   associate_public_ip_address = true
   user_data = templatefile("${path.module}/bootstrap.sh", {
-    role   = "controlled-client"
-    run_id = var.run_id
+    role           = "controlled-client"
+    run_id         = var.run_id
+    ssh_public_key = var.ssh_public_key
   })
   instance_market_options {
     market_type = "spot"
@@ -215,65 +192,7 @@ resource "aws_instance" "client" {
     encrypted             = true
     delete_on_termination = true
   }
-  tags       = { Name = "${var.run_id}-client", XConnectRole = "controlled-client" }
-  depends_on = [aws_route_table_association.lab]
-}
-
-resource "vultr_ssh_key" "lab" {
-  count   = var.gateway_provider == "vultr" ? 1 : 0
-  name    = var.run_id
-  ssh_key = var.ssh_public_key
-}
-
-resource "vultr_firewall_group" "lab" {
-  count       = var.gateway_provider == "vultr" ? 1 : 0
-  description = var.run_id
-}
-
-resource "vultr_firewall_rule" "ssh" {
-  count             = var.gateway_provider == "vultr" ? 1 : 0
-  firewall_group_id = vultr_firewall_group.lab[0].id
-  protocol          = "tcp"
-  ip_type           = "v4"
-  subnet            = split("/", var.runner_cidr)[0]
-  subnet_size       = 32
-  port              = "22"
-}
-
-resource "vultr_firewall_rule" "client" {
-  count             = var.gateway_provider == "vultr" ? 1 : 0
-  firewall_group_id = vultr_firewall_group.lab[0].id
-  protocol          = "tcp"
-  ip_type           = "v4"
-  subnet            = aws_instance.client.public_ip
-  subnet_size       = 32
-  port              = "443"
-}
-
-resource "vultr_firewall_rule" "zero" {
-  count             = var.gateway_provider == "vultr" ? 1 : 0
-  firewall_group_id = vultr_firewall_group.lab[0].id
-  protocol          = "tcp"
-  ip_type           = "v4"
-  subnet            = aws_instance.client.public_ip
-  subnet_size       = 32
-  port              = "8443"
-}
-
-resource "vultr_instance" "gateway" {
-  count             = var.gateway_provider == "vultr" ? 1 : 0
-  region            = var.vultr_region
-  plan              = var.vultr_plan
-  os_id             = var.vultr_os_id
-  label             = "${var.run_id}-gateway"
-  hostname          = "${var.run_id}-gateway"
-  tags              = ["xconnect-lab", var.run_id, "expires-${replace(var.expires_at, ":", "-")}"]
-  ssh_key_ids       = [vultr_ssh_key.lab[0].id]
-  firewall_group_id = vultr_firewall_group.lab[0].id
-  enable_ipv6       = false
-  backups           = "disabled"
-  activation_email  = false
-  depends_on        = [vultr_firewall_rule.ssh, vultr_firewall_rule.client, vultr_firewall_rule.zero]
+  tags = { Name = "${var.run_id}-client", XConnectRole = "controlled-client" }
 }
 
 output "gateway_provider" { value = var.gateway_provider }
@@ -282,34 +201,23 @@ output "client_role" { value = "controlled-client" }
 output "client_ip" { value = aws_instance.client.public_ip }
 output "client_private_ip" { value = aws_instance.client.private_ip }
 
-output "gateway_ip" {
-  value = var.gateway_provider == "aws-spot" ? aws_instance.gateway[0].public_ip : vultr_instance.gateway[0].main_ip
-}
-
-output "gateway_private_ip" {
-  value = var.gateway_provider == "aws-spot" ? aws_instance.gateway[0].private_ip : ""
-}
-
-output "gateway_transport_ip" {
-  value = var.gateway_provider == "aws-spot" ? aws_instance.gateway[0].private_ip : vultr_instance.gateway[0].main_ip
-}
-
-output "gateway_ssh_user" {
-  value = var.gateway_provider == "aws-spot" ? "ubuntu" : "root"
-}
+output "gateway_ip" { value = aws_instance.gateway.public_ip }
+output "gateway_private_ip" { value = aws_instance.gateway.private_ip }
+output "gateway_transport_ip" { value = aws_instance.gateway.private_ip }
+output "gateway_ssh_user" { value = "ubuntu" }
 
 output "client_ssh_user" { value = "ubuntu" }
 output "zero_accounts_api_url" { value = var.zero_accounts_api_url }
 output "zero_portal_url" { value = var.zero_portal_url }
 
 output "lab_controller_url" {
-  value = "https://${var.gateway_provider == "aws-spot" ? aws_instance.gateway[0].public_ip : vultr_instance.gateway[0].main_ip}:8443"
+  value = "https://${aws_instance.gateway.public_ip}:8443"
 }
 
 output "resource_ids" {
   value = {
     client         = aws_instance.client.id
-    gateway        = var.gateway_provider == "aws-spot" ? aws_instance.gateway[0].id : vultr_instance.gateway[0].id
+    gateway        = aws_instance.gateway.id
     gateway_role   = "relay"
     client_role    = "controlled-client"
     gateway_source = var.gateway_provider
