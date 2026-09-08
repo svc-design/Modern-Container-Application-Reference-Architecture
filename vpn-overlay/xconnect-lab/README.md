@@ -31,18 +31,20 @@ When the list is nonempty, `desktop_access_enabled` is `true` and
 reach the TLS transport. With the default empty list, desktop access is
 disabled and `gateway_transport_ip` remains the Gateway private IP for the
 existing co-located lab path. The module still creates exactly two one-time
-Spot instances with the GitOps-provided 120-minute (approximately two-hour)
-workflow expiry.
+Spot instances with the workflow-provided absolute expiry. The default
+GitOps retention is 60 minutes. Historical 120-minute leases remain a
+cleanup-only compatibility case; new apply runs use the current GitOps
+default.
 
 The workflow passes its absolute `expires_at` timestamp into both minimal
 cloud-init bootstraps. Each bootstrap validates the canonical RFC3339 UTC
 value, installs a root systemd timer with absolute `OnCalendar` and
-`Persistent=true`, and powers off with `/sbin/poweroff` at expiry. Both EC2
-instances set instance-initiated shutdown to `terminate`, so an expiry
-shutdown releases the instances even if the workflow was interrupted. A Spot
-instance can still be reclaimed earlier by AWS; the one-time Spot request
-options are not used as the runtime TTL, and rebooting does not extend the
-absolute expiry.
+`Persistent=true`, and powers off with `/sbin/poweroff` at expiry. The one-time
+Spot request is configured for interruption termination; Terraform does not
+manage the separate OS-initiated shutdown attribute on these Spot resources.
+A Spot instance can still be reclaimed earlier by AWS; the one-time Spot
+request options are not used as the runtime TTL, and rebooting does not extend
+the absolute expiry.
 
 This UAT validation module accepts only `gateway_provider = "aws-spot"`; it
 does not initialize or require a Vultr provider.
@@ -57,8 +59,9 @@ It is not the formal Accounts API, Portal, or a production configuration
 source.
 
 The client is pinned to `t4g.micro` (2 vCPU / 1 GiB) and the Gateway to
-`t4g.small` (2 vCPU / 2 GiB). Both use an ARM64 Ubuntu image and expire after
-120 minutes (approximately two hours). The consuming workflow in
+`t4g.small` (2 vCPU / 2 GiB). Both use an ARM64 Ubuntu image and expire at the
+workflow-provided absolute deadline, currently 60 minutes for new apply runs.
+Historical 120-minute leases are cleanup-only compatibility cases. The consuming workflow in
 `platform-ops-toolkit/.github/workflows/xconnect-cloud-lab.yml` downloads
 version-pinned project Release artifacts for the formal Gateway, One CLI and
 external Xray, then bootstraps both nodes over SSH. Verification checks Gateway

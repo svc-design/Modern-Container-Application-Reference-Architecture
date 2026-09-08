@@ -199,7 +199,6 @@ resource "aws_instance" "gateway" {
     ssh_public_key = var.ssh_public_key
     expires_at     = var.expires_at
   })
-  instance_initiated_shutdown_behavior = "terminate"
   instance_market_options {
     market_type = "spot"
     spot_options {
@@ -228,7 +227,6 @@ resource "aws_instance" "client" {
     ssh_public_key = var.ssh_public_key
     expires_at     = var.expires_at
   })
-  instance_initiated_shutdown_behavior = "terminate"
   instance_market_options {
     market_type = "spot"
     spot_options {
