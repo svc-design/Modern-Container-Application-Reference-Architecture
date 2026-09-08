@@ -27,6 +27,56 @@ variables {
   zero_portal_url           = "https://portal.example.test"
 }
 
+run "instances_have_absolute_expiry_lifecycle" {
+  command = plan
+
+  assert {
+    condition     = aws_instance.gateway.instance_type == "t4g.small"
+    error_message = "Gateway must remain t4g.small."
+  }
+  assert {
+    condition     = aws_instance.client.instance_type == "t4g.micro"
+    error_message = "One must remain t4g.micro."
+  }
+  assert {
+    condition     = aws_instance.gateway.instance_initiated_shutdown_behavior == "terminate"
+    error_message = "Gateway must terminate after an instance-initiated shutdown."
+  }
+  assert {
+    condition     = aws_instance.client.instance_initiated_shutdown_behavior == "terminate"
+    error_message = "One must terminate after an instance-initiated shutdown."
+  }
+  assert {
+    condition = alltrue([
+      strcontains(aws_instance.gateway.user_data, "2026-09-08T12:00:00Z"),
+      strcontains(aws_instance.client.user_data, "2026-09-08T12:00:00Z"),
+      strcontains(aws_instance.gateway.user_data, "OnCalendar=$${expiry_calendar}"),
+      strcontains(aws_instance.gateway.user_data, "Persistent=true"),
+      strcontains(aws_instance.gateway.user_data, "ExecStart=/sbin/poweroff"),
+      strcontains(aws_instance.client.user_data, "OnCalendar=$${expiry_calendar}"),
+      strcontains(aws_instance.client.user_data, "Persistent=true"),
+      strcontains(aws_instance.client.user_data, "ExecStart=/sbin/poweroff"),
+    ])
+    error_message = "Both user_data scripts must carry the absolute expiry timer."
+  }
+}
+
+run "invalid_calendar_expiry_is_invalid" {
+  command = plan
+  variables {
+    expires_at = "2026-02-30T12:00:00Z"
+  }
+  expect_failures = [var.expires_at]
+}
+
+run "shell_metacharacters_in_expiry_are_invalid" {
+  command = plan
+  variables {
+    expires_at = "2026-09-08T12:00:00Z';touch /tmp/xconnect-lab-pwned;echo '"
+  }
+  expect_failures = [var.expires_at]
+}
+
 run "empty_list_is_valid" {
   command = plan
   variables {

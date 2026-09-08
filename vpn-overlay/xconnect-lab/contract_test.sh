@@ -15,11 +15,19 @@ for forbidden in aws_vpc aws_subnet aws_internet_gateway aws_route_table aws_rou
   fi
 done
 
+for forbidden in aws_iam_role aws_iam_instance_profile aws_iam_policy; do
+  if grep -Fq "resource \"${forbidden}\"" "${main}"; then
+    echo "UAT lab must not create IAM resources; forbidden resource: ${forbidden}" >&2
+    exit 1
+  fi
+done
+
 grep -Fq 'data "aws_vpc" "uat"' "${main}"
 grep -Fq 'data "aws_subnets" "uat"' "${main}"
 grep -Fq 'var.aws_client_instance_type == "t4g.micro"' "${main}"
 grep -Fq 'var.aws_gateway_instance_type == "t4g.small"' "${main}"
 grep -Fq 'variable "desktop_ingress_cidrs"' "${main}"
+grep -Fq 'can(formatdate(' "${main}"
 grep -Fq 'type     = list(string)' "${main}"
 grep -Fq 'default  = []' "${main}"
 grep -Fq 'length(var.desktop_ingress_cidrs) <= 2' "${main}"
@@ -48,7 +56,17 @@ fi
 [[ $(grep -Fc 'market_type = "spot"' "${main}") -eq 2 ]]
 [[ $(grep -Fc 'spot_instance_type             = "one-time"' "${main}") -eq 2 ]]
 [[ $(grep -Fc 'instance_interruption_behavior = "terminate"' "${main}") -eq 2 ]]
+[[ $(grep -Fc 'instance_initiated_shutdown_behavior = "terminate"' "${main}") -eq 2 ]]
+[[ $(grep -Fc 'expires_at     = var.expires_at' "${main}") -eq 2 ]]
+grep -Fq 'OnCalendar=$${expiry_calendar}' "${root}/bootstrap.sh"
+grep -Fq "'+%Y-%m-%d %H:%M:%S UTC'" "${root}/bootstrap.sh"
+grep -Fq 'AccuracySec=1s' "${root}/bootstrap.sh"
+grep -Fq 'Persistent=true' "${root}/bootstrap.sh"
+grep -Fq 'ExecStart=/sbin/poweroff' "${root}/bootstrap.sh"
+grep -Fq 'expires_at must be absolute RFC3339 UTC' "${root}/bootstrap.sh"
 grep -Fq 'Environment = "uat"' "${main}"
 grep -Fq "'\${ssh_public_key}'" "${root}/bootstrap.sh"
+
+bash "${root}/expiry_timer_test.sh"
 
 echo 'XConnect UAT IaC contract creates two ARM64 Spot nodes and reuses the UAT network.'
