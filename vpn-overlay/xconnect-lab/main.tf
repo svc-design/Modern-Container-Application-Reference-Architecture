@@ -24,6 +24,31 @@ variable "runner_cidr" {
   }
 }
 
+variable "desktop_ingress_cidrs" {
+  type     = list(string)
+  default  = []
+  nullable = true
+  validation {
+    condition = try(
+      var.desktop_ingress_cidrs != null &&
+      length(var.desktop_ingress_cidrs) <= 2 &&
+      length(distinct(var.desktop_ingress_cidrs)) == length(var.desktop_ingress_cidrs) &&
+      alltrue([
+        for cidr in var.desktop_ingress_cidrs : try(
+          can(cidrnetmask(cidr)) &&
+          cidr != "" &&
+          cidr != "0.0.0.0/0" &&
+          cidr == trimspace(cidr) &&
+          cidr == format("%s/32", cidrhost(cidr, 0)),
+          false
+        )
+      ]),
+      false
+    )
+    error_message = "desktop_ingress_cidrs must contain at most two unique canonical IPv4 /32 CIDRs."
+  }
+}
+
 variable "ssh_public_key" { type = string }
 variable "aws_region" { type = string }
 variable "aws_client_instance_type" {
@@ -91,7 +116,10 @@ data "aws_subnets" "uat" {
   }
 }
 
-locals { uat_subnet_id = sort(data.aws_subnets.uat.ids)[0] }
+locals {
+  uat_subnet_id          = sort(data.aws_subnets.uat.ids)[0]
+  desktop_access_enabled = length(var.desktop_ingress_cidrs) > 0
+}
 
 resource "aws_security_group" "client" {
   name   = "${var.run_id}-client"
@@ -125,6 +153,16 @@ resource "aws_security_group" "gateway" {
     protocol        = "tcp"
     security_groups = [aws_security_group.client.id]
     description     = "Xray TLS from the controlled client only"
+  }
+  dynamic "ingress" {
+    for_each = var.desktop_ingress_cidrs
+    content {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = [ingress.value]
+      description = "Xray TLS from an explicitly allowed desktop /32"
+    }
   }
   ingress {
     from_port       = 8443
@@ -203,7 +241,10 @@ output "client_private_ip" { value = aws_instance.client.private_ip }
 
 output "gateway_ip" { value = aws_instance.gateway.public_ip }
 output "gateway_private_ip" { value = aws_instance.gateway.private_ip }
-output "gateway_transport_ip" { value = aws_instance.gateway.private_ip }
+output "gateway_transport_ip" {
+  value = local.desktop_access_enabled ? aws_instance.gateway.public_ip : aws_instance.gateway.private_ip
+}
+output "desktop_access_enabled" { value = local.desktop_access_enabled }
 output "gateway_ssh_user" { value = "ubuntu" }
 
 output "client_ssh_user" { value = "ubuntu" }
