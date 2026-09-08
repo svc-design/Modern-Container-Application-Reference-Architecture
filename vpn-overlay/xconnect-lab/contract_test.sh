@@ -41,7 +41,17 @@ grep -Fq 'cidr_blocks = [ingress.value]' "${main}"
 grep -Fq 'local.desktop_access_enabled ? aws_instance.gateway.public_ip : aws_instance.gateway.private_ip' "${main}"
 grep -Fq 'output "desktop_access_enabled"' "${main}"
 [[ $(grep -Ec 'from_port[[:space:]]+= 443' "${main}") -eq 2 ]]
-desktop_ingress=$(awk '/dynamic "ingress"/ {inside=1} inside {print} inside && /^  }$/ {exit}' "${main}")
+# The SSH debug rule is also a dynamic ingress block. Select the desktop block
+# by its dedicated iterator instead of relying on declaration order.
+desktop_ingress=$(awk '
+  /dynamic "ingress"/ { inside = 1; wanted = 0; block = "" }
+  inside { block = block $0 ORS }
+  inside && /for_each = var.desktop_ingress_cidrs/ { wanted = 1 }
+  inside && /^  }$/ {
+    if (wanted) { printf "%s", block; exit }
+    inside = 0
+  }
+' "${main}")
 grep -Eq 'from_port[[:space:]]+= 443' <<<"${desktop_ingress}"
 grep -Eq 'to_port[[:space:]]+= 443' <<<"${desktop_ingress}"
 grep -Eq 'protocol[[:space:]]+= "tcp"' <<<"${desktop_ingress}"
