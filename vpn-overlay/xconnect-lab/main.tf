@@ -32,6 +32,31 @@ variable "runner_cidr" {
   }
 }
 
+variable "ssh_debug_ingress_cidrs" {
+  type     = list(string)
+  default  = []
+  nullable = true
+  validation {
+    condition = try(
+      var.ssh_debug_ingress_cidrs != null &&
+      length(var.ssh_debug_ingress_cidrs) <= 2 &&
+      length(distinct(var.ssh_debug_ingress_cidrs)) == length(var.ssh_debug_ingress_cidrs) &&
+      alltrue([
+        for cidr in var.ssh_debug_ingress_cidrs : try(
+          can(cidrnetmask(cidr)) &&
+          cidr != "" &&
+          cidr != "0.0.0.0/0" &&
+          cidr == trimspace(cidr) &&
+          cidr == format("%s/32", cidrhost(cidr, 0)),
+          false
+        )
+      ]),
+      false
+    )
+    error_message = "ssh_debug_ingress_cidrs must contain at most two unique canonical IPv4 /32 CIDRs."
+  }
+}
+
 variable "desktop_ingress_cidrs" {
   type     = list(string)
   default  = []
@@ -138,6 +163,16 @@ resource "aws_security_group" "client" {
     protocol    = "tcp"
     cidr_blocks = [var.runner_cidr]
   }
+  dynamic "ingress" {
+    for_each = var.ssh_debug_ingress_cidrs
+    content {
+      from_port   = 22
+      to_port     = 22
+      protocol    = "tcp"
+      cidr_blocks = [ingress.value]
+      description = "Temporary operator SSH debugging from an explicitly allowed /32"
+    }
+  }
   egress {
     from_port   = 0
     to_port     = 0
@@ -154,6 +189,16 @@ resource "aws_security_group" "gateway" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = [var.runner_cidr]
+  }
+  dynamic "ingress" {
+    for_each = var.ssh_debug_ingress_cidrs
+    content {
+      from_port   = 22
+      to_port     = 22
+      protocol    = "tcp"
+      cidr_blocks = [ingress.value]
+      description = "Temporary operator SSH debugging from an explicitly allowed /32"
+    }
   }
   ingress {
     from_port       = 443
@@ -255,6 +300,7 @@ output "gateway_transport_ip" {
   value = local.desktop_access_enabled ? aws_instance.gateway.public_ip : aws_instance.gateway.private_ip
 }
 output "desktop_access_enabled" { value = local.desktop_access_enabled }
+output "ssh_debug_access_enabled" { value = length(var.ssh_debug_ingress_cidrs) > 0 }
 output "gateway_ssh_user" { value = "ubuntu" }
 
 output "client_ssh_user" { value = "ubuntu" }

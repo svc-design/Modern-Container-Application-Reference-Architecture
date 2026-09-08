@@ -10,7 +10,9 @@ symmetrical nodes:
 
 The UAT `gateway_provider` is `aws-spot`. Both Gateway and One are AWS EC2
 one-time Spot instances attached to the existing UAT default VPC/subnet, with
-private-path access between them and SSH limited to the runner /32. The module
+private-path access between them and SSH limited to the runner /32 by default. A
+temporary operator `/32` SSH allowlist can be supplied separately for debugging.
+The module
 does not create another VPC, subnet, route table, internet gateway, or EC2 key
 pair. It creates only the two Spot instances and their disposable least-privilege
 security groups. The Gateway has TLS
@@ -24,7 +26,9 @@ empty list. It accepts at most two unique canonical IPv4 `/32` values, for
 example `198.51.100.42/32`. Each value adds one inline Gateway security-group
 rule for TCP 443 only. Empty values, non-canonical values, non-`/32` networks,
 IPv6, `0.0.0.0/0`, and more than two entries are rejected. This does not open
-SSH, TCP 8443, or WireGuard UDP to the desktop CIDRs.
+SSH, TCP 8443, or WireGuard UDP to the desktop CIDRs. The separate
+`ssh_debug_ingress_cidrs` input only adds TCP 22 to both disposable nodes for
+the explicitly supplied operator `/32` values.
 
 When the list is nonempty, `desktop_access_enabled` is `true` and
 `gateway_transport_ip` is the Gateway public IP so an external desktop can
