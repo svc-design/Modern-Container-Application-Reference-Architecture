@@ -19,6 +19,20 @@ public WireGuard UDP 51820 is not opened. Terraform outputs both public SSH
 addresses and the Gateway private transport address, plus the TLS/Zero URLs
 and node roles.
 
+Desktop access is opt-in through `desktop_ingress_cidrs`, which defaults to an
+empty list. It accepts at most two unique canonical IPv4 `/32` values, for
+example `198.51.100.42/32`. Each value adds one inline Gateway security-group
+rule for TCP 443 only. Empty values, non-canonical values, non-`/32` networks,
+IPv6, `0.0.0.0/0`, and more than two entries are rejected. This does not open
+SSH, TCP 8443, or WireGuard UDP to the desktop CIDRs.
+
+When the list is nonempty, `desktop_access_enabled` is `true` and
+`gateway_transport_ip` is the Gateway public IP so an external desktop can
+reach the TLS transport. With the default empty list, desktop access is
+disabled and `gateway_transport_ip` remains the Gateway private IP for the
+existing co-located lab path. The module still creates exactly two one-time
+Spot instances with the existing one-hour workflow expiry.
+
 This UAT validation module accepts only `gateway_provider = "aws-spot"`; it
 does not initialize or require a Vultr provider.
 
