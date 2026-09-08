@@ -14,7 +14,15 @@ variable "run_id" {
   }
 }
 
-variable "expires_at" { type = string }
+variable "expires_at" {
+  type = string
+  validation {
+    condition = can(formatdate("YYYY-MM-DD hh:mm:ss ZZZ", var.expires_at)) && can(
+      regex("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$", var.expires_at)
+    )
+    error_message = "expires_at must be an absolute RFC3339 UTC timestamp ending in Z."
+  }
+}
 
 variable "runner_cidr" {
   type = string
@@ -189,7 +197,9 @@ resource "aws_instance" "gateway" {
     role           = "relay"
     run_id         = var.run_id
     ssh_public_key = var.ssh_public_key
+    expires_at     = var.expires_at
   })
+  instance_initiated_shutdown_behavior = "terminate"
   instance_market_options {
     market_type = "spot"
     spot_options {
@@ -216,7 +226,9 @@ resource "aws_instance" "client" {
     role           = "controlled-client"
     run_id         = var.run_id
     ssh_public_key = var.ssh_public_key
+    expires_at     = var.expires_at
   })
+  instance_initiated_shutdown_behavior = "terminate"
   instance_market_options {
     market_type = "spot"
     spot_options {
