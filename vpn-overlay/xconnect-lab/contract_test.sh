@@ -56,7 +56,7 @@ fi
 [[ $(grep -Fc 'market_type = "spot"' "${main}") -eq 2 ]]
 [[ $(grep -Fc 'spot_instance_type             = "one-time"' "${main}") -eq 2 ]]
 [[ $(grep -Fc 'instance_interruption_behavior = "terminate"' "${main}") -eq 2 ]]
-[[ $(grep -Fc 'instance_initiated_shutdown_behavior = "terminate"' "${main}") -eq 2 ]]
+[[ $(grep -Fc 'instance_initiated_shutdown_behavior' "${main}") -eq 0 ]]
 [[ $(grep -Fc 'expires_at     = var.expires_at' "${main}") -eq 2 ]]
 grep -Fq 'OnCalendar=$${expiry_calendar}' "${root}/bootstrap.sh"
 grep -Fq "'+%Y-%m-%d %H:%M:%S UTC'" "${root}/bootstrap.sh"

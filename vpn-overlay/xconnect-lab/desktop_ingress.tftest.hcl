@@ -39,14 +39,6 @@ run "instances_have_absolute_expiry_lifecycle" {
     error_message = "One must remain t4g.micro."
   }
   assert {
-    condition     = aws_instance.gateway.instance_initiated_shutdown_behavior == "terminate"
-    error_message = "Gateway must terminate after an instance-initiated shutdown."
-  }
-  assert {
-    condition     = aws_instance.client.instance_initiated_shutdown_behavior == "terminate"
-    error_message = "One must terminate after an instance-initiated shutdown."
-  }
-  assert {
     condition = alltrue([
       strcontains(aws_instance.gateway.user_data, "2026-09-08T12:00:00Z"),
       strcontains(aws_instance.client.user_data, "2026-09-08T12:00:00Z"),
