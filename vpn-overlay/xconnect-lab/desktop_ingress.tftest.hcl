@@ -5,13 +5,6 @@ mock_provider "aws" {
       id = "vpc-0123456789abcdef0"
     }
   }
-
-  override_data {
-    target = data.aws_subnets.uat
-    values = {
-      ids = ["subnet-0123456789abcdef0"]
-    }
-  }
 }
 
 variables {
