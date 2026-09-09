@@ -4,6 +4,9 @@ global:
   # US Spot edge: Oregon is preferred for Asia-facing traffic. Keep this
   # configurable so capacity policy can move without changing node identity.
   aws_us_region: us-west-2
+  # HK Spot edge uses its own provider alias so Terraform discovers capacity
+  # in the local default VPC without coupling it to the Tokyo state.
+  aws_hk_region: ap-east-1
   name_prefix: agent-proxy-prod
   user_data_file: cloud-init.yaml
 
@@ -94,3 +97,36 @@ hosts:
       role: regional
       service_domains:
         - agent-proxy-selfhost-prod-us.{{ env['TARGET_DOMAIN_BASE'] }}
+
+  - name: agent-proxy-node-prod-hk
+    node_id: ap-prod-hk
+    short_hostname: ap-prod-hk
+    display_name: "ap-prod-hk (hk-spot)"
+    cloud_provider: aws
+    cloud_region: ap-east-1
+    location: hk
+    node_label: hk-spot
+    aws_provider: hk
+    aws_region: ap-east-1
+    # Dynamic region node: prefer Debian 13 ARM64 and allow the existing
+    # generator fallback to Debian 12 ARM64 when needed.
+    os_name: "Debian 13 ARM64 (preferred; Debian 12 fallback)"
+    plan: {{ env.get('AGENT_PROXY_HK_PLAN_API', 't4g.micro') }}
+    billing_mode: spot
+    spot_instance: true
+    max_runtime_minutes: 60
+    elastic_ip: false
+    deletion_protection: false
+    backups: false
+    enable_ipv6: true
+    ansible_user: admin
+    groups: [agent_proxy, debian]
+    tags: [debian, prod, hk, spot]
+    security_group_ingress:
+      - port: 1443
+        protocol: tcp
+        cidr: 0.0.0.0/0
+    host_vars:
+      role: regional
+      service_domains:
+        - agent-proxy-selfhost-prod-hk.{{ env['TARGET_DOMAIN_BASE'] }}

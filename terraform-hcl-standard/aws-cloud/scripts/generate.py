@@ -60,7 +60,7 @@ NODE_METADATA_DEFAULTS = {
     "location": "",
     "node_label": "",
 }
-VALID_AWS_PROVIDER_ALIASES = {"default", "us"}
+VALID_AWS_PROVIDER_ALIASES = {"default", "us", "hk"}
 
 
 def _tf_id(value):
@@ -134,7 +134,7 @@ def cmd_render(args):
         raise SystemExit(
             "Unsupported aws_provider alias(es): "
             + ", ".join(invalid_aliases)
-            + ". Supported aliases: default, us."
+            + ". Supported aliases: default, us, hk."
         )
 
     rendered = (
@@ -168,6 +168,7 @@ def cmd_render(args):
         "region": glob.get("region", "nrt"),
         "aws_region": glob.get("aws_region", "ap-northeast-1"),
         "aws_us_region": glob.get("aws_us_region", "us-east-1"),
+        "aws_hk_region": glob.get("aws_hk_region", "ap-east-1"),
         "name_prefix": glob.get("name_prefix", "ai-workspace"),
         "user_data_file": glob.get("user_data_file", "cloud-init.yaml"),
     }
