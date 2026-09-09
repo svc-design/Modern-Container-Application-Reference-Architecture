@@ -1,5 +1,8 @@
 global:
   region: nrt
+  aws_region: ap-northeast-1
+  aws_us_region: us-west-2
+  aws_hk_region: ap-east-1
   name_prefix: agent-proxy-uat
   user_data_file: cloud-init.yaml
 
@@ -15,11 +18,11 @@ hosts:
   - name: agent-proxy-node-uat
     node_id: ap-uat-tky
     short_hostname: ap-uat-tky
-    display_name: "ap-uat-tky (tky-spot)"
+    display_name: "JP XConnect · Tokyo Spot"
     cloud_provider: aws
     cloud_region: ap-northeast-1
     location: tky
-    node_label: tky-spot
+    node_label: jpn-tky-spot
     os_name: "Debian 12 ARM64 (bookworm)"
     # AWS T4g.small is 2 vCPU / 2 GiB. UAT is an ephemeral one-hour Spot
     # validation node, never a long-lived Vultr default.
@@ -38,6 +41,61 @@ hosts:
     groups: [agent_proxy, debian]
     tags: [debian]
     host_vars:
-      role: primary
+      role: regional
       service_domains:
-        - agent-proxy.{{ env['TARGET_DOMAIN_BASE'] }}
+        - jp-xconnect.{{ env['TARGET_DOMAIN_BASE'] }}
+
+  - name: agent-proxy-node-uat-hk
+    node_id: ap-uat-hk
+    short_hostname: ap-uat-hk
+    display_name: "HK XConnect · Hong Kong Spot"
+    cloud_provider: aws
+    cloud_region: ap-east-1
+    location: hk
+    node_label: hk-spot
+    aws_provider: hk
+    aws_region: ap-east-1
+    os_name: "Debian 13 ARM64 (preferred; Debian 12 fallback)"
+    # All UAT XConnect regions are short-lived 2 vCPU / 2 GiB Spot nodes.
+    plan: {{ env.get('AGENT_PROXY_HK_PLAN_API', 't4g.small') }}
+    billing_mode: spot
+    spot_instance: true
+    max_runtime_minutes: 60
+    elastic_ip: false
+    deletion_protection: false
+    backups: false
+    enable_ipv6: true
+    ansible_user: admin
+    groups: [agent_proxy, debian]
+    tags: [debian, uat, hk, spot]
+    host_vars:
+      role: regional
+      service_domains:
+        - hk-xconnect.{{ env['TARGET_DOMAIN_BASE'] }}
+
+  - name: agent-proxy-node-uat-us
+    node_id: ap-uat-us
+    short_hostname: ap-uat-us
+    display_name: "US XConnect · West Spot"
+    cloud_provider: aws
+    cloud_region: us-west-2
+    location: us
+    node_label: us-ca-spot
+    aws_provider: us
+    aws_region: us-west-2
+    os_name: "Debian 13 ARM64 (preferred; Debian 12 fallback)"
+    plan: {{ env.get('AGENT_PROXY_US_PLAN_API', 't4g.small') }}
+    billing_mode: spot
+    spot_instance: true
+    max_runtime_minutes: 60
+    elastic_ip: false
+    deletion_protection: false
+    backups: false
+    enable_ipv6: true
+    ansible_user: admin
+    groups: [agent_proxy, debian]
+    tags: [debian, uat, us, spot]
+    host_vars:
+      role: regional
+      service_domains:
+        - us-xconnect.{{ env['TARGET_DOMAIN_BASE'] }}
