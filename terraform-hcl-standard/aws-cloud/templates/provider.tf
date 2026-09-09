@@ -22,6 +22,11 @@ provider "aws" {
   region = var.aws_us_region
 }
 
+provider "aws" {
+  alias  = "hk"
+  region = var.aws_hk_region
+}
+
 variable "aws_region" {
   description = "AWS region"
   type        = string
@@ -32,4 +37,10 @@ variable "aws_us_region" {
   description = "AWS region for the US Agent Proxy provider alias"
   type        = string
   default     = "us-east-1"
+}
+
+variable "aws_hk_region" {
+  description = "AWS region for the Hong Kong Agent Proxy provider alias"
+  type        = string
+  default     = "ap-east-1"
 }
