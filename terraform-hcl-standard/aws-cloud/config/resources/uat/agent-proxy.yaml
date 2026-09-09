@@ -24,9 +24,9 @@ hosts:
     location: tky
     node_label: jpn-tky-spot
     os_name: "Debian 12 ARM64 (bookworm)"
-    # AWS T4g.small is 2 vCPU / 2 GiB. UAT is an ephemeral one-hour Spot
+    # AWS T4g.micro is 2 vCPU / 1 GiB. UAT is an ephemeral one-hour Spot
     # validation node, never a long-lived Vultr default.
-    plan: {{ env.get('AGENT_PROXY_PLAN_API', 't4g.small') }}
+    plan: {{ env.get('AGENT_PROXY_PLAN_API', 't4g.micro') }}
     billing_mode: spot
     spot_instance: true
     max_runtime_minutes: 60
@@ -56,8 +56,8 @@ hosts:
     aws_provider: hk
     aws_region: ap-east-1
     os_name: "Debian 13 ARM64 (preferred; Debian 12 fallback)"
-    # All UAT XConnect regions are short-lived 2 vCPU / 2 GiB Spot nodes.
-    plan: {{ env.get('AGENT_PROXY_HK_PLAN_API', 't4g.small') }}
+    # All UAT XConnect regions are short-lived 2 vCPU / 1 GiB Spot nodes.
+    plan: {{ env.get('AGENT_PROXY_HK_PLAN_API', 't4g.micro') }}
     billing_mode: spot
     spot_instance: true
     max_runtime_minutes: 60
@@ -84,7 +84,7 @@ hosts:
     aws_provider: us
     aws_region: us-west-2
     os_name: "Debian 13 ARM64 (preferred; Debian 12 fallback)"
-    plan: {{ env.get('AGENT_PROXY_US_PLAN_API', 't4g.small') }}
+    plan: {{ env.get('AGENT_PROXY_US_PLAN_API', 't4g.micro') }}
     billing_mode: spot
     spot_instance: true
     max_runtime_minutes: 60
