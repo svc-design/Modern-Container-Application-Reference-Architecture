@@ -23,7 +23,10 @@ for forbidden in aws_iam_role aws_iam_instance_profile aws_iam_policy; do
 done
 
 grep -Fq 'data "aws_vpc" "uat"' "${main}"
-grep -Fq 'data "aws_subnets" "uat"' "${main}"
+if grep -Fq 'subnet_id' "${main}"; then
+  echo 'Ephemeral Spot nodes must let EC2 select a default subnet/AZ with capacity.' >&2
+  exit 1
+fi
 grep -Fq 'var.aws_client_instance_type == "t4g.micro"' "${main}"
 grep -Fq 'var.aws_gateway_instance_type == "t4g.small"' "${main}"
 grep -Fq 'variable "desktop_ingress_cidrs"' "${main}"
@@ -66,6 +69,7 @@ fi
 [[ $(grep -Fc 'market_type = "spot"' "${main}") -eq 2 ]]
 [[ $(grep -Fc 'spot_instance_type             = "one-time"' "${main}") -eq 2 ]]
 [[ $(grep -Fc 'instance_interruption_behavior = "terminate"' "${main}") -eq 2 ]]
+[[ $(grep -Fc 'timeouts { create = "5m" }' "${main}") -eq 2 ]]
 [[ $(grep -Fc 'instance_initiated_shutdown_behavior' "${main}") -eq 0 ]]
 [[ $(grep -Fc 'expires_at     = var.expires_at' "${main}") -eq 2 ]]
 grep -Fq 'OnCalendar=$${expiry_calendar}' "${root}/bootstrap.sh"

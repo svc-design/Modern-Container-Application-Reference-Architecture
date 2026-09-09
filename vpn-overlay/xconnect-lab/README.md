@@ -9,7 +9,9 @@ symmetrical nodes:
 | XConnect-One | `controlled-client` | Independent Linux node, external WireGuard + external Xray, CLI-driven sync/config/start/join |
 
 The UAT `gateway_provider` is `aws-spot`. Both Gateway and One are AWS EC2
-one-time Spot instances attached to the existing UAT default VPC/subnet, with
+one-time Spot instances attached to the existing UAT default VPC. EC2 selects
+a default subnet and availability zone with capacity instead of pinning both
+nodes to the lexicographically first subnet. The nodes retain
 private-path access between them and SSH limited to the runner /32 by default. A
 temporary operator `/32` SSH allowlist can be supplied separately for debugging.
 The module
@@ -20,6 +22,10 @@ security groups. The Gateway has TLS
 public WireGuard UDP 51820 is not opened. Terraform outputs both public SSH
 addresses and the Gateway private transport address, plus the TLS/Zero URLs
 and node roles.
+
+Each Spot instance has a five-minute Terraform create timeout. A capacity
+shortage therefore fails fast and reaches exact-run cleanup instead of holding
+the 90-minute workflow without reaching runtime validation.
 
 Desktop access is opt-in through `desktop_ingress_cidrs`, which defaults to an
 empty list. It accepts at most two unique canonical IPv4 `/32` values, for

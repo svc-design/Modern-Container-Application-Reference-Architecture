@@ -138,19 +138,7 @@ provider "aws" {
 # VPC/subnet; it never creates a parallel VPC, subnet, route or internet gateway.
 data "aws_vpc" "uat" { default = true }
 
-data "aws_subnets" "uat" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.uat.id]
-  }
-  filter {
-    name   = "default-for-az"
-    values = ["true"]
-  }
-}
-
 locals {
-  uat_subnet_id          = sort(data.aws_subnets.uat.ids)[0]
   desktop_access_enabled = length(var.desktop_ingress_cidrs) > 0
 }
 
@@ -235,7 +223,6 @@ resource "aws_security_group" "gateway" {
 resource "aws_instance" "gateway" {
   ami                         = var.aws_ami
   instance_type               = var.aws_gateway_instance_type
-  subnet_id                   = local.uat_subnet_id
   vpc_security_group_ids      = [aws_security_group.gateway.id]
   associate_public_ip_address = true
   user_data = templatefile("${path.module}/bootstrap.sh", {
@@ -257,13 +244,13 @@ resource "aws_instance" "gateway" {
     encrypted             = true
     delete_on_termination = true
   }
+  timeouts { create = "5m" }
   tags = { Name = "${var.run_id}-gateway", XConnectRole = "relay" }
 }
 
 resource "aws_instance" "client" {
   ami                         = var.aws_ami
   instance_type               = var.aws_client_instance_type
-  subnet_id                   = local.uat_subnet_id
   vpc_security_group_ids      = [aws_security_group.client.id]
   associate_public_ip_address = true
   user_data = templatefile("${path.module}/bootstrap.sh", {
@@ -285,6 +272,7 @@ resource "aws_instance" "client" {
     encrypted             = true
     delete_on_termination = true
   }
+  timeouts { create = "5m" }
   tags = { Name = "${var.run_id}-client", XConnectRole = "controlled-client" }
 }
 
